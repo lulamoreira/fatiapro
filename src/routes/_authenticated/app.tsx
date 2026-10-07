@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Box, Bookmark, FilePlus2, History, Monitor, LogOut, ShieldCheck } from "lucide-react";
+import { Box, Bookmark, FilePlus2, History, Monitor, LogOut, ShieldCheck, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -8,6 +8,7 @@ import { useNow } from "@/hooks/use-now";
 import { Dot } from "@/components/fatia/Chip";
 import { AppSkeleton, PageSkeleton } from "@/components/fatia/AppSkeleton";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -55,6 +56,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const status = useStatusComputador();
   const { isLoading } = useQuery(devicesQuery);
+  const isAdmin = useIsAdmin();
   async function sair() {
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
@@ -76,6 +78,15 @@ function AppLayout() {
               {n.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/app/admin"
+              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-all duration-200 hover:bg-sidebar-accent/60"
+              activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
+            >
+              <Shield className="size-[18px]" aria-hidden />Admin
+            </Link>
+          )}
         </nav>
         <div className="space-y-2">
           <StatusCard />
@@ -96,6 +107,7 @@ function AppLayout() {
             <Link to="/app/computador" aria-label={status.conectado ? "Computador conectado" : "Computador desconectado"} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground">
               <Dot on={status.conectado} />{status.conectado ? "Conectado" : "Desconectado"}
             </Link>
+            {isAdmin && <Link to="/app/admin" aria-label="Admin" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><Shield className="size-4" /></Link>}
             <button onClick={sair} aria-label="Sair" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><LogOut className="size-4" /></button>
           </div>
         </header>
