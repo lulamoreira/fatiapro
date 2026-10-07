@@ -82,7 +82,7 @@ function ComputadorPage() {
               </p>
             </>
           ) : (
-            <p className="text-sm">O código expirou. <button className="font-semibold text-primary underline" onClick={gerar}>Gerar outro</button></p>
+            <p className="text-sm">O código expirou. <button className="font-semibold text-primary-ink underline" onClick={gerar}>Gerar outro</button></p>
           )}
         </div>
       )}

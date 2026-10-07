@@ -315,7 +315,7 @@ function NovaAnalise() {
                       on ? "border-primary bg-primary/8 shadow-aqua" : "border-border bg-card shadow-sm")}>
                     <IconTile tone={r.tone}><r.icon /></IconTile>
                     <span className="min-w-0 pr-5"><span className="block font-semibold">{r.titulo}</span><span className="block text-xs text-muted-foreground">{r.linha}</span></span>
-                    {on && <CheckCircle2 className="absolute right-3 top-3 size-5 text-primary" aria-hidden />}
+                    {on && <CheckCircle2 className="absolute right-3 top-3 size-5 text-primary-ink" aria-hidden />}
                   </button>
                 );
               })}
@@ -340,7 +340,7 @@ function NovaAnalise() {
           <Secao id="sec-2" n={2} ok={s2ok} titulo={`Peça${preco ? " (opcional)" : ""}`} subtitulo=".stl, .3mf, .step ou .stp · até 100 MB">
             {arquivo || pecaBib ? (
               <div className="flex items-center gap-3 rounded-2xl bg-primary/7 p-3">
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm"><FileBox className="size-7 text-primary" aria-hidden /></span>
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm"><FileBox className="size-7 text-primary-ink" aria-hidden /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{arquivo ? arquivo.name : pecaBib!.nome}</span>
                   <span className="block text-xs text-muted-foreground">{arquivo ? `${(arquivo.size / 1048576).toFixed(1)} MB` : "da biblioteca"}</span>
@@ -351,7 +351,7 @@ function NovaAnalise() {
               <button type="button" onClick={() => fileRef.current?.click()} onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files[0]); }}
                 className={cn("flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/7 p-8 text-center transition-colors hover:border-primary", f.usarAberta && "opacity-60")}>
-                <Upload className="size-7 text-primary" aria-hidden />
+                <Upload className="size-7 text-primary-ink" aria-hidden />
                 <span className="text-sm font-medium">Arraste o arquivo aqui ou clique para escolher</span>
               </button>
             )}

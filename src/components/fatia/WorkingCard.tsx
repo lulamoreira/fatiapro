@@ -51,7 +51,7 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
   return (
     <section ref={ref} aria-live="polite" aria-label="Trabalhando" className="scroll-mt-6 rounded-3xl border-2 border-primary/40 bg-accent/40 p-6">
       <div className="flex items-start gap-4">
-        <Loader2 className="mt-1 size-7 shrink-0 animate-spin text-primary" aria-hidden />
+        <Loader2 className="mt-1 size-7 shrink-0 animate-spin text-primary-ink" aria-hidden />
         <div className="min-w-0 flex-1">
           <h2 className="text-xl font-bold">{TITULOS[fase]}</h2>
           {ultimaMensagem && <p className="mt-1 text-sm text-muted-foreground">{ultimaMensagem}</p>}

@@ -27,7 +27,7 @@ function Landing() {
     <main className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <span className="font-display text-xl font-bold">
-          Fatia<span className="text-primary">Pro</span>
+          Fatia<span className="text-primary-ink">Pro</span>
         </span>
         <Button asChild variant="outline">
           <Link to="/auth">Entrar</Link>
@@ -49,7 +49,7 @@ function Landing() {
         <div className="mt-20 grid grid-cols-1 gap-4 md:grid-cols-3">
           {PONTOS.map((p) => (
             <div key={p.t} className="rounded-2xl border bg-card p-6">
-              <p.icon className="size-6 text-primary" aria-hidden />
+              <p.icon className="size-6 text-primary-ink" aria-hidden />
               <h2 className="mt-4 text-lg font-semibold">{p.t}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{p.d}</p>
             </div>

@@ -87,7 +87,7 @@ function ModelosPage() {
       {isLoading ? <Skeleton className="h-48 rounded-2xl" /> : !data?.rows.length ? (
         <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">
           <Bookmark className="mx-auto mb-3 size-8" aria-hidden />
-          Salve um modelo a partir de uma análise no <Link to="/app/historico" search={{ pagina: 0 }} className="font-semibold text-primary">Histórico</Link>.
+          Salve um modelo a partir de uma análise no <Link to="/app/historico" search={{ pagina: 0 }} className="font-semibold text-primary-ink">Histórico</Link>.
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
