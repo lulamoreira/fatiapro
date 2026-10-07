@@ -87,7 +87,7 @@ export function AdminUsuarios() {
   );
 }
 
-function Indicador({ titulo, valor, extra }: { titulo: string; valor?: number; extra?: React.ReactNode }) {
+function Indicador({ titulo, valor, extra }: { titulo: string; valor?: number | undefined; extra?: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-card p-4 shadow-sm">
       <p className="text-xs font-medium text-muted-foreground">{titulo}</p>
