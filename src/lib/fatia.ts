@@ -4,7 +4,9 @@
  */
 
 export type Roteiro = "config_geral" | "reduzir_tempo" | "checklist" | "preco";
-export type FatiadorId = "bambu" | "orca" | "snapmaker" | "anycubic";
+/** Slicer id comes from the bridge report (^[a-z0-9_-]{2,40}$). */
+export type FatiadorId = string;
+export const FATIADOR_ID_RE = /^[a-z0-9_-]{2,40}$/;
 export type Motor = "assinatura" | "api";
 export type Estado =
   | "na_fila"
@@ -52,13 +54,19 @@ export const FINALIDADES = ["Decorativa", "Uso mecânico", "Venda em lote"] as c
 export const PRIORIDADES = ["Tempo", "Acabamento", "Resistência"] as const;
 
 export const roteiroLabel = (r: string | null | undefined) => ROTEIROS.find((x) => x.id === r)?.label ?? "—";
-export const fatiadorLabel = (f: string | null | undefined) => FATIADORES.find((x) => x.id === f)?.label ?? "—";
+/** Display name: report name first, then the known names, then the id. */
+export const fatiadorLabel = (f: string | null | undefined, rel?: { fatiadores: { id: string; nome: string | null }[] }) =>
+  !f ? "—" : rel?.fatiadores.find((x) => x.id === f)?.nome || FATIADORES.find((x) => x.id === f)?.label || f;
+/** Name for a report entry. */
+export const nomeFatiador = (f: { id: string; nome: string | null }) => f.nome || FATIADORES.find((x) => x.id === f.id)?.label || f.id;
 export const motorLabel = (m: string | null | undefined) => (m === "api" ? "API" : m === "assinatura" ? "Assinatura" : "—");
 
 /* ---------- Relatório (written by the bridge) ---------- */
 
 export interface FatiadorRelatorio {
   id: FatiadorId;
+  nome: string | null;
+  adicionado_manual: boolean;
   versao: string | null;
   impressoras: string[];
   /** tipo → marca → linhas */
@@ -85,9 +93,9 @@ export function parseRelatorio(raw: unknown): Relatorio {
   if (Array.isArray(r.fatiadores)) {
     for (const item of r.fatiadores) {
       if (!isRecord(item)) continue;
-      const f = item as { id?: unknown; versao?: unknown; impressoras?: unknown; filamentos?: unknown };
+      const f = item as { id?: unknown; nome?: unknown; adicionado_manual?: unknown; versao?: unknown; impressoras?: unknown; filamentos?: unknown };
       const id = f.id;
-      if (!FATIADORES.some((x) => x.id === id)) continue;
+      if (typeof id !== "string" || !FATIADOR_ID_RE.test(id)) continue;
       const fil: Record<string, Record<string, string[]>> = {};
       if (isRecord(f.filamentos)) {
         for (const [tipo, marcas] of Object.entries(f.filamentos)) {
@@ -97,7 +105,7 @@ export function parseRelatorio(raw: unknown): Relatorio {
           fil[tipo] = porMarca;
         }
       }
-      fatiadores.push({ id: id as FatiadorId, versao: typeof f.versao === "string" ? f.versao : null, impressoras: strArr(f.impressoras), filamentos: fil });
+      fatiadores.push({ id, nome: typeof f.nome === "string" && f.nome.trim() ? f.nome.trim().slice(0, 80) : null, adicionado_manual: f.adicionado_manual === true, versao: typeof f.versao === "string" ? f.versao : null, impressoras: strArr(f.impressoras), filamentos: fil });
     }
   }
   const m = (isRecord(r.motores) ? r.motores : {}) as { assinatura?: unknown; api?: unknown; assinatura_detalhe?: unknown };
@@ -216,6 +224,10 @@ export interface NomeArquivoInput {
 }
 
 /** {peça}_{impressora}_{bico}mm_{filamento}_{AAAA-MM-DD}_{HHhMM}.3mf */
+/** True when the preview has every part (piece, printer, filament). */
+export const nomeArquivoCompleto = (i: { pecaDefinida: boolean; impressora: string | null; marca: string | null; linha: string | null }) =>
+  i.pecaDefinida && !!i.impressora && !!i.marca && !!i.linha;
+
 export function nomeArquivoOtimizado(i: NomeArquivoInput): string {
   const peca = i.peca ? i.peca.replace(/\.[^.]+$/, "") : "peca-aberta";
   const p2 = (n: number) => String(n).padStart(2, "0");

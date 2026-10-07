@@ -1,3 +1,4 @@
+import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bookmark } from "lucide-react";
@@ -66,6 +67,7 @@ function useAjustesAprovados(jobId: string, enabled: boolean) {
 }
 
 export function SalvarModeloDialog({ job, trigger }: { job: Tables<"jobs">; trigger?: "icon" | "button" }) {
+  const rotuloFat = useFatiadorLabel();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const o = (job.opcoes ?? {}) as OpcoesJob;
@@ -106,7 +108,7 @@ export function SalvarModeloDialog({ job, trigger }: { job: Tables<"jobs">; trig
 
   const fil = o.filamento;
   const linhas: [string, string][] = [
-    ["Fatiador", fatiadorLabel(job.fatiador)],
+    ["Fatiador", rotuloFat(job.fatiador)],
     ["Impressora", o.impressora ?? "—"],
     ["Bico", o.bico ? `${o.bico} mm` : "—"],
     ["Filamento", [fil?.tipo, fil?.marca, fil?.linha].filter(Boolean).join(" · ") || "—"],

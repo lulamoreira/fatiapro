@@ -3,13 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Box, Bookmark, FilePlus2, History, Monitor, LogOut, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
-import { FATIADORES, isConectado, parseRelatorio } from "@/lib/fatia";
+import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { Dot } from "@/components/fatia/Chip";
+import { AppSkeleton, PageSkeleton } from "@/components/fatia/AppSkeleton";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
+  pendingComponent: AppSkeleton,
 });
 
 const NAV = [
@@ -30,7 +32,7 @@ function useStatusComputador() {
   const { data: devices = [] } = useQuery(devicesQuery);
   const on = devices.find((d) => isConectado(d.ultimo_contato, now));
   const d = on ?? devices[0];
-  const fat = d ? parseRelatorio(d.relatorio).fatiadores.map((f) => FATIADORES.find((x) => x.id === f.id)?.label ?? f.id) : [];
+  const fat = d ? parseRelatorio(d.relatorio).fatiadores.map(nomeFatiador) : [];
   return { device: d, conectado: !!on, fatiadores: fat };
 }
 
@@ -52,6 +54,7 @@ function StatusCard() {
 function AppLayout() {
   const navigate = useNavigate();
   const status = useStatusComputador();
+  const { isLoading } = useQuery(devicesQuery);
   async function sair() {
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
@@ -97,7 +100,7 @@ function AppLayout() {
           </div>
         </header>
         <main className="flex-1 overflow-x-hidden px-4 pb-48 pt-5 md:px-8 md:pb-10 md:pt-8">
-          <Outlet />
+          {isLoading ? <PageSkeleton /> : <Outlet />}
           <p className="mt-10 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground md:hidden">
             <ShieldCheck className="size-4 text-success" aria-hidden />Nada é enviado para a impressora
           </p>
