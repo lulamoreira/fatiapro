@@ -24,6 +24,7 @@ import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/publ
 import { Route as ApiPublicBridgeCommandsNextRouteImport } from './routes/api/public/bridge/commands.next'
 import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
 import { Route as ApiPublicBridgeJobsIdEventsRouteImport } from './routes/api/public/bridge/jobs.$id.events'
+import { Route as ApiPublicBridgeJobsIdUploadUrlRouteImport } from './routes/api/public/bridge/jobs.$id.upload-url'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -107,6 +108,12 @@ const ApiPublicBridgeJobsIdEventsRoute =
     path: '/api/public/bridge/jobs/$id/events',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBridgeJobsIdUploadUrlRoute =
+  ApiPublicBridgeJobsIdUploadUrlRouteImport.update({
+    id: '/api/public/bridge/jobs/$id/upload-url',
+    path: '/api/public/bridge/jobs/$id/upload-url',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
+  '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
+  '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -156,6 +165,7 @@ export interface FileRoutesById {
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
+  '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
+    | '/api/public/bridge/jobs/$id/upload-url'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
+    | '/api/public/bridge/jobs/$id/upload-url'
   id:
     | '__root__'
     | '/'
@@ -206,6 +218,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
+    | '/api/public/bridge/jobs/$id/upload-url'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -218,6 +231,7 @@ export interface RootRouteChildren {
   ApiPublicBridgeCommandsNextRoute: typeof ApiPublicBridgeCommandsNextRoute
   ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
   ApiPublicBridgeJobsIdEventsRoute: typeof ApiPublicBridgeJobsIdEventsRoute
+  ApiPublicBridgeJobsIdUploadUrlRoute: typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -327,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeJobsIdEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bridge/jobs/$id/upload-url': {
+      id: '/api/public/bridge/jobs/$id/upload-url'
+      path: '/api/public/bridge/jobs/$id/upload-url'
+      fullPath: '/api/public/bridge/jobs/$id/upload-url'
+      preLoaderRoute: typeof ApiPublicBridgeJobsIdUploadUrlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -370,6 +391,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBridgeCommandsNextRoute: ApiPublicBridgeCommandsNextRoute,
   ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,
   ApiPublicBridgeJobsIdEventsRoute: ApiPublicBridgeJobsIdEventsRoute,
+  ApiPublicBridgeJobsIdUploadUrlRoute: ApiPublicBridgeJobsIdUploadUrlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
