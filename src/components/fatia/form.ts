@@ -86,13 +86,29 @@ const num = (s: string): number | null => {
 };
 const str = (v: unknown) => (v == null ? "" : String(v));
 
+interface OpcoesSalvas {
+  roteiro?: string | null;
+  fatiador?: string | null;
+  motor?: string | null;
+  usar_peca_aberta?: boolean;
+  impressora?: string | null;
+  bico?: string;
+  filamento?: { tipo?: string | null; marca?: string | null; linha?: string | null };
+  filamento_marca_escolhida?: string | null;
+  finalidades?: unknown;
+  prioridades?: unknown;
+  gramas_restantes?: unknown;
+  preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
+}
+const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+
 /** Rebuild a form from a saved preset or an earlier job. */
 export function fromOpcoes(
   base: { roteiro?: string | null; fatiador?: string | null; motor?: string | null; device_id?: string | null },
   raw: unknown,
 ): FormState {
-  const o = (raw ?? {}) as Record<string, any>;
-  const p = (o.preco ?? {}) as Record<string, unknown>;
+  const o = (raw ?? {}) as OpcoesSalvas;
+  const p = o.preco ?? {};
   return {
     ...FORM_INICIAL,
     deviceId: base.device_id ?? null,
@@ -106,8 +122,8 @@ export function fromOpcoes(
     filMarca: o.filamento_marca_escolhida ?? o.filamento?.marca ?? null,
     filMarcaOutra: o.filamento_marca_escolhida === MARCA_OUTRA ? str(o.filamento?.marca) : "",
     filLinha: o.filamento?.linha ?? null,
-    finalidades: Array.isArray(o.finalidades) ? o.finalidades : [],
-    prioridades: Array.isArray(o.prioridades) ? o.prioridades.slice(0, 2) : [],
+    finalidades: strArr(o.finalidades),
+    prioridades: strArr(o.prioridades).slice(0, 2),
     gramasRestantes: str(o.gramas_restantes),
     preco: {
       precoRolo: str(p.preco_rolo_brl),
@@ -124,7 +140,8 @@ export function fromOpcoes(
   };
 }
 
-export type Erros = Partial<Record<string, string>>;
+export type ErroKey = "device" | "roteiro" | "fatiador" | "peca" | "impressora" | "filamento" | "motor" | "gramasRestantes" | keyof PrecoCampos;
+export type Erros = Partial<Record<ErroKey, string>>;
 
 export function validar(f: FormState, temArquivo: boolean): Erros {
   const e: Erros = {};
