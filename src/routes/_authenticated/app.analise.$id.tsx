@@ -9,6 +9,8 @@ import { jobEventsQuery, jobQuery } from "@/lib/queries";
 import { ESTADOS, fatiadorLabel, isConectado, roteiroLabel, type Estado } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
+import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
+import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialog";
 import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
 import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
@@ -189,6 +191,12 @@ function AnalisePage() {
           </div>
           <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
         </div>
+        {estado === "concluido" && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <SalvarModeloDialog job={job} trigger="button" />
+            <SalvarBibliotecaDialog job={job} trigger="button" />
+          </div>
+        )}
         {podeCancelar && !mostrarAprovacao && (
           <div className="mt-4 flex justify-end">
             <Button variant="ghost" size="sm" onClick={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}>Cancelar análise</Button>

@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight } from "lucide-react";
 import { useDevicesLive } from "@/hooks/use-devices-live";
+import type { Tables } from "@/integrations/supabase/types";
+import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
+import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialog";
 
 export const Route = createFileRoute("/_authenticated/app/historico")({
   validateSearch: z.object({ pagina: z.number().int().min(0).catch(0).default(0) }),
@@ -99,7 +102,7 @@ function HistoricoPage() {
                       <td className="p-3 tabular">{custo(j.motor, j.custo_real)}</td>
                       <td className="p-3"><Tag tone={est.tone}>{est.label}</Tag></td>
                       <td className="p-3">
-                        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                        <div className="flex flex-wrap items-center justify-end gap-1.5">
                           <Acoes j={j} onAbrirPasta={abrirPasta} onRepetir={(id) => navigate({ to: "/app/nova-analise", search: { repetir: id } })} />
                           <Button size="sm" onClick={(e) => { e.stopPropagation(); abrir(); }}>Ver análise<ChevronRight className="size-4" aria-hidden /></Button>
                         </div>
@@ -152,7 +155,7 @@ function HistoricoPage() {
 }
 
 interface AcoesProps {
-  j: { id: string; estado: string; resultado: unknown; device_id: string | null };
+  j: Tables<"jobs">;
   onAbrirPasta: (jobId: string, deviceId: string | null) => void;
   onRepetir: (jobId: string) => void;
 }
@@ -164,6 +167,10 @@ function Acoes({ j, onAbrirPasta, onRepetir }: AcoesProps) {
         <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onAbrirPasta(j.id, j.device_id); }}>Abrir pasta</Button>
       )}
       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onRepetir(j.id); }}>Repetir</Button>
+      <span onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} className="contents">
+        <SalvarModeloDialog job={j} />
+        <SalvarBibliotecaDialog job={j} />
+      </span>
     </>
   );
 }

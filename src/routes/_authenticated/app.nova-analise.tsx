@@ -14,6 +14,10 @@ import {
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
+import { BibliotecaPicker, type PecaEscolhida } from "@/components/fatia/BibliotecaPicker";
+import type { AjusteModelo } from "@/components/fatia/SalvarModeloDialog";
+import { nomeDoPath } from "@/lib/storage";
+import { X } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
 import { Chip, ChipGroup, Dot } from "@/components/fatia/Chip";
 import { CostCard } from "@/components/fatia/CostCard";
@@ -27,7 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app/nova-analise")({
-  validateSearch: z.object({ repetir: z.string().uuid().optional().catch(undefined) }),
+  validateSearch: z.object({ repetir: z.string().uuid().optional().catch(undefined), modelo: z.string().uuid().optional().catch(undefined), peca: z.string().uuid().optional().catch(undefined) }),
   head: () => ({ meta: [{ title: "Nova análise — FatiaPro" }, { name: "description", content: "Peça uma nova análise de fatiamento ao seu computador." }] }),
   component: NovaAnalise,
 });
@@ -43,7 +47,7 @@ function Campo({ titulo, erro, children }: { titulo: string; erro?: string | und
 }
 
 function NovaAnalise() {
-  const { repetir } = Route.useSearch();
+  const { repetir, modelo, peca } = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const now = useNow(5000);
@@ -56,6 +60,8 @@ function NovaAnalise() {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
+  const [pecaBib, setPecaBib] = useState<PecaEscolhida | null>(null);
+  const [ajustes, setAjustes] = useState<AjusteModelo[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
@@ -75,6 +81,28 @@ function NovaAnalise() {
     });
   }, [repetir]);
 
+  function aplicarModelo(opcoes: unknown) {
+    setF((cur) => ({ ...fromOpcoes({}, opcoes), deviceId: cur.deviceId }));
+    const lista = (opcoes as { ajustes_modelo?: unknown } | null)?.ajustes_modelo;
+    setAjustes(Array.isArray(lista) ? lista.filter((a): a is AjusteModelo => !!a && typeof (a as AjusteModelo).titulo === "string") : []);
+  }
+
+  // Prefill from "Meus modelos → Usar".
+  useEffect(() => {
+    if (!modelo) return;
+    supabase.from("presets").select("opcoes").eq("id", modelo).maybeSingle().then(({ data }) => {
+      if (data) aplicarModelo(data.opcoes);
+    });
+  }, [modelo]);
+
+  // Prefill the part from the library.
+  useEffect(() => {
+    if (!peca) return;
+    supabase.from("pecas").select("id, nome, arquivo_original_path").eq("id", peca).maybeSingle().then(({ data }) => {
+      if (data?.arquivo_original_path) { setPecaBib({ id: data.id, nome: data.nome, path: data.arquivo_original_path }); setArquivo(null); set("usarAberta", false); }
+    });
+  }, [peca]);
+
   const device = devices.find((d) => d.id === f.deviceId);
   const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
@@ -88,7 +116,7 @@ function NovaAnalise() {
   const pastaFinal = pastaSaida ?? pastaPadrao;
   const filMarcaNome = f.filMarca === MARCA_OUTRA ? f.filMarcaOutra : f.filMarca;
   const nomeArquivo = nomeArquivoOtimizado({
-    peca: arquivo && !f.usarAberta ? arquivo.name : null,
+    peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? nomeDoPath(pecaBib.path) : null,
     impressora: f.impressora,
     bico: f.bico,
     marca: filMarcaNome,
@@ -104,6 +132,7 @@ function NovaAnalise() {
     if (!EXTENSOES.includes(ext)) { toast.error("Use arquivos .stl, .3mf, .step ou .stp."); return; }
     if (file.size > MAX_BYTES) { toast.error("O arquivo passa de 100 MB."); return; }
     setArquivo(file);
+    setPecaBib(null);
     set("usarAberta", false);
   }
 
@@ -120,7 +149,7 @@ function NovaAnalise() {
   }
 
   async function analisar() {
-    const e = validar(f, !!arquivo);
+    const e = validar(f, !!arquivo || !!pecaBib);
     setErros(e);
     if (Object.keys(e).length) { toast.error("Confira os campos destacados."); return; }
     setEnviando(true);
@@ -133,6 +162,8 @@ function NovaAnalise() {
         arquivo_path = `${u.user.id}/${crypto.randomUUID()}/${safeName}`;
         const { error: upErr } = await supabase.storage.from("pecas").upload(arquivo_path, arquivo, { upsert: false });
         if (upErr) throw upErr;
+      } else if (pecaBib && !f.usarAberta) {
+        arquivo_path = pecaBib.path; // reuse stored file, no re-upload
       }
       const { data, error } = await supabase
         .from("jobs")
@@ -141,9 +172,9 @@ function NovaAnalise() {
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
           motor: f.motor!,
-          opcoes: { ...toOpcoes(f), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo } as Json,
+          opcoes: { ...toOpcoes(f), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json } as Json,
           arquivo_path,
-          nome_peca: arquivo && !f.usarAberta ? arquivo.name : null,
+          nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? nomeDoPath(pecaBib.path) : null,
         })
         .select("id")
         .single();
@@ -175,7 +206,7 @@ function NovaAnalise() {
           <DropdownMenuTrigger asChild><Button variant="ghost" size="sm">Meus modelos <ChevronDown className="size-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {presets.length === 0 ? <DropdownMenuItem disabled>Nenhum modelo salvo</DropdownMenuItem> : presets.map((p) => (
-              <DropdownMenuItem key={p.id} onClick={() => setF((cur) => ({ ...fromOpcoes({}, p.opcoes), deviceId: cur.deviceId }))}>{p.nome}</DropdownMenuItem>
+              <DropdownMenuItem key={p.id} onClick={() => aplicarModelo(p.opcoes)}>{p.nome}</DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -198,6 +229,20 @@ function NovaAnalise() {
         <ChipGroup label="Roteiro" options={ROTEIROS} value={f.roteiro} onChange={(v) => set("roteiro", v)} />
       </Campo>
 
+      {ajustes.length > 0 && (
+        <Campo titulo="Mudanças deste modelo">
+          <ul className="flex flex-wrap gap-2">
+            {ajustes.map((a) => (
+              <li key={a.titulo} className="inline-flex items-center gap-1 rounded-full border bg-accent py-1 pl-3 pr-1 text-sm">
+                {a.titulo}
+                <button type="button" aria-label={`Remover ${a.titulo}`} className="rounded-full p-1 hover:bg-background" onClick={() => setAjustes((l) => l.filter((x) => x !== a))}><X className="size-3.5" /></button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">O computador aplica essas mudanças primeiro e depois analisa o que mais dá para melhorar.</p>
+        </Campo>
+      )}
+
       <Campo titulo={`Fatiador${preco ? " (opcional)" : ""}`} erro={erros.fatiador}>
         {fatOpts.length === 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
@@ -210,19 +255,20 @@ function NovaAnalise() {
       </Campo>
 
       <Campo titulo={`Peça${preco ? " (opcional)" : ""}`} erro={erros.peca}>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto]">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files[0]); }}
-            className={cn("flex items-center gap-3 rounded-2xl border-2 border-dashed p-5 text-left transition-colors hover:border-primary/60 hover:bg-accent/40", arquivo && "border-primary bg-accent/40")}
+            className={cn("flex items-center gap-3 rounded-2xl border-2 border-dashed p-5 text-left transition-colors hover:border-primary/60 hover:bg-accent/40", (arquivo || pecaBib) && "border-primary bg-accent/40")}
           >
-            {arquivo ? <FileBox className="size-6 text-primary" aria-hidden /> : <Upload className="size-6 text-muted-foreground" aria-hidden />}
-            <span className="text-sm">{arquivo ? <><b>{arquivo.name}</b> · {(arquivo.size / 1048576).toFixed(1)} MB</> : "Arraste o arquivo aqui ou clique (.stl, .3mf, .step, .stp · até 100 MB)"}</span>
+            {arquivo || pecaBib ? <FileBox className="size-6 text-primary" aria-hidden /> : <Upload className="size-6 text-muted-foreground" aria-hidden />}
+            <span className="text-sm">{!arquivo && pecaBib ? <><b>{pecaBib.nome}</b> · da biblioteca</> : arquivo ? <><b>{arquivo.name}</b> · {(arquivo.size / 1048576).toFixed(1)} MB</> : "Arraste o arquivo aqui ou clique (.stl, .3mf, .step, .stp · até 100 MB)"}</span>
           </button>
           <input ref={fileRef} type="file" accept=".stl,.3mf,.step,.stp" className="hidden" onChange={(e) => escolherArquivo(e.target.files?.[0])} />
-          <Chip className="self-center" selected={f.usarAberta} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); }}>Usar a peça aberta no fatiador</Chip>
+          <Chip className="self-center" selected={f.usarAberta} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); setPecaBib(null); }}>Usar a peça aberta no fatiador</Chip>
+          <BibliotecaPicker selected={!!pecaBib} onPick={(p) => { setPecaBib(p); setArquivo(null); set("usarAberta", false); }} />
         </div>
       </Campo>
 

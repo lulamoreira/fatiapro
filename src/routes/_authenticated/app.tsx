@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { FilePlus2, History, Monitor, LogOut, Menu, X, ShieldCheck } from "lucide-react";
+import { Box, Bookmark, FilePlus2, History, Monitor, LogOut, Menu, X, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,8 @@ export const Route = createFileRoute("/_authenticated/app")({
 const NAV = [
   { to: "/app/nova-analise", label: "Nova análise", icon: FilePlus2 },
   { to: "/app/historico", label: "Histórico", icon: History },
+  { to: "/app/biblioteca", label: "Biblioteca de peças", icon: Box },
+  { to: "/app/modelos", label: "Meus modelos", icon: Bookmark },
   { to: "/app/computador", label: "Seu computador", icon: Monitor },
 ] as const;
 
