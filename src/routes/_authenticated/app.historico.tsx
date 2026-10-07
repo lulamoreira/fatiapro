@@ -50,7 +50,7 @@ function HistoricoPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <h1 className="text-3xl font-bold">Histórico</h1>
+      <h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">Gasto na API este mês</p>
@@ -66,7 +66,7 @@ function HistoricoPage() {
         <Skeleton className="h-64 rounded-2xl" />
       ) : !data?.rows.length ? (
         <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">
-          Nenhuma análise ainda. <Link to="/app/nova-analise" className="font-semibold text-primary">Fazer a primeira</Link>
+          Nenhuma análise ainda. <Link to="/app/nova-analise" className="font-semibold text-primary-ink">Fazer a primeira</Link>
         </div>
       ) : (
         <>
@@ -93,7 +93,7 @@ function HistoricoPage() {
                       onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}
                     >
                       <td className="p-3">
-                        <Link to="/app/analise/$id" params={{ id: j.id }} onClick={(e) => e.stopPropagation()} className="font-medium text-primary hover:underline">{peca}</Link>
+                        <Link to="/app/analise/$id" params={{ id: j.id }} onClick={(e) => e.stopPropagation()} className="font-medium text-primary-ink hover:underline">{peca}</Link>
                         <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
                       </td>
                       <td className="p-3">{fatiadorLabel(j.fatiador)}</td>
@@ -119,10 +119,10 @@ function HistoricoPage() {
               const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
               const peca = j.nome_peca ?? "Peça aberta no fatiador";
               return (
-                <li key={j.id} className="rounded-2xl border bg-card p-4">
+                <li key={j.id} className="lift rounded-2xl border bg-card/70 p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <Link to="/app/analise/$id" params={{ id: j.id }} aria-label={`Abrir análise de ${peca}`} className="break-words font-medium text-primary hover:underline">{peca}</Link>
+                      <Link to="/app/analise/$id" params={{ id: j.id }} aria-label={`Abrir análise de ${peca}`} className="break-words font-medium text-primary-ink hover:underline">{peca}</Link>
                       <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
                     </div>
                     <Tag tone={est.tone}>{est.label}</Tag>

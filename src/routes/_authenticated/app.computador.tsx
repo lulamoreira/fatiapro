@@ -65,7 +65,7 @@ function ComputadorPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Seu computador</h1>
+          <h1 className="text-[30px] font-bold tracking-[-0.02em]">Seu computador</h1>
           <p className="mt-1 text-muted-foreground">A ponte FatiaPro roda no seu computador e faz as análises nos seus fatiadores.</p>
         </div>
         <Button onClick={gerar} size="lg"><Plug className="size-4" />Conectar computador</Button>
@@ -82,7 +82,7 @@ function ComputadorPage() {
               </p>
             </>
           ) : (
-            <p className="text-sm">O código expirou. <button className="font-semibold text-primary underline" onClick={gerar}>Gerar outro</button></p>
+            <p className="text-sm">O código expirou. <button className="font-semibold text-primary-ink underline" onClick={gerar}>Gerar outro</button></p>
           )}
         </div>
       )}

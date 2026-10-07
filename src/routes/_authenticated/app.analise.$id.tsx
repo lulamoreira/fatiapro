@@ -110,7 +110,7 @@ function AnalisePage() {
     return (
       <div className="mx-auto max-w-md text-center">
         <p>Análise não encontrada.</p>
-        <Link to="/app/historico" className="font-semibold text-primary">Ver histórico</Link>
+        <Link to="/app/historico" className="font-semibold text-primary-ink">Ver histórico</Link>
       </div>
     );
 
@@ -178,7 +178,7 @@ function AnalisePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Link to="/app/historico" search={{ pagina: 0 }} className="inline-flex text-sm font-medium text-muted-foreground hover:text-primary">← Voltar ao histórico</Link>
+      <Link to="/app/historico" search={{ pagina: 0 }} className="inline-flex text-sm font-medium text-muted-foreground hover:text-primary-ink">← Voltar ao histórico</Link>
       <header className="rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -231,7 +231,7 @@ function AnalisePage() {
               <li key={e.id} className="relative">
                 <span className="absolute -left-[1.4rem] top-1.5 size-2.5 rounded-full bg-primary" aria-hidden />
                 <p className="flex items-center gap-2 text-sm">
-                  {!terminal && i === progresso.length - 1 && <Loader2 className="size-3.5 shrink-0 animate-spin text-primary" aria-label="em andamento" />}{String((e.conteudo as { texto?: unknown })?.texto ?? "")}</p>
+                  {!terminal && i === progresso.length - 1 && <Loader2 className="size-3.5 shrink-0 animate-spin text-primary-ink" aria-label="em andamento" />}{String((e.conteudo as { texto?: unknown })?.texto ?? "")}</p>
                 <p className="text-xs text-muted-foreground">{new Date(e.criado_em).toLocaleTimeString("pt-BR")}</p>
               </li>
             ))}

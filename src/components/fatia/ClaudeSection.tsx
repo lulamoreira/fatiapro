@@ -81,7 +81,7 @@ export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionP
           <Tag tone="primary">Chave de API</Tag>
           <p className="text-sm text-muted-foreground">
             O FatiaPro usa a sua própria chave de API da Anthropic. Você paga direto à Anthropic só o que usar, e o app mostra o custo antes de cada análise.{" "}
-            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2">Como criar uma chave</a>
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-ink underline underline-offset-2">Como criar uma chave</a>
           </p>
         </div>
       )}

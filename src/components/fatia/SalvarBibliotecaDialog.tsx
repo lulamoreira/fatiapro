@@ -82,7 +82,7 @@ export function SalvarBibliotecaDialog({ job, trigger }: { job: Tables<"jobs">; 
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <DialogHeader><DialogTitle>Salvar na biblioteca</DialogTitle></DialogHeader>
         {info?.jaSalva ? (
-          <p className="text-sm">Já está na biblioteca. <Link to="/app/biblioteca" className="font-semibold text-primary underline">Ver biblioteca</Link></p>
+          <p className="text-sm">Já está na biblioteca. <Link to="/app/biblioteca" className="font-semibold text-primary-ink underline">Ver biblioteca</Link></p>
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5">

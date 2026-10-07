@@ -83,11 +83,11 @@ function ModelosPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <h1 className="text-3xl font-bold">Meus modelos</h1>
+      <h1 className="text-[30px] font-bold tracking-[-0.02em]">Meus modelos</h1>
       {isLoading ? <Skeleton className="h-48 rounded-2xl" /> : !data?.rows.length ? (
         <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">
           <Bookmark className="mx-auto mb-3 size-8" aria-hidden />
-          Salve um modelo a partir de uma análise no <Link to="/app/historico" search={{ pagina: 0 }} className="font-semibold text-primary">Histórico</Link>.
+          Salve um modelo a partir de uma análise no <Link to="/app/historico" search={{ pagina: 0 }} className="font-semibold text-primary-ink">Histórico</Link>.
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -98,7 +98,7 @@ function BibliotecaPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-3xl font-bold">Biblioteca de peças</h1>
+        <h1 className="text-[30px] font-bold tracking-[-0.02em]">Biblioteca de peças</h1>
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); navigate({ to: "/app/biblioteca", search: { pagina: 0, q: busca } }); }}>
           <Input placeholder="Buscar por nome" value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Buscar por nome" className="w-60" />
           <Button type="submit" variant="outline">Buscar</Button>
