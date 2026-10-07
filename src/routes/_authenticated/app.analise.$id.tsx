@@ -82,11 +82,17 @@ function AnalisePage() {
   const est = ESTADOS[estado];
   const opc = (job.opcoes ?? {}) as { impressora?: string; filamento?: { tipo?: string; marca?: string; linha?: string } };
   const progresso = eventos.filter((e) => e.tipo === "progresso");
-  const idxProposta = eventos.findLastIndex((e) => e.tipo === "proposta");
+  type Ev = (typeof eventos)[number];
+  const ultimo = (tipo: string): { ev: Ev; idx: number } | null => {
+    for (let i = eventos.length - 1; i >= 0; i--) { const ev = eventos[i]; if (ev && ev.tipo === tipo) return { ev, idx: i }; }
+    return null;
+  };
+  const prop = ultimo("proposta");
+  const idxProposta = prop?.idx ?? -1;
   const respondida = idxProposta >= 0 && eventos.slice(idxProposta + 1).some((e) => e.tipo === "aprovacao" || e.tipo === "pedido_outra" || e.tipo === "cancelamento");
-  const mostrarAprovacao = idxProposta >= 0 && !respondida && !TERMINAIS.includes(estado);
-  const resultado = eventos.findLast((e) => e.tipo === "resultado");
-  const erroEv = eventos.findLast((e) => e.tipo === "erro");
+  const mostrarAprovacao = !!prop && !respondida && !TERMINAIS.includes(estado);
+  const resultado = ultimo("resultado")?.ev;
+  const erroEv = ultimo("erro")?.ev;
   const podeCancelar = !TERMINAIS.includes(estado);
 
   return (
@@ -130,10 +136,10 @@ function AnalisePage() {
         )}
       </section>
 
-      {mostrarAprovacao && (
+      {mostrarAprovacao && prop && (
         <Approval
-          key={eventos[idxProposta].id}
-          proposta={eventos[idxProposta].conteudo as unknown as Proposta}
+          key={prop.ev.id}
+          proposta={prop.ev.conteudo as unknown as Proposta}
           disabled={enviar.isPending}
           onAprovar={(ids) => enviar.mutate({ tipo: "aprovacao", conteudo: { itens_aprovados: ids } })}
           onPedirOutra={(texto) => enviar.mutate({ tipo: "pedido_outra", conteudo: { texto } })}

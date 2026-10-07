@@ -41,7 +41,7 @@ function ComputadorPage() {
   // Fallback polling while a pairing code is visible.
   const restante = codigo ? Math.max(0, Math.floor((codigo.expira - now) / 1000)) : 0;
   useEffect(() => {
-    if (!codigo) return;
+    if (!codigo) return undefined;
     const t = setInterval(() => qc.invalidateQueries({ queryKey: ["devices"] }), 4000);
     return () => clearInterval(t);
   }, [codigo, qc]);
@@ -58,7 +58,10 @@ function ComputadorPage() {
   async function gerar() {
     const { data, error } = await supabase.rpc("create_pairing_code");
     const row = Array.isArray(data) ? data[0] : null;
-    if (error || !row) return toast.error("Não foi possível gerar o código.");
+    if (error || !row) {
+      toast.error("Não foi possível gerar o código.");
+      return;
+    }
     setQtdInicial(devices?.length ?? 0);
     setCodigo({ codigo: row.codigo, expira: Date.parse(row.expira_em) });
   }

@@ -57,7 +57,8 @@ function NovaAnalise() {
   useEffect(() => {
     if (f.deviceId || !devices.length) return;
     const on = devices.find((d) => isConectado(d.ultimo_contato, Date.now()));
-    set("deviceId", (on ?? devices[0]).id);
+    const alvo = on ?? devices[0];
+    if (alvo) set("deviceId", alvo.id);
   }, [devices, f.deviceId]);
 
   // Prefill from "Repetir com outras opções".
@@ -83,8 +84,8 @@ function NovaAnalise() {
   function escolherArquivo(file: File | undefined) {
     if (!file) return;
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!EXTENSOES.includes(ext)) return toast.error("Use arquivos .stl, .3mf, .step ou .stp.");
-    if (file.size > MAX_BYTES) return toast.error("O arquivo passa de 100 MB.");
+    if (!EXTENSOES.includes(ext)) { toast.error("Use arquivos .stl, .3mf, .step ou .stp."); return; }
+    if (file.size > MAX_BYTES) { toast.error("O arquivo passa de 100 MB."); return; }
     setArquivo(file);
     set("usarAberta", false);
   }
@@ -96,7 +97,7 @@ function NovaAnalise() {
       nome: nome.trim().slice(0, 80),
       opcoes: { ...toOpcoes(f), roteiro: f.roteiro, fatiador: f.fatiador, motor: f.motor } as Json,
     });
-    if (error) return toast.error("Não foi possível salvar o modelo.");
+    if (error) { toast.error("Não foi possível salvar o modelo."); return; }
     toast.success("Modelo salvo.");
     qc.invalidateQueries({ queryKey: ["presets"] });
   }
@@ -104,7 +105,7 @@ function NovaAnalise() {
   async function analisar() {
     const e = validar(f, !!arquivo);
     setErros(e);
-    if (Object.keys(e).length) return toast.error("Confira os campos destacados.");
+    if (Object.keys(e).length) { toast.error("Confira os campos destacados."); return; }
     setEnviando(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -144,7 +145,7 @@ function NovaAnalise() {
         <div className="flex min-w-0 items-center gap-3">
           <Dot on={conectado} />
           {devices.length ? (
-            <Select value={f.deviceId ?? undefined} onValueChange={(v) => setF((p) => ({ ...p, deviceId: v, fatiador: null, impressora: null, motor: null }))}>
+            <Select value={f.deviceId ?? ""} onValueChange={(v) => setF((p) => ({ ...p, deviceId: v, fatiador: null, impressora: null, motor: null }))}>
               <SelectTrigger className="w-64" aria-label="Computador"><SelectValue placeholder="Escolha o computador" /></SelectTrigger>
               <SelectContent>{devices.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
             </Select>
@@ -204,7 +205,7 @@ function NovaAnalise() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <Campo titulo="Impressora" erro={erros.impressora}>
           {impressoras.length ? (
-            <Select value={f.impressora ?? undefined} onValueChange={(v) => set("impressora", v)}>
+            <Select value={f.impressora ?? ""} onValueChange={(v) => set("impressora", v)}>
               <SelectTrigger aria-label="Impressora"><SelectValue placeholder="Escolha a impressora" /></SelectTrigger>
               <SelectContent>{impressoras.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
             </Select>

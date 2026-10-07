@@ -54,8 +54,9 @@ export interface BridgeDevice {
 export async function authDevice(request: Request): Promise<BridgeDevice | null> {
   const h = request.headers.get("authorization") ?? "";
   const m = /^Bearer\s+(.+)$/i.exec(h);
-  if (!m) return null;
-  const hash = await sha256Hex(m[1].trim());
+  const tok = m?.[1]?.trim();
+  if (!tok) return null;
+  const hash = await sha256Hex(tok);
   const { data, error } = await supabaseAdmin
     .from("devices")
     .select("id, user_id, limite_gasto_usd")

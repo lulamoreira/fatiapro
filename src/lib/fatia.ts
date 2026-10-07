@@ -74,30 +74,27 @@ const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is 
 
 /** Defensive parser: the relatório comes from an external program. */
 export function parseRelatorio(raw: unknown): Relatorio {
-  const r = isRecord(raw) ? raw : {};
+  const r = (isRecord(raw) ? raw : {}) as { fatiadores?: unknown; motores?: unknown };
   const fatiadores: FatiadorRelatorio[] = [];
   if (Array.isArray(r.fatiadores)) {
-    for (const f of r.fatiadores) {
-      if (!isRecord(f)) continue;
+    for (const item of r.fatiadores) {
+      if (!isRecord(item)) continue;
+      const f = item as { id?: unknown; versao?: unknown; impressoras?: unknown; filamentos?: unknown };
       const id = f.id;
       if (!FATIADORES.some((x) => x.id === id)) continue;
       const fil: Record<string, Record<string, string[]>> = {};
       if (isRecord(f.filamentos)) {
         for (const [tipo, marcas] of Object.entries(f.filamentos)) {
           if (!isRecord(marcas)) continue;
-          fil[tipo] = {};
-          for (const [marca, linhas] of Object.entries(marcas)) fil[tipo][marca] = strArr(linhas);
+          const porMarca: Record<string, string[]> = {};
+          for (const [marca, linhas] of Object.entries(marcas)) porMarca[marca] = strArr(linhas);
+          fil[tipo] = porMarca;
         }
       }
-      fatiadores.push({
-        id: id as FatiadorId,
-        versao: typeof f.versao === "string" ? f.versao : null,
-        impressoras: strArr(f.impressoras),
-        filamentos: fil,
-      });
+      fatiadores.push({ id: id as FatiadorId, versao: typeof f.versao === "string" ? f.versao : null, impressoras: strArr(f.impressoras), filamentos: fil });
     }
   }
-  const m = isRecord(r.motores) ? r.motores : {};
+  const m = (isRecord(r.motores) ? r.motores : {}) as { assinatura?: unknown; api?: unknown };
   return { fatiadores, motores: { assinatura: m.assinatura === true, api: m.api === true } };
 }
 
