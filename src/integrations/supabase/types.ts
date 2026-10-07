@@ -260,6 +260,50 @@ export type Database = {
         }
         Relationships: []
       }
+      pecas: {
+        Row: {
+          arquivo_original_path: string | null
+          arquivo_otimizado_path: string | null
+          atualizado_em: string
+          criado_em: string
+          id: string
+          job_id: string | null
+          nome: string
+          observacao: string | null
+          user_id: string
+        }
+        Insert: {
+          arquivo_original_path?: string | null
+          arquivo_otimizado_path?: string | null
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          job_id?: string | null
+          nome: string
+          observacao?: string | null
+          user_id?: string
+        }
+        Update: {
+          arquivo_original_path?: string | null
+          arquivo_otimizado_path?: string | null
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          job_id?: string | null
+          nome?: string
+          observacao?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pecas_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       presets: {
         Row: {
           criado_em: string
