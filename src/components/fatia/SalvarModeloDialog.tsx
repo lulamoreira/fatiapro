@@ -131,7 +131,7 @@ export function SalvarModeloDialog({ job, trigger }: { job: Tables<"jobs">; trig
             {erroNome && <p className="text-xs text-destructive" role="alert">{erroNome}</p>}
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-xl bg-muted p-3 text-sm">
-            {linhas.map(([k, v]) => (<><dt key={`k-${k}`} className="text-muted-foreground">{k}</dt><dd key={`v-${k}`} className="break-words">{v}</dd></>))}
+            {linhas.map(([k, v]) => (<div key={k} className="contents"><dt className="text-muted-foreground">{k}</dt><dd className="break-words">{v}</dd></div>))}
           </dl>
           {ajustes.length > 0 && (
             <div className="space-y-2">
