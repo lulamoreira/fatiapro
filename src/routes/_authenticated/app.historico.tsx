@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronRight } from "lucide-react";
+import { useDevicesLive } from "@/hooks/use-devices-live";
 
 export const Route = createFileRoute("/_authenticated/app/historico")({
   validateSearch: z.object({ pagina: z.number().int().min(0).catch(0).default(0) }),
@@ -32,6 +34,7 @@ function HistoricoPage() {
   const { pagina } = Route.useSearch();
   const navigate = useNavigate();
   const { data: devices = [] } = useQuery(devicesQuery);
+  useDevicesLive();
   async function abrirPasta(jobId: string, deviceId: string | null) {
     const { error } = await supabase.from("job_events").insert({ job_id: jobId, tipo: "acao", conteudo: { acao: "abrir_pasta" } });
     if (error) { toast.error("Não foi possível enviar o pedido."); return; }
@@ -63,42 +66,79 @@ function HistoricoPage() {
           Nenhuma análise ainda. <Link to="/app/nova-analise" className="font-semibold text-primary">Fazer a primeira</Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-card">
-          <table className="w-full min-w-[820px] text-sm">
-            <thead className="border-b text-left text-muted-foreground">
-              <tr>
-                <th className="p-3 font-medium">Peça</th><th className="p-3 font-medium">Fatiador</th><th className="p-3 font-medium">Antes → depois</th>
-                <th className="p-3 font-medium">Motor</th><th className="p-3 font-medium">Custo real</th><th className="p-3 font-medium">Estado</th><th className="p-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {data.rows.map((j) => {
-                const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
-                return (
-                  <tr key={j.id} className="cursor-pointer border-b last:border-0 hover:bg-accent/50" onClick={() => navigate({ to: "/app/analise/$id", params: { id: j.id } })}>
-                    <td className="p-3">
-                      <p className="font-medium">{j.nome_peca ?? "Peça aberta no fatiador"}</p>
+        <>
+          <div className="hidden overflow-x-auto rounded-2xl border bg-card md:block">
+            <table className="w-full min-w-[860px] text-sm">
+              <thead className="border-b text-left text-muted-foreground">
+                <tr>
+                  <th className="p-3 font-medium">Peça</th><th className="p-3 font-medium">Fatiador</th><th className="p-3 font-medium">Antes → depois</th>
+                  <th className="p-3 font-medium">Motor</th><th className="p-3 font-medium">Custo real</th><th className="p-3 font-medium">Estado</th><th className="p-3"><span className="sr-only">Ações</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((j) => {
+                  const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
+                  const peca = j.nome_peca ?? "Peça aberta no fatiador";
+                  const abrir = () => navigate({ to: "/app/analise/$id", params: { id: j.id } });
+                  return (
+                    <tr
+                      key={j.id}
+                      tabIndex={0}
+                      aria-label={`Abrir análise de ${peca}`}
+                      className="cursor-pointer border-b last:border-0 hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                      onClick={abrir}
+                      onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}
+                    >
+                      <td className="p-3">
+                        <Link to="/app/analise/$id" params={{ id: j.id }} onClick={(e) => e.stopPropagation()} className="font-medium text-primary hover:underline">{peca}</Link>
+                        <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
+                      </td>
+                      <td className="p-3">{fatiadorLabel(j.fatiador)}</td>
+                      <td className="p-3 tabular">{antesDepois(j.resultado)}</td>
+                      <td className="p-3">{motorLabel(j.motor)}</td>
+                      <td className="p-3 tabular">{custo(j.motor, j.custo_real)}</td>
+                      <td className="p-3"><Tag tone={est.tone}>{est.label}</Tag></td>
+                      <td className="p-3">
+                        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                          <Acoes j={j} onAbrirPasta={abrirPasta} onRepetir={(id) => navigate({ to: "/app/nova-analise", search: { repetir: id } })} />
+                          <Button size="sm" onClick={(e) => { e.stopPropagation(); abrir(); }}>Ver análise<ChevronRight className="size-4" aria-hidden /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="space-y-3 md:hidden">
+            {data.rows.map((j) => {
+              const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
+              const peca = j.nome_peca ?? "Peça aberta no fatiador";
+              return (
+                <li key={j.id} className="rounded-2xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link to="/app/analise/$id" params={{ id: j.id }} aria-label={`Abrir análise de ${peca}`} className="break-words font-medium text-primary hover:underline">{peca}</Link>
                       <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
-                    </td>
-                    <td className="p-3">{fatiadorLabel(j.fatiador)}</td>
-                    <td className="p-3 tabular">{antesDepois(j.resultado)}</td>
-                    <td className="p-3">{motorLabel(j.motor)}</td>
-                    <td className="p-3 tabular">{custo(j.motor, j.custo_real)}</td>
-                    <td className="p-3"><Tag tone={est.tone}>{est.label}</Tag></td>
-                    <td className="space-x-2 whitespace-nowrap p-3 text-right">
-                      {j.estado === "concluido" && arquivoDoResultado(j.resultado) && (
-                        <Button size="sm" onClick={(e) => { e.stopPropagation(); abrirPasta(j.id, j.device_id); }}>Abrir pasta</Button>
-                      )}
-                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate({ to: "/app/nova-analise", search: { repetir: j.id } }); }}>
-                        Repetir com outras opções
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    <Tag tone={est.tone}>{est.label}</Tag>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div><dt className="text-xs text-muted-foreground">Fatiador</dt><dd>{fatiadorLabel(j.fatiador)}</dd></div>
+                    <div><dt className="text-xs text-muted-foreground">Antes → depois</dt><dd className="tabular">{antesDepois(j.resultado)}</dd></div>
+                    <div><dt className="text-xs text-muted-foreground">Motor</dt><dd>{motorLabel(j.motor)}</dd></div>
+                    <div><dt className="text-xs text-muted-foreground">Custo real</dt><dd className="tabular">{custo(j.motor, j.custo_real)}</dd></div>
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <Acoes j={j} onAbrirPasta={abrirPasta} onRepetir={(id) => navigate({ to: "/app/nova-analise", search: { repetir: id } })} />
+                  </div>
+                  <Button className="mt-3 w-full" onClick={() => navigate({ to: "/app/analise/$id", params: { id: j.id } })}>Ver análise<ChevronRight className="size-4" aria-hidden /></Button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Página {pagina + 1} de {totalPaginas} · {data?.total ?? 0} análises</span>
@@ -108,5 +148,22 @@ function HistoricoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+interface AcoesProps {
+  j: { id: string; estado: string; resultado: unknown; device_id: string | null };
+  onAbrirPasta: (jobId: string, deviceId: string | null) => void;
+  onRepetir: (jobId: string) => void;
+}
+
+function Acoes({ j, onAbrirPasta, onRepetir }: AcoesProps) {
+  return (
+    <>
+      {j.estado === "concluido" && arquivoDoResultado(j.resultado) && (
+        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onAbrirPasta(j.id, j.device_id); }}>Abrir pasta</Button>
+      )}
+      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onRepetir(j.id); }}>Repetir</Button>
+    </>
   );
 }

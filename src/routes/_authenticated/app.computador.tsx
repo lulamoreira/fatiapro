@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery, type DeviceRow } from "@/lib/queries";
 import { FATIADORES, isConectado, parseRelatorio } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
+import { useDevicesLive } from "@/hooks/use-devices-live";
+import { ClaudeSection } from "@/components/fatia/ClaudeSection";
+import { EnviarComando } from "@/components/fatia/EnviarComando";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,15 +31,7 @@ function ComputadorPage() {
   const [codigo, setCodigo] = useState<{ codigo: string; expira: number } | null>(null);
   const now = useNow(1000);
 
-  useEffect(() => {
-    const ch = supabase
-      .channel("devices-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, () => qc.invalidateQueries({ queryKey: ["devices"] }))
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [qc]);
+  useDevicesLive();
 
   // Fallback polling while a pairing code is visible.
   const restante = codigo ? Math.max(0, Math.floor((codigo.expira - now) / 1000)) : 0;
@@ -165,6 +160,16 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
         <li><Tag tone={rel.motores.api ? "success" : "muted"}>API: {rel.motores.api ? "chave configurada" : "não configurada"}</Tag></li>
       </ul>
       <p className="mt-2 text-xs text-muted-foreground">A chave de API fica guardada no próprio computador e nunca vai para a nuvem.</p>
+
+      <ClaudeSection deviceId={d.id} usos={d.usos_claude ?? []} rel={rel} conectado={on} />
+
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold">Pasta dos arquivos otimizados</h3>
+          <p className="mt-1 break-all font-mono text-sm">{rel.pasta_saida_padrao ?? "Downloads/FatiaPro"}</p>
+        </div>
+        <EnviarComando deviceId={d.id} tipo="escolher_pasta" parametros={{ padrao: true }} conectado={on} variant="outline">Escolher pasta</EnviarComando>
+      </div>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">

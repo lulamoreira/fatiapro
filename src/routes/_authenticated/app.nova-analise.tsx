@@ -9,9 +9,12 @@ import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, FATIADORES, FINALIDADES, MARCA_GENERICA, MARCA_OUTRA, MOTORES, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
-  isConectado, linhasPara, marcasPara, parseRelatorio, togglePrioridade,
+  isConectado, linhasPara, nomeArquivoOtimizado, marcasPara, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
+import { useDevicesLive } from "@/hooks/use-devices-live";
+import { EnviarComando } from "@/components/fatia/EnviarComando";
+import { AlertTriangle } from "lucide-react";
 import { Chip, ChipGroup, Dot } from "@/components/fatia/Chip";
 import { CostCard } from "@/components/fatia/CostCard";
 import { PrecoFields } from "@/components/fatia/PrecoFields";
@@ -44,6 +47,9 @@ function NovaAnalise() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const now = useNow(5000);
+  useDevicesLive();
+  /** null = use the computer's default folder. */
+  const [pastaSaida, setPastaSaida] = useState<string | null>(null);
   const { data: devices = [] } = useQuery(devicesQuery);
   const { data: presets = [] } = useQuery(presetsQuery);
   const [f, setF] = useState<FormState>(FORM_INICIAL);
@@ -78,6 +84,17 @@ function NovaAnalise() {
   const marcas = f.filTipo ? marcasPara(fatRel, f.filTipo) : [];
   const linhas = f.filTipo && f.filMarca ? linhasPara(fatRel, f.filTipo, f.filMarca) : [];
   const motoresOk = MOTORES.filter((m) => rel.motores[m.id]);
+  const pastaPadrao = rel.pasta_saida_padrao ?? "Downloads/FatiaPro";
+  const pastaFinal = pastaSaida ?? pastaPadrao;
+  const filMarcaNome = f.filMarca === MARCA_OUTRA ? f.filMarcaOutra : f.filMarca;
+  const nomeArquivo = nomeArquivoOtimizado({
+    peca: arquivo && !f.usarAberta ? arquivo.name : null,
+    impressora: f.impressora,
+    bico: f.bico,
+    marca: filMarcaNome,
+    linha: f.filLinha,
+    data: new Date(now),
+  });
   const perfilEncontrado = !!(f.filTipo && f.filMarca && f.filMarca !== MARCA_GENERICA && f.filMarca !== MARCA_OUTRA && fatRel?.filamentos[f.filTipo]?.[f.filMarca]?.length);
   const preco = f.roteiro === "preco";
 
@@ -124,7 +141,7 @@ function NovaAnalise() {
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
           motor: f.motor!,
-          opcoes: toOpcoes(f) as Json,
+          opcoes: { ...toOpcoes(f), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo } as Json,
           arquivo_path,
           nome_peca: arquivo && !f.usarAberta ? arquivo.name : null,
         })
@@ -170,12 +187,19 @@ function NovaAnalise() {
         <p className="mt-1 text-muted-foreground">Escolha o que você quer e o seu computador faz o resto.</p>
       </div>
 
+      {device && !conectado && (
+        <p className="-mt-4 flex items-start gap-2 rounded-2xl bg-warning/25 p-4 text-sm text-warning-foreground dark:text-warning">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          Seu computador está desconectado agora. Você pode criar o pedido: ele fica na fila e roda quando o computador voltar.
+        </p>
+      )}
+
       <Campo titulo="Roteiro" erro={erros.roteiro}>
         <ChipGroup label="Roteiro" options={ROTEIROS} value={f.roteiro} onChange={(v) => set("roteiro", v)} />
       </Campo>
 
       <Campo titulo={`Fatiador${preco ? " (opcional)" : ""}`} erro={erros.fatiador}>
-        {!conectado || fatOpts.length === 0 ? (
+        {fatOpts.length === 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
             <p className="text-sm text-muted-foreground">Conecte um computador para escolher o fatiador</p>
             <Button asChild size="sm" variant="outline"><Link to="/app/computador">Seu computador</Link></Button>
@@ -245,10 +269,38 @@ function NovaAnalise() {
       {preco && <Campo titulo="Dados para o preço"><PrecoFields v={f.preco} onChange={(p) => set("preco", p)} erros={erros} /></Campo>}
 
       <Campo titulo="Motor" erro={erros.motor}>
-        {motoresOk.length ? <ChipGroup label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} /> : <p className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">Nenhum motor disponível neste computador — configure na ponte.</p>}
+        {motoresOk.length ? <ChipGroup label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} /> : (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
+            <p className="text-sm text-muted-foreground">Nenhum motor pronto neste computador.</p>
+            <Button asChild size="sm" variant="outline"><Link to="/app/computador" {...(device ? { hash: `claude-${device.id}` } : {})}>Configurar o Claude</Link></Button>
+          </div>
+        )}
       </Campo>
 
       <CostCard roteiro={f.roteiro} motor={f.motor} />
+
+      <section aria-label="Arquivo otimizado" className="rounded-2xl border bg-card p-5">
+        <p className="text-sm font-semibold">Arquivo otimizado</p>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+          <p className="min-w-0 text-sm">
+            Salvar em: <span className="break-all font-mono">{pastaFinal}</span>
+          </p>
+          {device && (
+            <EnviarComando
+              deviceId={device.id}
+              tipo="escolher_pasta"
+              parametros={{ padrao: false }}
+              conectado={conectado}
+              variant="link"
+              onConcluido={(r) => { if (typeof r["pasta"] === "string" && r["pasta"]) setPastaSaida(r["pasta"]); }}
+            >
+              Trocar só desta vez
+            </EnviarComando>
+          )}
+        </div>
+        <p className="mt-3 text-sm">Nome do arquivo:</p>
+        <p className="mt-1 break-all font-mono text-sm font-medium">{nomeArquivo}</p>
+      </section>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="outline" size="lg" onClick={salvarModelo}><BookmarkPlus className="size-4" />Salvar como modelo</Button>

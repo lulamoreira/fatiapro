@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      device_commands: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          device_id: string
+          estado: string
+          id: string
+          parametros: Json
+          resposta: Json | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          device_id: string
+          estado?: string
+          id?: string
+          parametros?: Json
+          resposta?: Json | null
+          tipo: string
+          user_id?: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          device_id?: string
+          estado?: string
+          id?: string
+          parametros?: Json
+          resposta?: Json | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           criado_em: string
@@ -26,6 +70,7 @@ export type Database = {
           token_hash: string
           ultimo_contato: string | null
           user_id: string
+          usos_claude: string[]
           versao_ponte: string | null
         }
         Insert: {
@@ -39,6 +84,7 @@ export type Database = {
           token_hash: string
           ultimo_contato?: string | null
           user_id: string
+          usos_claude?: string[]
           versao_ponte?: string | null
         }
         Update: {
@@ -52,6 +98,7 @@ export type Database = {
           token_hash?: string
           ultimo_contato?: string | null
           user_id?: string
+          usos_claude?: string[]
           versao_ponte?: string | null
         }
         Relationships: []
@@ -281,6 +328,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_next_command: {
+        Args: { p_device_id: string }
+        Returns: {
+          atualizado_em: string
+          criado_em: string
+          device_id: string
+          estado: string
+          id: string
+          parametros: Json
+          resposta: Json | null
+          tipo: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "device_commands"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_next_job: {
         Args: { p_device_id: string }
         Returns: {

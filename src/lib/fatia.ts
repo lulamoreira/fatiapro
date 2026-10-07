@@ -64,9 +64,15 @@ export interface FatiadorRelatorio {
   /** tipo → marca → linhas */
   filamentos: Record<string, Record<string, string[]>>;
 }
+export interface AssinaturaDetalhe {
+  instalado: boolean;
+  versao: string | null;
+  logado: boolean;
+}
 export interface Relatorio {
   fatiadores: FatiadorRelatorio[];
-  motores: { assinatura: boolean; api: boolean };
+  motores: { assinatura: boolean; api: boolean; assinatura_detalhe: AssinaturaDetalhe | null };
+  pasta_saida_padrao: string | null;
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -74,7 +80,7 @@ const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is 
 
 /** Defensive parser: the relatório comes from an external program. */
 export function parseRelatorio(raw: unknown): Relatorio {
-  const r = (isRecord(raw) ? raw : {}) as { fatiadores?: unknown; motores?: unknown };
+  const r = (isRecord(raw) ? raw : {}) as { fatiadores?: unknown; motores?: unknown; pasta_saida_padrao?: unknown };
   const fatiadores: FatiadorRelatorio[] = [];
   if (Array.isArray(r.fatiadores)) {
     for (const item of r.fatiadores) {
@@ -94,8 +100,17 @@ export function parseRelatorio(raw: unknown): Relatorio {
       fatiadores.push({ id: id as FatiadorId, versao: typeof f.versao === "string" ? f.versao : null, impressoras: strArr(f.impressoras), filamentos: fil });
     }
   }
-  const m = (isRecord(r.motores) ? r.motores : {}) as { assinatura?: unknown; api?: unknown };
-  return { fatiadores, motores: { assinatura: m.assinatura === true, api: m.api === true } };
+  const m = (isRecord(r.motores) ? r.motores : {}) as { assinatura?: unknown; api?: unknown; assinatura_detalhe?: unknown };
+  const ad = isRecord(m.assinatura_detalhe) ? (m.assinatura_detalhe as { instalado?: unknown; versao?: unknown; logado?: unknown }) : null;
+  return {
+    fatiadores,
+    motores: {
+      assinatura: m.assinatura === true,
+      api: m.api === true,
+      assinatura_detalhe: ad ? { instalado: ad.instalado === true, versao: typeof ad.versao === "string" ? ad.versao : null, logado: ad.logado === true } : null,
+    },
+    pasta_saida_padrao: typeof r.pasta_saida_padrao === "string" && r.pasta_saida_padrao ? r.pasta_saida_padrao : null,
+  };
 }
 
 export const MARCA_GENERICA = "Genérica";
@@ -171,4 +186,47 @@ export function usoPlano(tokensEntrada: number): UsoPlano {
   if (tokensEntrada < 25_000) return "leve";
   if (tokensEntrada <= 60_000) return "médio";
   return "pesado";
+}
+
+/* ---------- Optimized file name (the bridge uses the same rule) ---------- */
+
+/** Spaces → "-", removes / \ : * ? " < > |; keeps accents and CJK. */
+export function limparParte(s: string): string {
+  return s.trim().replace(/[\/\\:*?"<>|]/g, "").replace(/\s+/g, "-");
+}
+
+export function impressoraSemBico(nome: string): string {
+  return nome.replace(/\s*\d+(?:\.\d+)?\s*nozzle\s*$/i, "").trim();
+}
+
+export function nomeFilamento(marca: string, linha: string): string {
+  const m = marca === MARCA_GENERICA ? "Generico" : marca.trim();
+  const l = linha.trim();
+  if (!m) return l;
+  return l.toLowerCase().startsWith(m.toLowerCase()) ? l : `${m} ${l}`;
+}
+
+export interface NomeArquivoInput {
+  peca: string | null;
+  impressora: string | null;
+  bico: string;
+  marca: string | null;
+  linha: string | null;
+  data: Date;
+}
+
+/** {peça}_{impressora}_{bico}mm_{filamento}_{AAAA-MM-DD}_{HHhMM}.3mf */
+export function nomeArquivoOtimizado(i: NomeArquivoInput): string {
+  const peca = i.peca ? i.peca.replace(/\.[^.]+$/, "") : "peca-aberta";
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  const d = i.data;
+  const partes = [
+    limparParte(peca),
+    limparParte(impressoraSemBico(i.impressora ?? "")),
+    `${limparParte(i.bico)}mm`,
+    limparParte(nomeFilamento(i.marca ?? "", i.linha ?? "")),
+    `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`,
+    `${p2(d.getHours())}h${p2(d.getMinutes())}`,
+  ];
+  return `${partes.join("_")}.3mf`;
 }

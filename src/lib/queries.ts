@@ -5,10 +5,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const DEVICE_COLS = "id, user_id, nome, sistema, versao_ponte, ultimo_contato, relatorio, limite_gasto_usd, revogado, criado_em";
+export const DEVICE_COLS = "id, user_id, nome, sistema, versao_ponte, ultimo_contato, relatorio, limite_gasto_usd, revogado, usos_claude, criado_em";
 
 export const devicesQuery = queryOptions({
   queryKey: ["devices"],
+  refetchInterval: 15_000, // fallback; Realtime (useDevicesLive) is primary
   queryFn: async () => {
     const { data, error } = await supabase
       .from("devices")
