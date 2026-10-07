@@ -8,6 +8,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
 import { ESTADOS, fatiadorLabel, isConectado, roteiroLabel, type Estado } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
+import { useDevicesLive } from "@/hooks/use-devices-live";
 import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
 import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
@@ -30,6 +31,7 @@ function AnalisePage() {
   const { data: job, isLoading } = useQuery(jobQuery(id));
   const { data: eventos = [] } = useQuery(jobEventsQuery(id));
   const now = useNow(1000);
+  useDevicesLive();
   /** Optimistic phase set on click, before server/bridge confirm. */
   const [pendente, setPendente] = useState<{ fase: "aplicando" | "outra"; at: number } | null>(null);
   const workingRef = useRef<HTMLElement>(null);
@@ -174,6 +176,7 @@ function AnalisePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      <Link to="/app/historico" search={{ pagina: 0 }} className="inline-flex text-sm font-medium text-muted-foreground hover:text-primary">← Voltar ao histórico</Link>
       <header className="rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
