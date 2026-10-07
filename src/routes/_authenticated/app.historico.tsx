@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { z } from "zod";
-import { historicoQuery, resumoMesQuery, PAGE_SIZE } from "@/lib/queries";
-import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, motorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
+import { devicesQuery, historicoQuery, resumoMesQuery, PAGE_SIZE } from "@/lib/queries";
+import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, isConectado, motorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
 import { Tag } from "@/components/fatia/Chip";
+import { arquivoDoResultado, avisoAcao } from "@/components/fatia/ArquivoCard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -28,6 +31,13 @@ function custo(motor: string, c: unknown): string {
 function HistoricoPage() {
   const { pagina } = Route.useSearch();
   const navigate = useNavigate();
+  const { data: devices = [] } = useQuery(devicesQuery);
+  async function abrirPasta(jobId: string, deviceId: string | null) {
+    const { error } = await supabase.from("job_events").insert({ job_id: jobId, tipo: "acao", conteudo: { acao: "abrir_pasta" } });
+    if (error) { toast.error("Não foi possível enviar o pedido."); return; }
+    const d = devices.find((x) => x.id === deviceId);
+    toast.success(avisoAcao(isConectado(d?.ultimo_contato, Date.now())));
+  }
   const { data, isLoading } = useQuery({ ...historicoQuery(pagina), placeholderData: keepPreviousData });
   const { data: resumo } = useQuery(resumoMesQuery);
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
@@ -75,7 +85,10 @@ function HistoricoPage() {
                     <td className="p-3">{motorLabel(j.motor)}</td>
                     <td className="p-3 tabular">{custo(j.motor, j.custo_real)}</td>
                     <td className="p-3"><Tag tone={est.tone}>{est.label}</Tag></td>
-                    <td className="p-3 text-right">
+                    <td className="space-x-2 whitespace-nowrap p-3 text-right">
+                      {j.estado === "concluido" && arquivoDoResultado(j.resultado) && (
+                        <Button size="sm" onClick={(e) => { e.stopPropagation(); abrirPasta(j.id, j.device_id); }}>Abrir pasta</Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate({ to: "/app/nova-analise", search: { repetir: j.id } }); }}>
                         Repetir com outras opções
                       </Button>
