@@ -8,7 +8,7 @@ import { devicesQuery, type DeviceRow } from "@/lib/queries";
 import { FATIADORES, isConectado, parseRelatorio } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
-import { ClaudeSection } from "@/components/fatia/ClaudeSection";
+import { ClaudeSection, AssinaturaTag } from "@/components/fatia/ClaudeSection";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -156,7 +156,7 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
 
       <h3 className="mt-6 text-sm font-semibold">Motores</h3>
       <ul className="mt-2 flex flex-wrap gap-2">
-        <li><Tag tone={rel.motores.assinatura ? "success" : "muted"}>Assinatura: {rel.motores.assinatura ? "disponível" : "falta instalar"}</Tag></li>
+        <AssinaturaTag disponivel={rel.motores.assinatura} />
         <li><Tag tone={rel.motores.api ? "success" : "muted"}>API: {rel.motores.api ? "chave configurada" : "não configurada"}</Tag></li>
       </ul>
       <p className="mt-2 text-xs text-muted-foreground">A chave de API fica guardada no próprio computador e nunca vai para a nuvem.</p>

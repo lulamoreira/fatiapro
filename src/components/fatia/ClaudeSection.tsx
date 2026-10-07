@@ -6,6 +6,7 @@ import type { Relatorio } from "@/lib/fatia";
 import { Chip, Tag } from "@/components/fatia/Chip";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
 import type { ReactNode } from "react";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const USOS = [
   { id: "assinatura", label: "Tenho assinatura Claude (Pro ou Max)" },
@@ -35,6 +36,13 @@ const Ok = ({ children }: { children: ReactNode }) => (
   <p className="flex items-center gap-1.5 text-sm font-medium text-success"><CheckCircle2 className="size-4" aria-hidden />{children}</p>
 );
 
+/** Subscription status tag — admins only (personal use). */
+export function AssinaturaTag({ disponivel }: { disponivel: boolean }) {
+  const isAdmin = useIsAdmin();
+  if (!isAdmin) return null;
+  return <li><Tag tone={disponivel ? "success" : "muted"}>Assinatura: {disponivel ? "disponível" : "falta instalar"}</Tag></li>;
+}
+
 /** "Como este computador usa o Claude" — subscription and/or API setup via bridge commands. */
 export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionProps) {
   const qc = useQueryClient();
@@ -46,6 +54,7 @@ export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionP
     onSuccess: () => qc.invalidateQueries({ queryKey: ["devices"] }),
     onError: () => toast.error("Não foi possível salvar."),
   });
+  const isAdmin = useIsAdmin();
   const det = rel.motores.assinatura_detalhe;
   const instalado = det?.instalado === true;
   const logado = det?.logado === true;
@@ -53,18 +62,31 @@ export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionP
   return (
     <section id={`claude-${deviceId}`} aria-label="Como este computador usa o Claude" className="mt-6 scroll-mt-6 rounded-2xl border p-5">
       <h3 className="text-sm font-semibold">Como este computador usa o Claude</h3>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {USOS.map((u) => {
-          const on = usos.includes(u.id);
-          return (
-            <Chip key={u.id} selected={on} disabled={salvar.isPending} onClick={() => salvar.mutate(on ? usos.filter((x) => x !== u.id) : [...usos, u.id])}>
-              {u.label}
-            </Chip>
-          );
-        })}
-      </div>
+      {isAdmin ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {USOS.map((u) => {
+            const on = usos.includes(u.id);
+            return (
+              <span key={u.id} className="inline-flex items-center gap-1.5">
+                <Chip selected={on} disabled={salvar.isPending} onClick={() => salvar.mutate(on ? usos.filter((x) => x !== u.id) : [...usos, u.id])}>
+                  {u.label}
+                </Chip>
+                {u.id === "assinatura" && <Tag tone="muted" className="text-[11px]">Somente administrador · uso pessoal</Tag>}
+              </span>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-3 space-y-2">
+          <Tag tone="primary">Chave de API</Tag>
+          <p className="text-sm text-muted-foreground">
+            O FatiaPro usa a sua própria chave de API da Anthropic. Você paga direto à Anthropic só o que usar, e o app mostra o custo antes de cada análise.{" "}
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2">Como criar uma chave</a>
+          </p>
+        </div>
+      )}
 
-      {usos.includes("assinatura") && (
+      {isAdmin && usos.includes("assinatura") && (
         <div className="mt-5 space-y-3">
           <ol className="space-y-4">
             <Etapa n={1} titulo="Instalar o Claude Code neste computador">
@@ -84,7 +106,7 @@ export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionP
         </div>
       )}
 
-      {usos.includes("api") && (
+      {(!isAdmin || usos.includes("api")) && (
         <ol className="mt-5">
           <Etapa n={1} titulo="Configurar a chave de API no computador">
             {rel.motores.api ? <Ok>Chave configurada</Ok> : (

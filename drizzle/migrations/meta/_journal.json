@@ -29,6 +29,13 @@
       "when": 1791405975841,
       "tag": "0003_modelos_biblioteca",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791406260275,
+      "tag": "0004_app_admins_assinatura",
+      "breakpoints": true
     }
   ]
 }
