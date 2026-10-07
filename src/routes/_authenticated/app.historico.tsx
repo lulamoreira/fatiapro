@@ -1,3 +1,4 @@
+import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { z } from "zod";
@@ -34,6 +35,7 @@ function custo(motor: string, c: unknown): string {
 }
 
 function HistoricoPage() {
+  const rotuloFat = useFatiadorLabel();
   const { pagina } = Route.useSearch();
   const navigate = useNavigate();
   const { data: devices = [] } = useQuery(devicesQuery);
@@ -96,7 +98,7 @@ function HistoricoPage() {
                         <Link to="/app/analise/$id" params={{ id: j.id }} onClick={(e) => e.stopPropagation()} className="font-medium text-primary-ink hover:underline">{peca}</Link>
                         <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
                       </td>
-                      <td className="p-3">{fatiadorLabel(j.fatiador)}</td>
+                      <td className="p-3">{rotuloFat(j.fatiador)}</td>
                       <td className="p-3 tabular">{antesDepois(j.resultado)}</td>
                       <td className="p-3">{motorLabel(j.motor)}</td>
                       <td className="p-3 tabular">{custo(j.motor, j.custo_real)}</td>
@@ -128,7 +130,7 @@ function HistoricoPage() {
                     <Tag tone={est.tone}>{est.label}</Tag>
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div><dt className="text-xs text-muted-foreground">Fatiador</dt><dd>{fatiadorLabel(j.fatiador)}</dd></div>
+                    <div><dt className="text-xs text-muted-foreground">Fatiador</dt><dd>{rotuloFat(j.fatiador)}</dd></div>
                     <div><dt className="text-xs text-muted-foreground">Antes → depois</dt><dd className="tabular">{antesDepois(j.resultado)}</dd></div>
                     <div><dt className="text-xs text-muted-foreground">Motor</dt><dd>{motorLabel(j.motor)}</dd></div>
                     <div><dt className="text-xs text-muted-foreground">Custo real</dt><dd className="tabular">{custo(j.motor, j.custo_real)}</dd></div>

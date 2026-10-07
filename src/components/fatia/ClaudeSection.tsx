@@ -1,121 +1,76 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, BadgeCheck } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { CheckCircle2, Circle, KeyRound, Sparkles } from "lucide-react";
 import type { Relatorio } from "@/lib/fatia";
-import { Chip, Tag } from "@/components/fatia/Chip";
+import { IconTile, Tag } from "@/components/fatia/Chip";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
-import type { ReactNode } from "react";
+import { ApiKeyWizard } from "@/components/fatia/ApiKeyWizard";
+import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-
-const USOS = [
-  { id: "assinatura", label: "Tenho assinatura Claude (Pro ou Max)" },
-  { id: "api", label: "Tenho chave de API" },
-] as const;
 
 export interface ClaudeSectionProps {
   deviceId: string;
-  usos: string[];
   rel: Relatorio;
   conectado: boolean;
 }
 
-function Etapa({ n, titulo, children }: { n: number; titulo: string; children: ReactNode }) {
-  return (
-    <li className="flex gap-3">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold">{n}</span>
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <p className="font-medium">{titulo}</p>
-        {children}
-      </div>
-    </li>
-  );
-}
-
-const Ok = ({ children }: { children: ReactNode }) => (
-  <p className="flex items-center gap-1.5 text-sm font-medium text-success"><CheckCircle2 className="size-4" aria-hidden />{children}</p>
-);
-
-/** Subscription status tag — admins only (personal use). */
-export function AssinaturaTag({ disponivel }: { disponivel: boolean }) {
+/** "Claude neste computador" — availability comes only from the bridge report. */
+export function ClaudeSection({ deviceId, rel, conectado }: ClaudeSectionProps) {
   const isAdmin = useIsAdmin();
-  if (!isAdmin) return null;
-  return <li><Tag tone={disponivel ? "success" : "muted"}>Assinatura: {disponivel ? "disponível" : "falta instalar"}</Tag></li>;
-}
-
-/** "Como este computador usa o Claude" — subscription and/or API setup via bridge commands. */
-export function ClaudeSection({ deviceId, usos, rel, conectado }: ClaudeSectionProps) {
-  const qc = useQueryClient();
-  const salvar = useMutation({
-    mutationFn: async (next: string[]) => {
-      const { error } = await supabase.from("devices").update({ usos_claude: next }).eq("id", deviceId);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["devices"] }),
-    onError: () => toast.error("Não foi possível salvar."),
-  });
-  const isAdmin = useIsAdmin();
+  const [wizard, setWizard] = useState(false);
   const det = rel.motores.assinatura_detalhe;
   const instalado = det?.instalado === true;
   const logado = det?.logado === true;
+  const api = rel.motores.api;
 
   return (
-    <section id={`claude-${deviceId}`} aria-label="Como este computador usa o Claude" className="mt-6 scroll-mt-6 rounded-2xl border p-5">
-      <h3 className="text-sm font-semibold">Como este computador usa o Claude</h3>
-      {isAdmin ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {USOS.map((u) => {
-            const on = usos.includes(u.id);
-            return (
-              <span key={u.id} className="inline-flex items-center gap-1.5">
-                <Chip selected={on} disabled={salvar.isPending} onClick={() => salvar.mutate(on ? usos.filter((x) => x !== u.id) : [...usos, u.id])}>
-                  {u.label}
-                </Chip>
-                {u.id === "assinatura" && <Tag tone="muted" className="text-[11px]">Somente administrador · uso pessoal</Tag>}
-              </span>
-            );
-          })}
+    <section id={`claude-${deviceId}`} aria-labelledby={`claude-t-${deviceId}`} className="scroll-mt-6 space-y-3">
+      <h3 id={`claude-t-${deviceId}`} className="text-[17px] font-semibold">Claude neste computador</h3>
+      <div className={isAdmin ? "grid grid-cols-1 gap-3 md:grid-cols-2" : "grid grid-cols-1 gap-3"}>
+        <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <IconTile tone="orange"><KeyRound /></IconTile>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold">Sua chave de API</p>
+                <Tag tone="primary">Recomendado</Tag>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">Você paga só o que usar, direto à Anthropic. Leva uns 5 minutos na primeira vez.</p>
+            </div>
+          </div>
+          <Tag tone={api ? "success" : "warning"} className="self-start">{api ? "Configurada e testada" : "Não configurada"}</Tag>
+          <div className="mt-auto flex flex-wrap items-center gap-3">
+            {api
+              ? <Button variant="outline" onClick={() => setWizard(true)}>Trocar a chave</Button>
+              : <Button onClick={() => setWizard(true)}>Configurar passo a passo</Button>}
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary-ink underline underline-offset-2">Como criar uma chave</a>
+          </div>
         </div>
-      ) : (
-        <div className="mt-3 space-y-2">
-          <Tag tone="primary">Chave de API</Tag>
-          <p className="text-sm text-muted-foreground">
-            O FatiaPro usa a sua própria chave de API da Anthropic. Você paga direto à Anthropic só o que usar, e o app mostra o custo antes de cada análise.{" "}
-            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-ink underline underline-offset-2">Como criar uma chave</a>
-          </p>
-        </div>
-      )}
 
-      {isAdmin && usos.includes("assinatura") && (
-        <div className="mt-5 space-y-3">
-          <ol className="space-y-4">
-            <Etapa n={1} titulo="Instalar o Claude Code neste computador">
-              {instalado ? <Ok>Instalado{det?.versao ? ` (versão ${det.versao})` : ""}</Ok> : (
-                <EnviarComando deviceId={deviceId} tipo="instalar_claude_code" conectado={conectado}>Instalar</EnviarComando>
-              )}
-              <p className="text-xs text-muted-foreground">A ponte baixa o instalador oficial da Anthropic e confere a assinatura do arquivo antes de instalar.</p>
-            </Etapa>
-            <Etapa n={2} titulo="Entrar na sua conta Claude">
-              {logado ? <Ok>Conta conectada</Ok> : (
-                <EnviarComando deviceId={deviceId} tipo="entrar_claude" conectado={conectado} disabled={!instalado}>Entrar</EnviarComando>
-              )}
-              <p className="text-xs text-muted-foreground">Vai abrir uma página de login da Claude no navegador do seu computador. Confirme lá e volte aqui.</p>
-            </Etapa>
-          </ol>
-          {instalado && logado && <Tag tone="success" className="gap-1"><BadgeCheck className="size-3.5" aria-hidden />Assinatura pronta para usar</Tag>}
-        </div>
-      )}
-
-      {(!isAdmin || usos.includes("api")) && (
-        <ol className="mt-5">
-          <Etapa n={1} titulo="Configurar a chave de API no computador">
-            {rel.motores.api ? <Ok>Chave configurada</Ok> : (
-              <EnviarComando deviceId={deviceId} tipo="configurar_api" conectado={conectado}>Configurar</EnviarComando>
-            )}
-            <p className="text-xs text-muted-foreground">A ponte abre uma janela no computador para você colar a chave. Ela fica guardada só no computador e nunca passa pela internet do app.</p>
-          </Etapa>
-        </ol>
-      )}
+        {isAdmin && (
+          <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <IconTile tone="purple"><Sparkles /></IconTile>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Sua assinatura Claude</p>
+                <Tag tone="muted" className="mt-1">Somente administrador · uso pessoal</Tag>
+              </div>
+            </div>
+            <ol className="space-y-2.5">
+              <li className="flex flex-wrap items-center gap-2 text-sm">
+                {instalado ? <CheckCircle2 className="size-5 text-success" aria-hidden /> : <Circle className="size-5 text-muted-foreground" aria-hidden />}
+                <span className="flex-1">Claude Code instalado{instalado && det?.versao ? ` · versão ${det.versao}` : ""}</span>
+                {!instalado && <EnviarComando deviceId={deviceId} tipo="instalar_claude_code" conectado={conectado} variant="outline">Instalar</EnviarComando>}
+              </li>
+              <li className="flex flex-wrap items-center gap-2 text-sm">
+                {logado ? <CheckCircle2 className="size-5 text-success" aria-hidden /> : <Circle className="size-5 text-muted-foreground" aria-hidden />}
+                <span className="flex-1">Conta conectada</span>
+                {!logado && <EnviarComando deviceId={deviceId} tipo="entrar_claude" conectado={conectado} disabled={!instalado} variant="outline">Entrar</EnviarComando>}
+              </li>
+            </ol>
+          </div>
+        )}
+      </div>
+      <ApiKeyWizard deviceId={deviceId} conectado={conectado} open={wizard} onOpenChange={setWizard} />
     </section>
   );
 }

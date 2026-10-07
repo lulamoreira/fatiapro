@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
-  BICOS, FATIADORES, FINALIDADES, MARCA_GENERICA, MARCA_OUTRA, MOTORES, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
+  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MARCA_OUTRA, MOTORES, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, linhasPara, nomeArquivoOtimizado, marcasPara, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
@@ -22,6 +22,7 @@ import { X } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
 import { Chip, Dot, IconTile, PageHeader, Segmented } from "@/components/fatia/Chip";
 import { Combobox } from "@/components/fatia/Combobox";
+import { ApiKeyWizard } from "@/components/fatia/ApiKeyWizard";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CostCard, useCustoCurto } from "@/components/fatia/CostCard";
 import { PrecoFields } from "@/components/fatia/PrecoFields";
@@ -131,7 +132,7 @@ function NovaAnalise() {
   const device = devices.find((d) => d.id === f.deviceId);
   const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
-  const fatOpts = FATIADORES.filter((x) => rel.fatiadores.some((r) => r.id === x.id));
+  const fatOpts = rel.fatiadores.map((x) => ({ id: x.id, label: nomeFatiador(x) }));
   const fatRel = rel.fatiadores.find((r) => r.id === f.fatiador);
   const impressoras = fatRel?.impressoras ?? [];
   const marcas = f.filTipo ? marcasPara(fatRel, f.filTipo) : [];
@@ -151,6 +152,8 @@ function NovaAnalise() {
   const perfilEncontrado = !!(f.filTipo && f.filMarca && f.filMarca !== MARCA_GENERICA && f.filMarca !== MARCA_OUTRA && fatRel?.filamentos[f.filTipo]?.[f.filMarca]?.length);
   const preco = f.roteiro === "preco";
   const custoCurto = useCustoCurto(f.roteiro, f.motor);
+  const [wizard, setWizard] = useState(false);
+  const nomeCompleto = nomeArquivoCompleto({ pecaDefinida: f.usarAberta || !!arquivo || !!pecaBib, impressora: f.impressora, marca: filMarcaNome || null, linha: f.filLinha });
 
   function escolherArquivo(file: File | undefined) {
     if (!file) return;
@@ -221,7 +224,7 @@ function NovaAnalise() {
   }
 
   const roteiroInfo = ROTEIROS.find((r) => r.id === f.roteiro)?.label ?? "—";
-  const fatLabel = FATIADORES.find((x) => x.id === f.fatiador)?.label;
+  const fatLabel = f.fatiador ? fatiadorLabel(f.fatiador, rel) : null;
   const maquina = [fatLabel, f.impressora, `${f.bico} mm`].filter(Boolean).join(" · ");
   const material = [f.filTipo, filMarcaNome, f.filLinha].filter(Boolean).join(" · ") || "—";
   const motorLabelSel = MOTORES.find((m) => m.id === f.motor)?.label ?? "—";
@@ -253,7 +256,9 @@ function NovaAnalise() {
         {motoresOk.length ? <Segmented label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} className="w-full" /> : (
           <div className="space-y-2 rounded-2xl border border-dashed p-3">
             <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
-            <Button asChild size="sm" variant="outline"><Link to="/app/computador" {...(device ? { hash: `claude-${device.id}` } : {})}>{isAdmin ? "Configurar o Claude" : "Configurar a chave de API"}</Link></Button>
+            {device
+              ? <Button size="sm" variant="outline" onClick={() => setWizard(true)}>Configurar a chave de API</Button>
+              : <Button asChild size="sm" variant="outline"><Link to="/app/computador">Conectar um computador</Link></Button>}
           </div>
         )}
         {erros.motor && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.motor}</p>}
@@ -261,7 +266,9 @@ function NovaAnalise() {
       <section aria-label="Arquivo otimizado" className="space-y-1.5 rounded-2xl bg-card p-3 text-sm shadow-sm">
         <p className="text-xs font-semibold text-muted-foreground">Arquivo otimizado</p>
         <p className="break-all font-mono text-xs">{pastaFinal}</p>
-        <p className="break-all font-mono text-xs font-semibold">{nomeArquivo}</p>
+        {nomeCompleto
+          ? <p className="break-all font-mono text-xs font-semibold">{nomeArquivo}</p>
+          : <p className="text-xs text-muted-foreground">Escolha a peça, a impressora e o filamento para ver o nome do arquivo.</p>}
         {device && (
           <EnviarComando deviceId={device.id} tipo="escolher_pasta" parametros={{ padrao: false }} conectado={conectado} variant="link"
             onConcluido={(r) => { if (typeof r["pasta"] === "string" && r["pasta"]) setPastaSaida(r["pasta"]); }}>
@@ -434,6 +441,8 @@ function NovaAnalise() {
 
         <aside className="glass sticky top-5 hidden self-start rounded-[22px] p-5 lg:block" aria-label="Resumo">{resumo}</aside>
       </div>
+
+      {device && <ApiKeyWizard deviceId={device.id} conectado={conectado} open={wizard} onOpenChange={setWizard} />}
 
       {/* Mobile/tablet summary bar above bottom nav */}
       <Sheet>

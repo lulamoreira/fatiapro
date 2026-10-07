@@ -1,3 +1,4 @@
+import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/app/analise/$id")({
 const TERMINAIS: Estado[] = ["concluido", "erro", "cancelado", "limite_de_gasto"];
 
 function AnalisePage() {
+  const rotuloFat = useFatiadorLabel();
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -184,7 +186,7 @@ function AnalisePage() {
           <div>
             <h1 className="text-2xl font-bold">{job.nome_peca ?? "Peça aberta no fatiador"}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {roteiroLabel(job.roteiro)} · {fatiadorLabel(job.fatiador)}
+              {roteiroLabel(job.roteiro)} · {rotuloFat(job.fatiador)}
               {opc.impressora ? ` · ${opc.impressora}` : ""}
               {opc.filamento?.tipo ? ` · ${[opc.filamento.marca, opc.filamento.linha].filter(Boolean).join(" ")}` : ""}
             </p>

@@ -28,7 +28,7 @@ describe("prioridade ranqueada", () => {
 
 describe("marcas", () => {
   it("Genérica primeiro e Outra… por último", () => {
-    const m = marcasPara({ id: "bambu", versao: null, impressoras: [], filamentos: { PLA: { "Bambu Lab": ["PLA Basic"] } } }, "PLA");
+    const m = marcasPara({ nome: null, adicionado_manual: false, id: "bambu", versao: null, impressoras: [], filamentos: { PLA: { "Bambu Lab": ["PLA Basic"] } } }, "PLA");
     expect(m).toEqual(["Genérica", "Bambu Lab", "Outra…"]);
   });
 });
@@ -49,5 +49,19 @@ describe("nome do arquivo otimizado", () => {
   it("Genérica + PLA vira Generico-PLA e sem arquivo vira peca-aberta", () => {
     expect(nomeArquivoOtimizado({ peca: null, impressora: "X1C", bico: "0.4", marca: "Genérica", linha: "PLA", data: new Date(2026, 0, 2, 3, 4) }))
       .toBe("peca-aberta_X1C_0.4mm_Generico-PLA_2026-01-02_03h04.3mf");
+  });
+});
+
+import { fatiadorLabel as _fl, nomeArquivoCompleto as _nc, parseRelatorio as _pr } from "./fatia";
+describe("fatiadores vindos do relatório", () => {
+  it("aceita ids novos e usa o nome do relatório", () => {
+    const rel = _pr({ fatiadores: [{ id: "creality_print", nome: "Creality Print", adicionado_manual: true }, { id: "X Inválido" }] });
+    expect(rel.fatiadores.map((f) => f.id)).toEqual(["creality_print"]);
+    expect(_fl("creality_print", rel)).toBe("Creality Print");
+    expect(_fl("bambu")).toBe("Bambu Studio");
+  });
+  it("prévia do nome só fica completa com peça, impressora e filamento", () => {
+    expect(_nc({ pecaDefinida: false, impressora: "X1C", marca: "Bambu", linha: "PLA" })).toBe(false);
+    expect(_nc({ pecaDefinida: true, impressora: "X1C", marca: "Bambu", linha: "PLA" })).toBe(true);
   });
 });
