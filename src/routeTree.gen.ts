@@ -10,33 +10,186 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
+import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authenticated/app.nova-analise'
+import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
+import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
+import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
+import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
+import { Route as ApiPublicBridgeJobsIdEventsRouteImport } from './routes/api/public/bridge/jobs.$id.events'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppComputadorRoute =
+  AuthenticatedAppComputadorRouteImport.update({
+    id: '/computador',
+    path: '/computador',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppHistoricoRoute =
+  AuthenticatedAppHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppNovaAnaliseRoute =
+  AuthenticatedAppNovaAnaliseRouteImport.update({
+    id: '/nova-analise',
+    path: '/nova-analise',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAnaliseIdRoute =
+  AuthenticatedAppAnaliseIdRouteImport.update({
+    id: '/analise/$id',
+    path: '/analise/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const ApiPublicBridgeHeartbeatRoute =
+  ApiPublicBridgeHeartbeatRouteImport.update({
+    id: '/api/public/bridge/heartbeat',
+    path: '/api/public/bridge/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBridgePairRoute = ApiPublicBridgePairRouteImport.update({
+  id: '/api/public/bridge/pair',
+  path: '/api/public/bridge/pair',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBridgeJobsNextRoute = ApiPublicBridgeJobsNextRouteImport.update({
+  id: '/api/public/bridge/jobs/next',
+  path: '/api/public/bridge/jobs/next',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBridgeJobsIdEventsRoute =
+  ApiPublicBridgeJobsIdEventsRouteImport.update({
+    id: '/api/public/bridge/jobs/$id/events',
+    path: '/api/public/bridge/jobs/$id/events',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/computador': typeof AuthenticatedAppComputadorRoute
+  '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
+  '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/app/computador': typeof AuthenticatedAppComputadorRoute
+  '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
+  '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
+  '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/_authenticated/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
+  '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/app/computador'
+    | '/app/historico'
+    | '/app/nova-analise'
+    | '/app/'
+    | '/app/analise/$id'
+    | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/pair'
+    | '/api/public/bridge/jobs/next'
+    | '/api/public/bridge/jobs/$id/events'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/app/computador'
+    | '/app/historico'
+    | '/app/nova-analise'
+    | '/app'
+    | '/app/analise/$id'
+    | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/pair'
+    | '/api/public/bridge/jobs/next'
+    | '/api/public/bridge/jobs/$id/events'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/app'
+    | '/_authenticated/app/computador'
+    | '/_authenticated/app/historico'
+    | '/_authenticated/app/nova-analise'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/analise/$id'
+    | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/pair'
+    | '/api/public/bridge/jobs/next'
+    | '/api/public/bridge/jobs/$id/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApiPublicBridgeHeartbeatRoute: typeof ApiPublicBridgeHeartbeatRoute
+  ApiPublicBridgePairRoute: typeof ApiPublicBridgePairRoute
+  ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
+  ApiPublicBridgeJobsIdEventsRoute: typeof ApiPublicBridgeJobsIdEventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +201,131 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/computador': {
+      id: '/_authenticated/app/computador'
+      path: '/computador'
+      fullPath: '/app/computador'
+      preLoaderRoute: typeof AuthenticatedAppComputadorRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/historico': {
+      id: '/_authenticated/app/historico'
+      path: '/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/nova-analise': {
+      id: '/_authenticated/app/nova-analise'
+      path: '/nova-analise'
+      fullPath: '/app/nova-analise'
+      preLoaderRoute: typeof AuthenticatedAppNovaAnaliseRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/analise/$id': {
+      id: '/_authenticated/app/analise/$id'
+      path: '/analise/$id'
+      fullPath: '/app/analise/$id'
+      preLoaderRoute: typeof AuthenticatedAppAnaliseIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/bridge/heartbeat': {
+      id: '/api/public/bridge/heartbeat'
+      path: '/api/public/bridge/heartbeat'
+      fullPath: '/api/public/bridge/heartbeat'
+      preLoaderRoute: typeof ApiPublicBridgeHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bridge/pair': {
+      id: '/api/public/bridge/pair'
+      path: '/api/public/bridge/pair'
+      fullPath: '/api/public/bridge/pair'
+      preLoaderRoute: typeof ApiPublicBridgePairRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bridge/jobs/next': {
+      id: '/api/public/bridge/jobs/next'
+      path: '/api/public/bridge/jobs/next'
+      fullPath: '/api/public/bridge/jobs/next'
+      preLoaderRoute: typeof ApiPublicBridgeJobsNextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bridge/jobs/$id/events': {
+      id: '/api/public/bridge/jobs/$id/events'
+      path: '/api/public/bridge/jobs/$id/events'
+      fullPath: '/api/public/bridge/jobs/$id/events'
+      preLoaderRoute: typeof ApiPublicBridgeJobsIdEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
+  AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
+  AuthenticatedAppNovaAnaliseRoute: typeof AuthenticatedAppNovaAnaliseRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppAnaliseIdRoute: typeof AuthenticatedAppAnaliseIdRoute
+}
+
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
+  AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
+  AuthenticatedAppNovaAnaliseRoute: AuthenticatedAppNovaAnaliseRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppAnaliseIdRoute: AuthenticatedAppAnaliseIdRoute,
+}
+
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiPublicBridgeHeartbeatRoute: ApiPublicBridgeHeartbeatRoute,
+  ApiPublicBridgePairRoute: ApiPublicBridgePairRoute,
+  ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,
+  ApiPublicBridgeJobsIdEventsRoute: ApiPublicBridgeJobsIdEventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
