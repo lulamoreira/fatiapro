@@ -16,6 +16,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authenticated/app.nova-analise'
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
 import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
@@ -58,6 +59,12 @@ const AuthenticatedAppHistoricoRoute =
     path: '/historico',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppNovaAnaliseRoute =
+  AuthenticatedAppNovaAnaliseRouteImport.update({
+    id: '/nova-analise',
+    path: '/nova-analise',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppAnaliseIdRoute =
   AuthenticatedAppAnaliseIdRouteImport.update({
     id: '/analise/$id',
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/_authenticated/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/computador'
     | '/app/historico'
+    | '/app/nova-analise'
     | '/app/'
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/computador'
     | '/app/historico'
+    | '/app/nova-analise'
     | '/app'
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/app/computador'
     | '/_authenticated/app/historico'
+    | '/_authenticated/app/nova-analise'
     | '/_authenticated/app/'
     | '/_authenticated/app/analise/$id'
     | '/api/public/bridge/heartbeat'
@@ -230,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/nova-analise': {
+      id: '/_authenticated/app/nova-analise'
+      path: '/nova-analise'
+      fullPath: '/app/nova-analise'
+      preLoaderRoute: typeof AuthenticatedAppNovaAnaliseRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/analise/$id': {
       id: '/_authenticated/app/analise/$id'
       path: '/analise/$id'
@@ -271,6 +291,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
+  AuthenticatedAppNovaAnaliseRoute: typeof AuthenticatedAppNovaAnaliseRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAnaliseIdRoute: typeof AuthenticatedAppAnaliseIdRoute
 }
@@ -278,6 +299,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
+  AuthenticatedAppNovaAnaliseRoute: AuthenticatedAppNovaAnaliseRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAnaliseIdRoute: AuthenticatedAppAnaliseIdRoute,
 }
