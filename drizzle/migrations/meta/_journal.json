@@ -50,6 +50,13 @@
       "when": 1791408097159,
       "tag": "0006_fatiador_livre_adicionar",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791408474229,
+      "tag": "0007_admin_audit",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit: {
+        Row: {
+          acao: string
+          admin_id: string
+          alvo_user_id: string
+          criado_em: string
+          detalhe: Json
+          id: string
+        }
+        Insert: {
+          acao: string
+          admin_id: string
+          alvo_user_id: string
+          criado_em?: string
+          detalhe?: Json
+          id?: string
+        }
+        Update: {
+          acao?: string
+          admin_id?: string
+          alvo_user_id?: string
+          criado_em?: string
+          detalhe?: Json
+          id?: string
+        }
+        Relationships: []
+      }
       app_admins: {
         Row: {
           criado_em: string
