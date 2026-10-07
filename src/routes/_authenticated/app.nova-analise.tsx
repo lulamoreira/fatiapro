@@ -103,6 +103,7 @@ function NovaAnalise() {
     });
   }, [peca]);
 
+  const isAdmin = useIsAdmin();
   const device = devices.find((d) => d.id === f.deviceId);
   const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
@@ -111,7 +112,7 @@ function NovaAnalise() {
   const impressoras = fatRel?.impressoras ?? [];
   const marcas = f.filTipo ? marcasPara(fatRel, f.filTipo) : [];
   const linhas = f.filTipo && f.filMarca ? linhasPara(fatRel, f.filTipo, f.filMarca) : [];
-  const motoresOk = MOTORES.filter((m) => rel.motores[m.id]);
+  const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
   const pastaPadrao = rel.pasta_saida_padrao ?? "Downloads/FatiaPro";
   const pastaFinal = pastaSaida ?? pastaPadrao;
   const filMarcaNome = f.filMarca === MARCA_OUTRA ? f.filMarcaOutra : f.filMarca;
@@ -317,8 +318,8 @@ function NovaAnalise() {
       <Campo titulo="Motor" erro={erros.motor}>
         {motoresOk.length ? <ChipGroup label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} /> : (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
-            <p className="text-sm text-muted-foreground">Nenhum motor pronto neste computador.</p>
-            <Button asChild size="sm" variant="outline"><Link to="/app/computador" {...(device ? { hash: `claude-${device.id}` } : {})}>Configurar o Claude</Link></Button>
+            <p className="text-sm text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
+            <Button asChild size="sm" variant="outline"><Link to="/app/computador" {...(device ? { hash: `claude-${device.id}` } : {})}>{isAdmin ? "Configurar o Claude" : "Configurar a chave de API"}</Link></Button>
           </div>
         )}
       </Campo>

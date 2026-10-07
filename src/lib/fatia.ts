@@ -31,7 +31,7 @@ export const FATIADORES: { id: FatiadorId; label: string }[] = [
 ];
 
 export const MOTORES: { id: Motor; label: string }[] = [
-  { id: "assinatura", label: "Minha assinatura Claude" },
+  { id: "assinatura", label: "Minha assinatura Claude (admin)" },
   { id: "api", label: "Minha chave de API" },
 ];
 
