@@ -32,7 +32,7 @@ export const FATIADORES: { id: FatiadorId; label: string }[] = [
 
 export const MOTORES: { id: Motor; label: string }[] = [
   { id: "assinatura", label: "Minha assinatura Claude (admin)" },
-  { id: "api", label: "Minha chave de API" },
+  { id: "api", label: "Claude pela sua chave de API" },
 ];
 
 export const ESTADOS: Record<Estado, { label: string; tone: "muted" | "primary" | "warning" | "success" | "destructive" }> = {
