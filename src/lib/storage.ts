@@ -14,8 +14,9 @@ export async function tamanhoArquivo(path: string | null | undefined): Promise<n
   return typeof size === "number" ? size : null;
 }
 
-export async function baixar(path: string): Promise<void> {
-  const { data, error } = await supabase.storage.from("pecas").createSignedUrl(path, 300, { download: true });
+/** Download with the real file name (the storage key itself is ASCII-only). */
+export async function baixar(path: string, nomeReal: string): Promise<void> {
+  const { data, error } = await supabase.storage.from("pecas").createSignedUrl(path, 300, { download: nomeReal });
   if (error || !data) throw error ?? new Error("sem url");
   window.location.assign(data.signedUrl);
 }

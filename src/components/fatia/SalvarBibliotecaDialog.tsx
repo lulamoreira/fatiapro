@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { formatBytes, tamanhoArquivo } from "@/lib/storage";
+import { nomesDoJob } from "@/lib/nomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ export function SalvarBibliotecaDialog({ job, trigger }: { job: Tables<"jobs">; 
   const [obs, setObs] = useState("");
   const [salvando, setSalvando] = useState(false);
   const { original, otimizado } = caminhosDoJob(job);
+  const nomes = nomesDoJob(job);
 
   useEffect(() => { if (open) { setNome(sugestao); setObs(""); } }, [open, sugestao]);
 
@@ -52,6 +54,8 @@ export function SalvarBibliotecaDialog({ job, trigger }: { job: Tables<"jobs">; 
       observacao: obs.trim() ? obs.trim().slice(0, 1000) : null,
       arquivo_original_path: info?.tOrig != null ? original : null,
       arquivo_otimizado_path: info?.tOtim != null ? otimizado : null,
+      nome_arquivo_original: info?.tOrig != null ? nomes.original : null,
+      nome_arquivo_otimizado: info?.tOtim != null ? nomes.otimizado : null,
       job_id: job.id,
     });
     setSalvando(false);

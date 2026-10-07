@@ -1,0 +1,3 @@
+ALTER TABLE public.pecas ADD COLUMN nome_arquivo_original text CHECK (nome_arquivo_original IS NULL OR char_length(nome_arquivo_original) <= 255);
+ALTER TABLE public.pecas ADD COLUMN nome_arquivo_otimizado text CHECK (nome_arquivo_otimizado IS NULL OR char_length(nome_arquivo_otimizado) <= 255);
+GRANT INSERT (nome_arquivo_original, nome_arquivo_otimizado), UPDATE (nome_arquivo_original, nome_arquivo_otimizado) ON public.pecas TO authenticated;

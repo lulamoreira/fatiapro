@@ -36,6 +36,13 @@
       "when": 1791406260275,
       "tag": "0004_app_admins_assinatura",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791406705583,
+      "tag": "0005_pecas_nomes_reais",
+      "breakpoints": true
     }
   ]
 }

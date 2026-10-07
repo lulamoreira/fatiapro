@@ -5,7 +5,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Box, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { baixar, formatBytes, nomeDoPath, tamanhoArquivo } from "@/lib/storage";
+import { baixar, formatBytes, tamanhoArquivo } from "@/lib/storage";
+import { nomeDownloadOriginal, nomeDownloadOtimizado } from "@/lib/nomes";
 import { escapeLike } from "@/components/fatia/BibliotecaPicker";
 import { Tag } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ function BibliotecaPage() {
       const from = pagina * POR_PAGINA;
       let query = supabase
         .from("pecas")
-        .select("*", { count: "exact" })
+        .select("*, jobs(nome_peca)", { count: "exact" })
         .order("criado_em", { ascending: false })
         .order("id", { ascending: false })
         .range(from, from + POR_PAGINA - 1);
@@ -90,8 +91,8 @@ function BibliotecaPage() {
     onError: () => toast.error("Não foi possível salvar."),
   });
 
-  async function onBaixar(path: string) {
-    try { await baixar(path); } catch { toast.error("Não foi possível gerar o link de download."); }
+  async function onBaixar(path: string, nome: string) {
+    try { await baixar(path, nome); } catch { toast.error("Não foi possível gerar o link de download."); }
   }
 
   return (
@@ -119,11 +120,12 @@ function BibliotecaPage() {
                 <Tag tone={p.arquivo_original_path ? "success" : "muted"}>Original</Tag>
                 <Tag tone={p.arquivo_otimizado_path ? "success" : "muted"}>Otimizado</Tag>
               </div>
-              {p.arquivo_otimizado_path && <p className="mt-2 break-all font-mono text-xs">{nomeDoPath(p.arquivo_otimizado_path)}</p>}
+              {p.arquivo_original_path && <p className="mt-2 break-all text-xs"><span className="text-muted-foreground">Original: </span>{nomeDownloadOriginal(p.nome_arquivo_original, p.jobs?.nome_peca)}</p>}
+              {p.arquivo_otimizado_path && <p className="break-all text-xs"><span className="text-muted-foreground">Otimizado: </span>{nomeDownloadOtimizado(p.nome_arquivo_otimizado)}</p>}
               {p.observacao && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{p.observacao}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
-                {p.arquivo_original_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_original_path!)}><Download className="size-4" aria-hidden />Baixar original</Button>}
-                {p.arquivo_otimizado_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_otimizado_path!)}><Download className="size-4" aria-hidden />Baixar otimizado</Button>}
+                {p.arquivo_original_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_original_path!, nomeDownloadOriginal(p.nome_arquivo_original, p.jobs?.nome_peca))}><Download className="size-4" aria-hidden />Baixar original</Button>}
+                {p.arquivo_otimizado_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_otimizado_path!, nomeDownloadOtimizado(p.nome_arquivo_otimizado))}><Download className="size-4" aria-hidden />Baixar otimizado</Button>}
                 {p.arquivo_original_path && <Button size="sm" onClick={() => navigate({ to: "/app/nova-analise", search: { peca: p.id } })}>Nova análise com esta peça</Button>}
                 {p.job_id && <Button asChild size="sm" variant="ghost"><Link to="/app/analise/$id" params={{ id: p.job_id }}>Ver análise de origem</Link></Button>}
                 <Button size="sm" variant="ghost" onClick={() => setEditar({ id: p.id, nome: p.nome, observacao: p.observacao ?? "" })}>Editar</Button>

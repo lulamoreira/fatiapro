@@ -17,7 +17,7 @@ import { useDevicesLive } from "@/hooks/use-devices-live";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
 import { BibliotecaPicker, type PecaEscolhida } from "@/components/fatia/BibliotecaPicker";
 import type { AjusteModelo } from "@/components/fatia/SalvarModeloDialog";
-import { nomeDoPath } from "@/lib/storage";
+import { caminhoOriginal, extensaoPermitida, nomeDownloadOriginal } from "@/lib/nomes";
 import { X } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
 import { Chip, ChipGroup, Dot } from "@/components/fatia/Chip";
@@ -99,8 +99,8 @@ function NovaAnalise() {
   // Prefill the part from the library.
   useEffect(() => {
     if (!peca) return;
-    supabase.from("pecas").select("id, nome, arquivo_original_path").eq("id", peca).maybeSingle().then(({ data }) => {
-      if (data?.arquivo_original_path) { setPecaBib({ id: data.id, nome: data.nome, path: data.arquivo_original_path }); setArquivo(null); set("usarAberta", false); }
+    supabase.from("pecas").select("id, nome, arquivo_original_path, nome_arquivo_original, jobs(nome_peca)").eq("id", peca).maybeSingle().then(({ data }) => {
+      if (data?.arquivo_original_path) { setPecaBib({ id: data.id, nome: data.nome, path: data.arquivo_original_path, nomeArquivo: nomeDownloadOriginal(data.nome_arquivo_original, data.jobs?.nome_peca) }); setArquivo(null); set("usarAberta", false); }
     });
   }, [peca]);
 
@@ -118,7 +118,7 @@ function NovaAnalise() {
   const pastaFinal = pastaSaida ?? pastaPadrao;
   const filMarcaNome = f.filMarca === MARCA_OUTRA ? f.filMarcaOutra : f.filMarca;
   const nomeArquivo = nomeArquivoOtimizado({
-    peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? nomeDoPath(pecaBib.path) : null,
+    peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
     impressora: f.impressora,
     bico: f.bico,
     marca: filMarcaNome,
@@ -160,8 +160,9 @@ function NovaAnalise() {
       if (!u.user) throw new Error("Sessão expirada.");
       let arquivo_path: string | null = null;
       if (arquivo && !f.usarAberta) {
-        const safeName = arquivo.name.replace(/[^\w.\-]+/g, "_").slice(-120);
-        arquivo_path = `${u.user.id}/${crypto.randomUUID()}/${safeName}`;
+        const ext = extensaoPermitida(arquivo.name);
+        if (!ext) throw new Error("Extensão não suportada.");
+        arquivo_path = caminhoOriginal(u.user.id, crypto.randomUUID(), ext);
         const { error: upErr } = await supabase.storage.from("pecas").upload(arquivo_path, arquivo, { upsert: false });
         if (upErr) throw upErr;
       } else if (pecaBib && !f.usarAberta) {
@@ -176,7 +177,7 @@ function NovaAnalise() {
           motor: f.motor!,
           opcoes: { ...toOpcoes(f), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json } as Json,
           arquivo_path,
-          nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? nomeDoPath(pecaBib.path) : null,
+          nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
         })
         .select("id")
         .single();
