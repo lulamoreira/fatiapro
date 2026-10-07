@@ -75,10 +75,10 @@ function AuthPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-sm">
-        <Link to="/" className="font-display text-xl font-bold">
-          Fatia<span className="text-primary">Pro</span>
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="glass w-full max-w-md rounded-[22px] p-8">
+        <Link to="/" className="text-2xl font-bold">
+          Fatia<span className="text-brand">Pro</span>
         </Link>
         <h1 className="mt-6 text-2xl font-bold">{modo === "criar" ? "Criar conta" : "Entrar"}</h1>
         <div className="mt-4 flex flex-wrap gap-2">

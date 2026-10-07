@@ -50,7 +50,7 @@ function HistoricoPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <h1 className="text-3xl font-bold">Histórico</h1>
+      <h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">Gasto na API este mês</p>
