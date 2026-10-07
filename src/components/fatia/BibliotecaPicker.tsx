@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Box } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { nomeDownloadOriginal } from "@/lib/nomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +11,8 @@ export interface PecaEscolhida {
   id: string;
   nome: string;
   path: string;
+  /** Real file name (non-ASCII allowed). */
+  nomeArquivo: string;
 }
 
 /** Escape LIKE wildcards in user search text. */
@@ -24,7 +27,7 @@ export function BibliotecaPicker({ onPick, selected }: { onPick: (p: PecaEscolhi
     queryFn: async () => {
       let q = supabase
         .from("pecas")
-        .select("id, nome, arquivo_original_path, criado_em", { count: "exact" })
+        .select("id, nome, arquivo_original_path, nome_arquivo_original, criado_em, jobs(nome_peca)", { count: "exact" })
         .not("arquivo_original_path", "is", null)
         .order("criado_em", { ascending: false })
         .order("id", { ascending: false })
@@ -49,7 +52,7 @@ export function BibliotecaPicker({ onPick, selected }: { onPick: (p: PecaEscolhi
           <ul className="max-h-80 space-y-1 overflow-y-auto">
             {data.map((p) => (
               <li key={p.id}>
-                <button type="button" className="w-full rounded-xl p-3 text-left hover:bg-accent" onClick={() => { onPick({ id: p.id, nome: p.nome, path: p.arquivo_original_path! }); setOpen(false); }}>
+                <button type="button" className="w-full rounded-xl p-3 text-left hover:bg-accent" onClick={() => { onPick({ id: p.id, nome: p.nome, path: p.arquivo_original_path!, nomeArquivo: nomeDownloadOriginal(p.nome_arquivo_original, p.jobs?.nome_peca) }); setOpen(false); }}>
                   <p className="font-medium">{p.nome}</p>
                   <p className="text-xs text-muted-foreground">{new Date(p.criado_em).toLocaleDateString("pt-BR")}</p>
                 </button>

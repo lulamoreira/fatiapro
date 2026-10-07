@@ -284,6 +284,8 @@ export type Database = {
           id: string
           job_id: string | null
           nome: string
+          nome_arquivo_original: string | null
+          nome_arquivo_otimizado: string | null
           observacao: string | null
           user_id: string
         }
@@ -295,6 +297,8 @@ export type Database = {
           id?: string
           job_id?: string | null
           nome: string
+          nome_arquivo_original?: string | null
+          nome_arquivo_otimizado?: string | null
           observacao?: string | null
           user_id?: string
         }
@@ -306,6 +310,8 @@ export type Database = {
           id?: string
           job_id?: string | null
           nome?: string
+          nome_arquivo_original?: string | null
+          nome_arquivo_otimizado?: string | null
           observacao?: string | null
           user_id?: string
         }
