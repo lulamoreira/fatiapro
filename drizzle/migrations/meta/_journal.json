@@ -15,6 +15,13 @@
       "when": 1791403366218,
       "tag": "0001_job_events_acao",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791404768007,
+      "tag": "0002_device_commands_usos_claude",
+      "breakpoints": true
     }
   ]
 }
