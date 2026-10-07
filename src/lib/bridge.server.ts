@@ -35,10 +35,23 @@ export function clientIp(request: Request): string {
   );
 }
 
-export async function readJson(request: Request): Promise<Record<string, unknown> | null> {
+export interface BridgeBody {
+  codigo?: unknown;
+  nome?: unknown;
+  sistema?: unknown;
+  versao_ponte?: unknown;
+  relatorio?: unknown;
+  tipo?: unknown;
+  conteudo?: unknown;
+  novo_estado?: unknown;
+  resultado?: unknown;
+  custo_real?: unknown;
+}
+
+export async function readJson(request: Request): Promise<BridgeBody | null> {
   try {
     const v: unknown = await request.json();
-    return typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+    return typeof v === "object" && v !== null && !Array.isArray(v) ? (v as BridgeBody) : null;
   } catch {
     return null;
   }

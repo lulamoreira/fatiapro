@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/app/nova-analise")({
   component: NovaAnalise,
 });
 
-function Campo({ titulo, erro, children }: { titulo: string; erro?: string; children: ReactNode }) {
+function Campo({ titulo, erro, children }: { titulo: string; erro?: string | undefined; children: ReactNode }) {
   return (
     <fieldset className="space-y-2.5">
       <legend className="mb-2.5 text-sm font-semibold">{titulo}</legend>
