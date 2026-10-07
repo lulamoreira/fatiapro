@@ -8,6 +8,13 @@
       "when": 1791400970207,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791403366218,
+      "tag": "0001_job_events_acao",
+      "breakpoints": true
     }
   ]
 }

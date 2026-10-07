@@ -1,12 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
-import { ESTADOS, fatiadorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
+import { ESTADOS, fatiadorLabel, isConectado, roteiroLabel, type Estado } from "@/lib/fatia";
+import { useNow } from "@/hooks/use-now";
+import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
+import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
 import { Approval, type Proposta } from "@/components/fatia/Approval";
 import { Result, type ResultadoConteudo } from "@/components/fatia/Result";
@@ -26,6 +29,32 @@ function AnalisePage() {
   const navigate = useNavigate();
   const { data: job, isLoading } = useQuery(jobQuery(id));
   const { data: eventos = [] } = useQuery(jobEventsQuery(id));
+  const now = useNow(1000);
+  /** Optimistic phase set on click, before server/bridge confirm. */
+  const [pendente, setPendente] = useState<{ fase: "aplicando" | "outra"; at: number } | null>(null);
+  const workingRef = useRef<HTMLElement>(null);
+  const deviceId = job?.device_id ?? null;
+  const { data: device } = useQuery({
+    queryKey: ["device_sinal", deviceId],
+    enabled: !!deviceId,
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("devices").select("id, ultimo_contato").eq("id", deviceId!).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!deviceId) return undefined;
+    const ch = supabase
+      .channel(`device-${deviceId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "devices", filter: `id=eq.${deviceId}` }, () => qc.invalidateQueries({ queryKey: ["device_sinal", deviceId] }))
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [deviceId, qc]);
 
   useEffect(() => {
     const ch = supabase
@@ -39,7 +68,7 @@ function AnalisePage() {
   }, [id, qc]);
 
   const enviar = useMutation({
-    mutationFn: async (ev: { tipo: "aprovacao" | "pedido_outra" | "cancelamento"; conteudo: Json }) => {
+    mutationFn: async (ev: { tipo: "aprovacao" | "pedido_outra" | "cancelamento" | "acao"; conteudo: Json }) => {
       const { error } = await supabase.from("job_events").insert({ job_id: id, tipo: ev.tipo, conteudo: ev.conteudo });
       if (error) throw error;
       if (ev.tipo === "cancelamento") {
@@ -47,11 +76,14 @@ function AnalisePage() {
         if (e2) throw e2;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["job_events", id] });
-      qc.invalidateQueries({ queryKey: ["job", id] });
+    onSuccess: async () => {
+      await Promise.all([qc.invalidateQueries({ queryKey: ["job_events", id] }), qc.invalidateQueries({ queryKey: ["job", id] })]);
+      setPendente(null); // events now carry the real phase
     },
-    onError: () => toast.error("Não foi possível enviar."),
+    onError: () => {
+      setPendente(null);
+      toast.error("Não foi possível enviar.");
+    },
   });
 
   const repetir = useMutation({
@@ -90,7 +122,52 @@ function AnalisePage() {
   const prop = ultimo("proposta");
   const idxProposta = prop?.idx ?? -1;
   const respondida = idxProposta >= 0 && eventos.slice(idxProposta + 1).some((e) => e.tipo === "aprovacao" || e.tipo === "pedido_outra" || e.tipo === "cancelamento");
-  const mostrarAprovacao = !!prop && !respondida && !TERMINAIS.includes(estado);
+  const mostrarAprovacao = !!prop && !respondida && !pendente && !TERMINAIS.includes(estado);
+  const terminal = TERMINAIS.includes(estado);
+  const ts = (e: Ev) => Date.parse(e.criado_em);
+
+  // Last user response after the last proposal defines the apply/other phase.
+  let ue: Ev | null = null;
+  for (let i = eventos.length - 1; i > idxProposta; i--) { const e = eventos[i]; if (e && (e.tipo === "aprovacao" || e.tipo === "pedido_outra")) { ue = e; break; } }
+  let fase: Fase;
+  let desde: number;
+  let marcoAprovacao: number | null = null;
+  if (pendente) { fase = pendente.fase; desde = pendente.at; if (fase === "aplicando") marcoAprovacao = pendente.at; }
+  else if (ue) { fase = ue.tipo === "aprovacao" ? "aplicando" : "outra"; desde = ts(ue); if (fase === "aplicando") marcoAprovacao = desde; }
+  else if (estado === "aplicando") { fase = "aplicando"; desde = Date.parse(job.atualizado_em); marcoAprovacao = desde; }
+  else if (estado === "na_fila") { fase = "na_fila"; desde = Date.parse(job.criado_em); }
+  else { fase = "analisando"; desde = prop ? ts(prop.ev) : Date.parse(job.atualizado_em); }
+  const posAprovacao = marcoAprovacao != null && ue ? eventos.slice(eventos.indexOf(ue) + 1) : [];
+  const passos = fase === "aplicando"
+    ? { aplicou: posAprovacao.some((e) => e.tipo === "progresso"), resultado: posAprovacao.some((e) => e.tipo === "resultado") }
+    : undefined;
+  const ultimoProg = progresso[progresso.length - 1];
+  const ultimaMensagem = ultimoProg ? String((ultimoProg.conteudo as { texto?: unknown })?.texto ?? "") || null : null;
+  const ultimoEv = eventos[eventos.length - 1];
+  const semEventosMs = now - Math.max(desde, ultimoEv ? ts(ultimoEv) : 0);
+  const ultimoContatoMs = device?.ultimo_contato ? Date.parse(device.ultimo_contato) : null;
+  const conectado = isConectado(device?.ultimo_contato, now);
+  const mostrarTrabalhando = !terminal && !mostrarAprovacao;
+
+  const arquivo = estado === "concluido" ? arquivoDoResultado(job.resultado) : null;
+  const ultimaAcao = ultimo("acao");
+  const confirmacaoAcao = ultimaAcao
+    ? (() => { const p = eventos.slice(ultimaAcao.idx + 1).filter((e) => e.tipo === "progresso").pop(); return p ? String((p.conteudo as { texto?: unknown })?.texto ?? "") || null : null; })()
+    : null;
+
+  function aprovar(ids: string[]) {
+    setPendente({ fase: "aplicando", at: Date.now() });
+    requestAnimationFrame(() => workingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    enviar.mutate({ tipo: "aprovacao", conteudo: { itens_aprovados: ids } });
+  }
+  function pedirOutra(texto: string) {
+    setPendente({ fase: "outra", at: Date.now() });
+    requestAnimationFrame(() => workingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    enviar.mutate({ tipo: "pedido_outra", conteudo: { texto } });
+  }
+  function acao(a: AcaoArquivo) {
+    enviar.mutate({ tipo: "acao", conteudo: { acao: a } }, { onSuccess: () => toast.success(avisoAcao(conectado)) });
+  }
   const resultado = ultimo("resultado")?.ev;
   const erroEv = ultimo("erro")?.ev;
   const podeCancelar = !TERMINAIS.includes(estado);
@@ -116,6 +193,20 @@ function AnalisePage() {
         )}
       </header>
 
+      {mostrarTrabalhando && (
+        <WorkingCard
+          ref={workingRef}
+          fase={fase}
+          ultimaMensagem={ultimaMensagem}
+          desdeMs={desde}
+          now={now}
+          {...(passos ? { passos } : {})}
+          ultimoContatoMs={ultimoContatoMs}
+          semEventosMs={semEventosMs}
+          onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
+        />
+      )}
+
       <section aria-label="Linha do tempo" className="rounded-3xl border bg-card p-6">
         <h2 className="text-sm font-semibold">Linha do tempo</h2>
         {progresso.length === 0 ? (
@@ -125,10 +216,11 @@ function AnalisePage() {
           </p>
         ) : (
           <ol className="mt-3 space-y-3 border-l-2 border-border pl-4" aria-live="polite">
-            {progresso.map((e) => (
+            {progresso.map((e, i) => (
               <li key={e.id} className="relative">
                 <span className="absolute -left-[1.4rem] top-1.5 size-2.5 rounded-full bg-primary" aria-hidden />
-                <p className="text-sm">{String((e.conteudo as { texto?: unknown })?.texto ?? "")}</p>
+                <p className="flex items-center gap-2 text-sm">
+                  {!terminal && i === progresso.length - 1 && <Loader2 className="size-3.5 shrink-0 animate-spin text-primary" aria-label="em andamento" />}{String((e.conteudo as { texto?: unknown })?.texto ?? "")}</p>
                 <p className="text-xs text-muted-foreground">{new Date(e.criado_em).toLocaleTimeString("pt-BR")}</p>
               </li>
             ))}
@@ -141,10 +233,14 @@ function AnalisePage() {
           key={prop.ev.id}
           proposta={prop.ev.conteudo as unknown as Proposta}
           disabled={enviar.isPending}
-          onAprovar={(ids) => enviar.mutate({ tipo: "aprovacao", conteudo: { itens_aprovados: ids } })}
-          onPedirOutra={(texto) => enviar.mutate({ tipo: "pedido_outra", conteudo: { texto } })}
+          onAprovar={aprovar}
+          onPedirOutra={pedirOutra}
           onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
         />
+      )}
+
+      {arquivo && (
+        <ArquivoCard arquivoLocal={arquivo.arquivoLocal} pastaLocal={arquivo.pastaLocal} confirmacao={confirmacaoAcao} disabled={enviar.isPending} onAcao={acao} />
       )}
 
       {resultado && <Result c={resultado.conteudo as unknown as ResultadoConteudo} motor={job.motor} custo={job.custo_real} />}

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { Json } from "@/integrations/supabase/types";
 
-const TIPOS = ["progresso", "proposta", "aprovacao", "pedido_outra", "resultado", "erro", "cancelamento"] as const;
+const TIPOS = ["progresso", "proposta", "aprovacao", "pedido_outra", "resultado", "erro", "cancelamento", "acao"] as const;
 const ESTADOS = ["na_fila", "analisando", "aguardando_aprovacao", "aplicando", "concluido", "erro", "cancelado", "limite_de_gasto"] as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
