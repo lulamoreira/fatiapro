@@ -272,7 +272,7 @@ function NovaAnalise() {
         {motoresOk.length ? <ChipGroup label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} /> : (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
             <p className="text-sm text-muted-foreground">Nenhum motor pronto neste computador.</p>
-            <Button asChild size="sm" variant="outline"><Link to="/app/computador" hash={device ? `claude-${device.id}` : undefined}>Configurar o Claude</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/app/computador" {...(device ? { hash: `claude-${device.id}` } : {})}>Configurar o Claude</Link></Button>
           </div>
         )}
       </Campo>
