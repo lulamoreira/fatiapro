@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { custoApiUSD, formatDuracao, formatGramas, isConectado, marcasPara, togglePrioridade, usoPlano } from "./fatia";
+import { nomeArquivoOtimizado, custoApiUSD, formatDuracao, formatGramas, isConectado, marcasPara, togglePrioridade, usoPlano } from "./fatia";
 
 describe("formatDuracao", () => {
   it("menos de 1h mostra minutos e segundos", () => expect(formatDuracao(1941)).toBe("32m 21s"));
@@ -38,5 +38,16 @@ describe("conectado", () => {
     const now = Date.parse("2026-01-01T00:01:00Z");
     expect(isConectado("2026-01-01T00:00:30Z", now)).toBe(true);
     expect(isConectado("2026-01-01T00:00:00Z", now)).toBe(false);
+  });
+});
+
+describe("nome do arquivo otimizado", () => {
+  it("segue o exemplo da regra", () => {
+    expect(nomeArquivoOtimizado({ peca: "热床线辅助定位.stl", impressora: "Anycubic Kobra X 0.4 nozzle", bico: "0.4", marca: "Anycubic", linha: "Anycubic PLA", data: new Date(2026, 9, 7, 17, 21) }))
+      .toBe("热床线辅助定位_Anycubic-Kobra-X_0.4mm_Anycubic-PLA_2026-10-07_17h21.3mf");
+  });
+  it("Genérica + PLA vira Generico-PLA e sem arquivo vira peca-aberta", () => {
+    expect(nomeArquivoOtimizado({ peca: null, impressora: "X1C", bico: "0.4", marca: "Genérica", linha: "PLA", data: new Date(2026, 0, 2, 3, 4) }))
+      .toBe("peca-aberta_X1C_0.4mm_Generico-PLA_2026-01-02_03h04.3mf");
   });
 });
