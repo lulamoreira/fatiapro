@@ -20,6 +20,8 @@ import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
 import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
+import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/public/bridge/commands.$id'
+import { Route as ApiPublicBridgeCommandsNextRouteImport } from './routes/api/public/bridge/commands.next'
 import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
 import { Route as ApiPublicBridgeJobsIdEventsRouteImport } from './routes/api/public/bridge/jobs.$id.events'
 
@@ -82,6 +84,18 @@ const ApiPublicBridgePairRoute = ApiPublicBridgePairRouteImport.update({
   path: '/api/public/bridge/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBridgeCommandsIdRoute =
+  ApiPublicBridgeCommandsIdRouteImport.update({
+    id: '/api/public/bridge/commands/$id',
+    path: '/api/public/bridge/commands/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBridgeCommandsNextRoute =
+  ApiPublicBridgeCommandsNextRouteImport.update({
+    id: '/api/public/bridge/commands/next',
+    path: '/api/public/bridge/commands/next',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBridgeJobsNextRoute = ApiPublicBridgeJobsNextRouteImport.update({
   id: '/api/public/bridge/jobs/next',
   path: '/api/public/bridge/jobs/next',
@@ -105,6 +119,8 @@ export interface FileRoutesByFullPath {
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
+  '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
@@ -118,6 +134,8 @@ export interface FileRoutesByTo {
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
+  '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
@@ -134,6 +152,8 @@ export interface FileRoutesById {
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
+  '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
 }
@@ -150,6 +170,8 @@ export interface FileRouteTypes {
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/commands/$id'
+    | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
   fileRoutesByTo: FileRoutesByTo
@@ -163,6 +185,8 @@ export interface FileRouteTypes {
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/commands/$id'
+    | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
   id:
@@ -178,6 +202,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/commands/$id'
+    | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
     | '/api/public/bridge/jobs/$id/events'
   fileRoutesById: FileRoutesById
@@ -188,6 +214,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiPublicBridgeHeartbeatRoute: typeof ApiPublicBridgeHeartbeatRoute
   ApiPublicBridgePairRoute: typeof ApiPublicBridgePairRoute
+  ApiPublicBridgeCommandsIdRoute: typeof ApiPublicBridgeCommandsIdRoute
+  ApiPublicBridgeCommandsNextRoute: typeof ApiPublicBridgeCommandsNextRoute
   ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
   ApiPublicBridgeJobsIdEventsRoute: typeof ApiPublicBridgeJobsIdEventsRoute
 }
@@ -271,6 +299,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgePairRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bridge/commands/$id': {
+      id: '/api/public/bridge/commands/$id'
+      path: '/api/public/bridge/commands/$id'
+      fullPath: '/api/public/bridge/commands/$id'
+      preLoaderRoute: typeof ApiPublicBridgeCommandsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bridge/commands/next': {
+      id: '/api/public/bridge/commands/next'
+      path: '/api/public/bridge/commands/next'
+      fullPath: '/api/public/bridge/commands/next'
+      preLoaderRoute: typeof ApiPublicBridgeCommandsNextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge/jobs/next': {
       id: '/api/public/bridge/jobs/next'
       path: '/api/public/bridge/jobs/next'
@@ -324,6 +366,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiPublicBridgeHeartbeatRoute: ApiPublicBridgeHeartbeatRoute,
   ApiPublicBridgePairRoute: ApiPublicBridgePairRoute,
+  ApiPublicBridgeCommandsIdRoute: ApiPublicBridgeCommandsIdRoute,
+  ApiPublicBridgeCommandsNextRoute: ApiPublicBridgeCommandsNextRoute,
   ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,
   ApiPublicBridgeJobsIdEventsRoute: ApiPublicBridgeJobsIdEventsRoute,
 }
