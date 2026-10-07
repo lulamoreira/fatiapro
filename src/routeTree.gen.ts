@@ -14,8 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppBibliotecaRouteImport } from './routes/_authenticated/app.biblioteca'
 import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppModelosRouteImport } from './routes/_authenticated/app.modelos'
 import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authenticated/app.nova-analise'
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
@@ -50,6 +52,12 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppBibliotecaRoute =
+  AuthenticatedAppBibliotecaRouteImport.update({
+    id: '/biblioteca',
+    path: '/biblioteca',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppComputadorRoute =
   AuthenticatedAppComputadorRouteImport.update({
     id: '/computador',
@@ -62,6 +70,11 @@ const AuthenticatedAppHistoricoRoute =
     path: '/historico',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppModelosRoute = AuthenticatedAppModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppNovaAnaliseRoute =
   AuthenticatedAppNovaAnaliseRouteImport.update({
     id: '/nova-analise',
@@ -119,8 +132,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/modelos': typeof AuthenticatedAppModelosRoute
   '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -135,8 +150,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/modelos': typeof AuthenticatedAppModelosRoute
   '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -154,8 +171,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/_authenticated/app/modelos': typeof AuthenticatedAppModelosRoute
   '/_authenticated/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -173,8 +192,10 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app'
+    | '/app/biblioteca'
     | '/app/computador'
     | '/app/historico'
+    | '/app/modelos'
     | '/app/nova-analise'
     | '/app/'
     | '/app/analise/$id'
@@ -189,8 +210,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/app/biblioteca'
     | '/app/computador'
     | '/app/historico'
+    | '/app/modelos'
     | '/app/nova-analise'
     | '/app'
     | '/app/analise/$id'
@@ -207,8 +230,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/app'
+    | '/_authenticated/app/biblioteca'
     | '/_authenticated/app/computador'
     | '/_authenticated/app/historico'
+    | '/_authenticated/app/modelos'
     | '/_authenticated/app/nova-analise'
     | '/_authenticated/app/'
     | '/_authenticated/app/analise/$id'
@@ -271,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/biblioteca': {
+      id: '/_authenticated/app/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/app/biblioteca'
+      preLoaderRoute: typeof AuthenticatedAppBibliotecaRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/computador': {
       id: '/_authenticated/app/computador'
       path: '/computador'
@@ -283,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/app/historico'
       preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/modelos': {
+      id: '/_authenticated/app/modelos'
+      path: '/modelos'
+      fullPath: '/app/modelos'
+      preLoaderRoute: typeof AuthenticatedAppModelosRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/nova-analise': {
@@ -352,16 +391,20 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppBibliotecaRoute: typeof AuthenticatedAppBibliotecaRoute
   AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
+  AuthenticatedAppModelosRoute: typeof AuthenticatedAppModelosRoute
   AuthenticatedAppNovaAnaliseRoute: typeof AuthenticatedAppNovaAnaliseRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAnaliseIdRoute: typeof AuthenticatedAppAnaliseIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppBibliotecaRoute: AuthenticatedAppBibliotecaRoute,
   AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
+  AuthenticatedAppModelosRoute: AuthenticatedAppModelosRoute,
   AuthenticatedAppNovaAnaliseRoute: AuthenticatedAppNovaAnaliseRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAnaliseIdRoute: AuthenticatedAppAnaliseIdRoute,
