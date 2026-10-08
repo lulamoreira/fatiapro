@@ -63,6 +63,8 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
     for (const i of itens) if (marcados.has(i.id)) { s += i.segundos_delta ?? 0; g += i.gramas ?? 0; }
     return { seg: s, gr: g };
   }, [itens, marcados, proposta.partida]);
+  // Nothing worth changing was pre-selected by the analysis.
+  const nadaPreMarcado = !itens.some((i) => i.pre_marcado && !i.rejeitado_motivo);
   const economia = (proposta.partida?.segundos ?? 0) - seg;
 
   return (
@@ -72,6 +74,12 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
         <Card t="Com o que você marcou" a={formatDuracao(seg)} b={formatGramas(gr)} highlight />
         <Card t="Economia estimada" a={formatDuracao(economia)} b={formatGramas((proposta.partida?.gramas ?? 0) - gr)} />
       </div>
+
+      {nadaPreMarcado && (
+        <p role="status" className="rounded-2xl border border-primary/30 bg-primary/8 p-4 text-sm text-primary-ink">
+          Esta peça já está bem ajustada para o que você pediu: nenhuma mudança testada valeu a pena. Você ainda pode marcar alguma por conta própria.
+        </p>
+      )}
 
       <ul className="divide-y rounded-2xl border bg-card">
         {itens.map((i) => {
@@ -123,9 +131,13 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="ghost" disabled={disabled} onClick={onCancelar}>Cancelar</Button>
         <Button variant="outline" disabled={disabled} onClick={() => setPedindo(true)}>Pedir outra opção</Button>
-        <Button size="lg" disabled={disabled || marcados.size === 0} onClick={() => onAprovar([...marcados])}>
-          Ok, aplicar {marcados.size} {marcados.size === 1 ? "mudança" : "mudanças"}
-        </Button>
+        {nadaPreMarcado && marcados.size === 0 ? (
+          <Button size="lg" disabled={disabled} onClick={() => onAprovar([])}>Manter como está</Button>
+        ) : (
+          <Button size="lg" disabled={disabled || marcados.size === 0} onClick={() => onAprovar([...marcados])}>
+            Ok, aplicar {marcados.size} {marcados.size === 1 ? "mudança" : "mudanças"}
+          </Button>
+        )}
       </div>
     </section>
   );

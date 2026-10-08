@@ -109,3 +109,16 @@ describe("lista de marcas em 3 grupos", () => {
     expect(_ld(rel, "anycubic", "PLA", "Bambu Lab", "outras")).toEqual(["PLA Basic", "PLA Lite", "PLA"]);
   });
 });
+
+import { custoEstimadoUSD as _ce, textoCustoEstimado as _tc } from "./fatia";
+describe("custo estimado com preços medidos", () => {
+  const precos = [
+    { modelo: "claude-opus-5-5", preco_entrada_usd_por_milhao: 4, preco_saida_usd_por_milhao: 20 },
+    { modelo: "claude-sonnet-5-5", preco_entrada_usd_por_milhao: 2, preco_saida_usd_por_milhao: 10 },
+  ];
+  const reduzir = { tokens_entrada_tipicos: 2950, tokens_saida_tipicos: 1000 };
+  it("usa sempre o Sonnet, mesmo com o Opus primeiro", () => expect(_ce(reduzir, precos)).toBeCloseTo(0.0159));
+  it("Premium multiplica por 2,8", () => expect(_ce(reduzir, precos, true)).toBeCloseTo(0.0159 * 2.8));
+  it("sem preço do Sonnet não estima", () => expect(_ce(reduzir, [precos[0]!])).toBeNull());
+  it("3 casas abaixo de US$ 0,10 com reais", () => expect(_tc(0.0159, 5.5)).toBe("≈ US$ 0,016 (R$ 0,09)"));
+});
