@@ -12,6 +12,8 @@ import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
 import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialog";
+import { FecharAnaliseDialog } from "@/components/fatia/FecharAnaliseDialog";
+import { Check } from "lucide-react";
 import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
 import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
@@ -180,7 +182,13 @@ function AnalisePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Link to="/app/historico" search={{ pagina: 0 }} className="inline-flex text-sm font-medium text-muted-foreground hover:text-primary-ink">← Voltar ao histórico</Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link to="/app/historico" search={{ pagina: 0 }} className="inline-flex text-sm font-medium text-muted-foreground hover:text-primary-ink">← Voltar ao histórico</Link>
+        {estado === "concluido" && <FecharAnaliseDialog job={job} />}
+        {(estado === "erro" || estado === "cancelado") && (
+          <Button asChild size="sm" variant="outline"><Link to="/app/historico" search={{ pagina: 0 }}><Check className="size-4" aria-hidden />Fechar</Link></Button>
+        )}
+      </div>
       <header className="rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -257,6 +265,7 @@ function AnalisePage() {
       )}
 
       {resultado && <Result c={resultado.conteudo as unknown as ResultadoConteudo} motor={job.motor} custo={job.custo_real} />}
+      {estado === "concluido" && <div className="flex justify-end"><FecharAnaliseDialog job={job} /></div>}
 
       {estado === "erro" && (
         <div className="rounded-2xl border border-destructive bg-destructive/10 p-5" role="alert">
