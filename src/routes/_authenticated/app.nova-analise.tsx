@@ -18,6 +18,7 @@ import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, maquinaResumo, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
+  opcoesImpressora, parseEscolhidas, separarPerfil, autoImpressora, SEM_BICO,
 } from "@/lib/fatia";
 import { escolherMotor } from "@/lib/motor-choice";
 import { MotorChoice } from "@/components/fatia/MotorChoice";
