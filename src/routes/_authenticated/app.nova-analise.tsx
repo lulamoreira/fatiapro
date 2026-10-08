@@ -9,8 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
-  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MARCA_OUTRA, MOTORES, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
-  isConectado, linhasPara, nomeArquivoOtimizado, marcasPara, parseRelatorio, togglePrioridade,
+  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto,, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
+  isConectado, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
@@ -68,7 +68,7 @@ const ROTEIRO_CARDS = [
 
 /** First section with a validation error, in screen order. */
 const SECAO_DO_ERRO = (k: string) =>
-  k === "roteiro" ? "sec-1" : k === "peca" ? "sec-2" : ["fatiador", "impressora", "filamento"].includes(k) ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
+  k === "roteiro" ? "sec-1" : k === "peca" ? "sec-2" : ["fatiador", "impressora", "filamento", "tempBico", "tempMesa"].includes(k) ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
 const ORDEM = ["sec-1", "sec-2", "sec-3", "sec-3b", "sec-4", "sec-motor"];
 
 function NovaAnalise() {
@@ -135,12 +135,15 @@ function NovaAnalise() {
   const fatOpts = rel.fatiadores.map((x) => ({ id: x.id, label: nomeFatiador(x) }));
   const fatRel = rel.fatiadores.find((r) => r.id === f.fatiador);
   const impressoras = fatRel?.impressoras ?? [];
-  const marcas = f.filTipo ? marcasPara(fatRel, f.filTipo) : [];
-  const linhas = f.filTipo && f.filMarca ? linhasPara(fatRel, f.filTipo, f.filMarca) : [];
+  const fatNome = fatRel ? nomeFatiador(fatRel) : "fatiador";
+  const grupos = f.filTipo ? gruposMarca(rel, f.fatiador, f.filTipo, f.filMarca) : { perfil: [], outras: [] };
+  const grupo = f.filMarca ? grupoDaMarca(f.filMarca, grupos) : null;
+  const linhas = f.filTipo && f.filMarca && grupo ? linhasDaMarca(rel, f.fatiador, f.filTipo, f.filMarca, grupo) : [];
+  const perfilNoFatiador = grupo === "perfil";
   const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
   const pastaPadrao = rel.pasta_saida_padrao ?? "Downloads/FatiaPro";
   const pastaFinal = pastaSaida ?? pastaPadrao;
-  const filMarcaNome = f.filMarca === MARCA_OUTRA ? f.filMarcaOutra : f.filMarca;
+  const filMarcaNome = f.filMarca;
   const nomeArquivo = nomeArquivoOtimizado({
     peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
     impressora: f.impressora,
@@ -149,7 +152,21 @@ function NovaAnalise() {
     linha: f.filLinha,
     data: new Date(now),
   });
-  const perfilEncontrado = !!(f.filTipo && f.filMarca && f.filMarca !== MARCA_GENERICA && f.filMarca !== MARCA_OUTRA && fatRel?.filamentos[f.filTipo]?.[f.filMarca]?.length);
+  // Guided order: preselect the slicer (only one, else the last one used if still reported).
+  const { data: ultimoFatiador } = useQuery({
+    queryKey: ["ultimo-fatiador"],
+    queryFn: async () => {
+      const { data } = await supabase.from("jobs").select("fatiador").not("fatiador", "is", null)
+        .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(0, 0);
+      return data?.[0]?.fatiador ?? null;
+    },
+    staleTime: 60_000,
+  });
+  useEffect(() => {
+    if (f.fatiador || !rel.fatiadores.length) return;
+    const alvo = rel.fatiadores.length === 1 ? rel.fatiadores[0]!.id : rel.fatiadores.find((x) => x.id === ultimoFatiador)?.id;
+    if (alvo) setF((p) => (p.fatiador ? p : { ...p, fatiador: alvo }));
+  }, [rel.fatiadores, ultimoFatiador, f.fatiador]);
   const preco = f.roteiro === "preco";
   const custoCurto = useCustoCurto(f.roteiro, f.motor);
   const [wizard, setWizard] = useState(false);
@@ -170,7 +187,7 @@ function NovaAnalise() {
     if (!nome?.trim()) return;
     const { error } = await supabase.from("presets").insert({
       nome: nome.trim().slice(0, 80),
-      opcoes: { ...toOpcoes(f), roteiro: f.roteiro, fatiador: f.fatiador, motor: f.motor } as Json,
+      opcoes: { ...toOpcoes(f, perfilNoFatiador), roteiro: f.roteiro, fatiador: f.fatiador, motor: f.motor } as Json,
     });
     if (error) { toast.error("Não foi possível salvar o modelo."); return; }
     toast.success("Modelo salvo.");
@@ -208,7 +225,7 @@ function NovaAnalise() {
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
           motor: f.motor!,
-          opcoes: { ...toOpcoes(f), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json } as Json,
+          opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json } as Json,
           arquivo_path,
           nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
         })
@@ -226,7 +243,9 @@ function NovaAnalise() {
   const roteiroInfo = ROTEIROS.find((r) => r.id === f.roteiro)?.label ?? "—";
   const fatLabel = f.fatiador ? fatiadorLabel(f.fatiador, rel) : null;
   const maquina = [fatLabel, f.impressora, `${f.bico} mm`].filter(Boolean).join(" · ");
-  const material = [f.filTipo, filMarcaNome, f.filLinha].filter(Boolean).join(" · ") || "—";
+  const material: ReactNode = f.filMarca && f.filLinha
+    ? <>{materialTexto(f.filMarca, f.filLinha)}{!perfilNoFatiador && <span className="ml-1.5 inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">perfil genérico</span>}</>
+    : f.filTipo ?? "—";
   const motorLabelSel = MOTORES.find((m) => m.id === f.motor)?.label ?? "—";
   const s1ok = !!f.roteiro;
   const s2ok = f.usarAberta || !!arquivo || !!pecaBib;
@@ -247,7 +266,7 @@ function NovaAnalise() {
         {erros.device && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.device}</p>}
       </div>
       <dl className="space-y-2 text-sm">
-        {[["Roteiro", roteiroInfo], ["Máquina", maquina || "—"], ["Material", material], ["Motor", motorLabelSel]].map(([k, v]) => (
+        {([["Roteiro", roteiroInfo], ["Máquina", maquina || "—"], ["Material", material], ["Motor", motorLabelSel]] as [string, ReactNode][]).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 text-right font-medium">{v}</dd></div>
         ))}
       </dl>
@@ -381,7 +400,7 @@ function NovaAnalise() {
                   <Button asChild size="sm" variant="outline"><Link to="/app/computador">Seu computador</Link></Button>
                 </div>
               ) : (
-                <Segmented label="Fatiador" options={fatOpts} value={f.fatiador} onChange={(v) => setF((p) => ({ ...p, fatiador: v, impressora: null, filMarca: null, filLinha: null }))} />
+                <Segmented label="Fatiador" className={cn(!f.fatiador && "animate-destaque-azul")} options={fatOpts} value={f.fatiador} onChange={(v) => setF((p) => ({ ...p, fatiador: v, impressora: null, filMarca: null, filLinha: null }))} />
               )}
               {erros.fatiador && <Erro>{erros.fatiador}</Erro>}
             </div>
@@ -389,7 +408,7 @@ function NovaAnalise() {
               <div className="space-y-1.5">
                 <Label>Impressora</Label>
                 <Combobox label="Impressora" options={impressoras} value={f.impressora} onChange={(v) => set("impressora", v)}
-                  placeholder={f.fatiador ? (impressoras.length ? "Escolha a impressora" : "Nenhuma impressora encontrada") : "Escolha o fatiador primeiro"} disabled={!impressoras.length} />
+                  placeholder={f.fatiador ? (impressoras.length ? "Escolha a impressora" : "Nenhuma impressora encontrada") : "Escolha o fatiador acima"} disabled={!impressoras.length} />
                 {erros.impressora && <Erro>{erros.impressora}</Erro>}
               </div>
               <div className="space-y-1.5">
@@ -403,12 +422,27 @@ function NovaAnalise() {
                 <Segmented label="Tipo de filamento" options={TIPOS_FILAMENTO.map((t) => ({ id: t, label: t }))} value={f.filTipo} onChange={(t) => setF((p) => ({ ...p, filTipo: t, filMarca: null, filLinha: null }))} />
               </div>
               <div className="space-y-1.5">
-                <Label>Marca e linha</Label>
-                <Combobox label="Marca" options={marcas} value={f.filMarca} placeholder={f.filTipo ? "Escolha a marca" : "Escolha o tipo primeiro"} disabled={!f.filTipo}
-                  onChange={(m) => setF((p) => ({ ...p, filMarca: m, filLinha: m === MARCA_GENERICA || m === MARCA_OUTRA ? p.filTipo : null }))} />
-                {f.filMarca === MARCA_OUTRA && <Input placeholder="Qual marca?" value={f.filMarcaOutra} onChange={(e) => set("filMarcaOutra", e.target.value)} maxLength={60} />}
-                {f.filMarca && <Combobox label="Linha" options={linhas} value={f.filLinha} placeholder="Escolha a linha" onChange={(l) => set("filLinha", l)} />}
-                {f.filMarca && <p className={cn("text-xs", perfilEncontrado ? "text-success-ink" : "text-muted-foreground")}>{perfilEncontrado ? "Perfil encontrado no fatiador." : "Vai usar o perfil Genérico."}</p>}
+                <Label>Marca</Label>
+                <Combobox label="Marca" value={f.filMarca} criarComo="marca" disabled={!f.fatiador || !f.filTipo}
+                  placeholder={!f.fatiador ? "Escolha o fatiador acima" : f.filTipo ? "Escolha a marca" : "Escolha o tipo primeiro"}
+                  groups={f.fatiador ? [{ options: [MARCA_GENERICA] }, { titulo: `Com perfil no ${fatNome}`, options: grupos.perfil }, { titulo: "Outras marcas", options: grupos.outras }] : []}
+                  onChange={(m) => setF((p) => ({ ...p, filMarca: m, filLinha: m === MARCA_GENERICA ? p.filTipo : null }))} />
+                {f.filMarca && grupo === "perfil" && <p className="text-xs font-medium text-success-ink">Perfil encontrado no {fatNome}.</p>}
+                {f.filMarca && grupo === "outras" && (
+                  <div className="space-y-2 rounded-xl bg-primary/10 p-3">
+                    <p className="text-xs text-primary-ink">O {fatNome} não tem perfil desta marca. Vamos usar o perfil {f.filTipo} genérico. Se quiser, informe as temperaturas do rótulo do rolo:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <TempCampo label="Bico °C" value={f.tempBico} erro={erros.tempBico} onChange={(v) => set("tempBico", v)} />
+                      <TempCampo label="Mesa °C" value={f.tempMesa} erro={erros.tempMesa} onChange={(v) => set("tempMesa", v)} />
+                    </div>
+                  </div>
+                )}
+                {f.filMarca && (
+                  <>
+                    <Label className="pt-1">Linha</Label>
+                    <Combobox label="Linha" options={linhas} value={f.filLinha} placeholder="Escolha a linha" criarComo={grupo === "outras" ? "linha" : undefined} onChange={(l) => set("filLinha", l)} />
+                  </>
+                )}
               </div>
             </div>
             {erros.filamento && <Erro>{erros.filamento}</Erro>}
@@ -461,5 +495,16 @@ function NovaAnalise() {
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+/** Small optional temperature field (validated on submit). */
+function TempCampo({ label, value, erro, onChange }: { label: string; value: string; erro?: string | undefined; onChange: (v: string) => void }) {
+  return (
+    <label className="space-y-1 text-xs font-medium">
+      <span>{label}</span>
+      <Input inputMode="numeric" value={value} onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, "").slice(0, 3))} className="h-9" aria-invalid={!!erro} />
+      {erro && <span className="block text-destructive-ink" role="alert">{erro}</span>}
+    </label>
   );
 }
