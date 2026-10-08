@@ -209,7 +209,7 @@ export function formatUSDEstimado(v: number): string {
 
 /** "≈ US$ 0,016 (R$ 0,09)". */
 export function textoCustoEstimado(usd: number, cambio: number): string {
-  const brl = Number.isFinite(cambio) && cambio > 0 ? ` (${formatBRL(usd * cambio)})` : "";
+  const brl = Number.isFinite(cambio) && cambio > 0 ? ` (${formatBRL(usd * cambio).replace(/\s/g, " ")})` : "";
   return `≈ ${formatUSDEstimado(usd)}${brl}`;
 }
 
