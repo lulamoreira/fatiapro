@@ -245,6 +245,7 @@ export type Database = {
         Row: {
           criado_em: string
           id: string
+          impressoras_escolhidas: Json
           limite_gasto_usd: number
           maquina_hash: string | null
           nome: string
@@ -260,6 +261,7 @@ export type Database = {
         Insert: {
           criado_em?: string
           id?: string
+          impressoras_escolhidas?: Json
           limite_gasto_usd?: number
           maquina_hash?: string | null
           nome: string
@@ -275,6 +277,7 @@ export type Database = {
         Update: {
           criado_em?: string
           id?: string
+          impressoras_escolhidas?: Json
           limite_gasto_usd?: number
           maquina_hash?: string | null
           nome?: string
@@ -838,6 +841,7 @@ export type Database = {
         Returns: Json
       }
       estornar_credito: { Args: { p_job: string }; Returns: undefined }
+      impressoras_escolhidas_valido: { Args: { v: Json }; Returns: boolean }
       inicio_dia_sp: { Args: { p?: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       job_contou: {
