@@ -88,7 +88,7 @@ export function ApiKeyWizard({ deviceId, conectado, open, onOpenChange }: ApiKey
         </div>
 
         {passo === 1 && (
-          <Corpo titulo="Crie sua conta na Anthropic" texto="A Anthropic é a empresa que faz o Claude. A conta de API é separada da assinatura do Claude, mesmo que você já use o claude.ai.">
+          <Corpo titulo="Crie sua conta na Anthropic" texto="A FatiaProAI funciona com a tecnologia da Anthropic. Para usar a sua própria chave, crie uma conta de API no site da Anthropic (é separada de qualquer assinatura).">
             <Lista itens={["Clique em Abrir o site da Anthropic.", "Entre com seu e-mail ou Google.", "Volte para esta janela."]} />
             <Link href="https://platform.claude.com/" primary>Abrir o site da Anthropic</Link>
           </Corpo>

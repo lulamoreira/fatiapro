@@ -1,4 +1,4 @@
-# Escolha do Claude no Resumo
-- [x] Substituir segmentado por cartões acessíveis com apoio de custo e erro abaixo.
-- [x] Selecionar motor recente disponível, com fallback API/único motor; testar regras.
-- [x] Validar seleção, teclado, custo e apresentação sem mudar outras áreas.
+# Marca FatiaProAI
+- [x] Atualizar apenas textos visíveis, preservando assinatura administrativa e links.
+- [x] Adicionar e executar teste de textos TSX com exceções delimitadas (4 testes de marca passaram).
+- [x] Confirmar quantidade de textos alterados e resultado (8 textos; 36 testes passaram).

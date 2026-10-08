@@ -289,16 +289,16 @@ function NovaAnalise() {
         ))}
       </dl>
       <div className="space-y-2" id="sec-motor">
-        <p id="claude-choice-label" className="text-xs text-muted-foreground">Como usar o Claude</p>
+        <p id="claude-choice-label" className="text-xs text-muted-foreground">Como usar a FatiaProAI</p>
         {motoresOk.length ? <MotorChoice aria-labelledby="claude-choice-label" aria-describedby={erros.motor && !f.motor ? "claude-choice-error" : undefined} options={motoresOk.map((m) => m.id)} value={f.motor} roteiro={f.roteiro} onChange={(v) => set("motor", v)} invalid={!!erros.motor && !f.motor} /> : (
           <div className={cn("space-y-2 rounded-2xl border border-dashed p-3", erros.motor && "border-destructive/30")}>
-            <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
+            <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API da FatiaProAI ainda não está configurada neste computador."}</p>
             {device
               ? <Button size="sm" variant="outline" onClick={() => setWizard(true)}>Configurar a chave de API</Button>
               : <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Conectar um computador</Link></Button>}
           </div>
         )}
-        {erros.motor && !f.motor && <p id="claude-choice-error" className="text-xs font-medium text-destructive-ink" role="alert">Escolha como usar o Claude.</p>}
+        {erros.motor && !f.motor && <p id="claude-choice-error" className="text-xs font-medium text-destructive-ink" role="alert">Escolha como usar a FatiaProAI.</p>}
       </div>
       <section aria-label="Arquivo otimizado" className="space-y-1.5 rounded-2xl bg-card p-3 text-sm shadow-sm">
         <p className="text-xs font-semibold text-muted-foreground">Arquivo otimizado</p>

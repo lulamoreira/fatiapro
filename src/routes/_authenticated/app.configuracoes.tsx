@@ -70,7 +70,7 @@ function ComputadorPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[30px] font-bold tracking-[-0.02em]">Configurações</h1>
-          <p className="mt-1 text-muted-foreground">Computadores conectados, Claude, fatiadores e pasta dos arquivos.</p>
+          <p className="mt-1 text-muted-foreground">Computadores conectados, FatiaProAI, fatiadores e pasta dos arquivos.</p>
         </div>
         <Button onClick={gerar} size="lg"><Plug className="size-4" />Conectar computador</Button>
       </div>
@@ -196,7 +196,7 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Quadrinho alvo={sec("fat")} titulo="Fatiadores" valor={`${rel.fatiadores.length} ${rel.fatiadores.length === 1 ? "pronto" : "prontos"}`}
           pill={<Tag tone={rel.fatiadores.length ? "success" : "warning"}>{rel.fatiadores.length ? "Tudo certo" : "Nenhum encontrado"}</Tag>} />
-        <Quadrinho alvo={`claude-${d.id}`} titulo="Claude" valor={claudePronto ?? "Falta a chave de API"}
+        <Quadrinho alvo={`claude-${d.id}`} titulo="FatiaProAI" valor={claudePronto ?? "Falta a chave de API"}
           pill={<Tag tone={claudePronto ? "success" : "warning"}>{claudePronto ? "Pronto" : "Configure para analisar"}</Tag>} />
         <Quadrinho alvo={sec("pasta")} titulo="Arquivos otimizados" valor={pastaCurta(pasta)} pill={<Tag tone="primary">Trocar pasta</Tag>} />
       </div>
