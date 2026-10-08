@@ -27,19 +27,10 @@ export const criarAnalise = createServerFn({ method: "POST" })
   .inputValidator((d) => Entrada.parse(d))
   .handler(async ({ data, context }): Promise<CriarAnaliseResultado> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: r, error } = await supabaseAdmin.rpc("criar_analise", {
-      p_user: context.userId,
-      p_device: data.device_id,
-      p_roteiro: data.roteiro,
-      p_fatiador: data.fatiador ?? undefined,
-      p_opcoes: data.opcoes as never,
-      p_motor: data.motor,
-      p_premium: data.premium,
-      p_arquivo_path: data.arquivo_path ?? undefined,
-      p_nome_peca: data.nome_peca ?? undefined,
-    } as never);
+    // Sempre os 9 parâmetros; opcionais vazios vão como null (undefined quebra o PGRST202).
+    const { data: r, error } = await supabaseAdmin.rpc("criar_analise", parametrosCriarAnalise(context.userId, data) as never);
     if (error) {
-      console.error("[criarAnalise]", error.code);
+      console.error("[criarAnalise]", error.code, error.message);
       return { erro: true, codigo: "erro_interno", detalhe: "Não foi possível criar a análise." };
     }
     return r as unknown as CriarAnaliseResultado;
