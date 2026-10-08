@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nomeArquivoOtimizado, custoApiUSD, formatDuracao, formatGramas, isConectado, marcasPara, togglePrioridade, usoPlano } from "./fatia";
+import { nomeArquivoOtimizado, materialTexto, maquinaResumo, motorSelecionado, custoApiUSD, formatDuracao, formatGramas, isConectado, marcasPara, togglePrioridade, usoPlano } from "./fatia";
 
 describe("formatDuracao", () => {
   it("menos de 1h mostra minutos e segundos", () => expect(formatDuracao(1941)).toBe("32m 21s"));
@@ -42,6 +42,15 @@ describe("conectado", () => {
 });
 
 describe("nome do arquivo otimizado", () => {
+  it.each([
+    ["Bambu Lab", "Bambu PLA Lite", "Bambu Lab PLA Lite", "Bambu-Lab-PLA-Lite"],
+    ["Anycubic", "Anycubic PLA", "Anycubic PLA", "Anycubic-PLA"],
+    ["Bambu Lab", "bámbu PLA Lite", "Bambu Lab PLA Lite", "Bambu-Lab-PLA-Lite"],
+  ])("deduplica a primeira palavra de %s + %s", (marca, linha, material, parte) => {
+    expect(materialTexto(marca, linha)).toBe(material);
+    expect(nomeArquivoOtimizado({ peca: "peca.stl", impressora: "X1C", bico: "0.4", marca, linha, data: new Date(2026, 9, 8, 13, 30) }))
+      .toBe(`peca_X1C_0.4mm_${parte}_2026-10-08_13h30.3mf`);
+  });
   it("segue o exemplo da regra", () => {
     expect(nomeArquivoOtimizado({ peca: "热床线辅助定位.stl", impressora: "Anycubic Kobra X 0.4 nozzle", bico: "0.4", marca: "Anycubic", linha: "Anycubic PLA", data: new Date(2026, 9, 7, 17, 21) }))
       .toBe("热床线辅助定位_Anycubic-Kobra-X_0.4mm_Anycubic-PLA_2026-10-07_17h21.3mf");
@@ -49,6 +58,18 @@ describe("nome do arquivo otimizado", () => {
   it("Genérica + PLA vira Generico-PLA e sem arquivo vira peca-aberta", () => {
     expect(nomeArquivoOtimizado({ peca: null, impressora: "X1C", bico: "0.4", marca: "Genérica", linha: "PLA", data: new Date(2026, 0, 2, 3, 4) }))
       .toBe("peca-aberta_X1C_0.4mm_Generico-PLA_2026-01-02_03h04.3mf");
+  });
+});
+
+describe("Resumo", () => {
+  it("separa a marca do fatiador e o sufixo nozzle da máquina", () => {
+    expect(maquinaResumo("Anycubic Kobra X 0.4 nozzle", "Anycubic Slicer Next", "0.4")).toBe("Kobra X · bico 0.4 mm");
+  });
+  it("seleciona automaticamente o único motor disponível", () => {
+    expect(motorSelecionado(null, ["api"])).toBe("api");
+    expect(motorSelecionado("assinatura", ["api"])).toBe("api");
+    expect(motorSelecionado(null, ["assinatura"])).toBe("assinatura");
+    expect(motorSelecionado(null, ["assinatura", "api"])).toBeNull();
   });
 });
 

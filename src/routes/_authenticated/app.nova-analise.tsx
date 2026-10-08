@@ -10,7 +10,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
-  isConectado, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
+  isConectado, maquinaResumo, motorSelecionado, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
@@ -81,13 +81,18 @@ function NovaAnalise() {
   const [pastaSaida, setPastaSaida] = useState<string | null>(null);
   const { data: devices = [] } = useQuery(devicesQuery);
   const { data: presets = [] } = useQuery(presetsQuery);
-  const [f, setF] = useState<FormState>(FORM_INICIAL);
+  const [form, setF] = useState<FormState>(FORM_INICIAL);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
   const [pecaBib, setPecaBib] = useState<PecaEscolhida | null>(null);
   const [ajustes, setAjustes] = useState<AjusteModelo[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const isAdmin = useIsAdmin();
+  const device = devices.find((d) => d.id === form.deviceId);
+  const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
+  const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
+  const f: FormState = { ...form, motor: motorSelecionado(form.motor, motoresOk.map((m) => m.id)) };
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
   // Default device: first connected, else first.
@@ -128,9 +133,6 @@ function NovaAnalise() {
     });
   }, [peca]);
 
-  const isAdmin = useIsAdmin();
-  const device = devices.find((d) => d.id === f.deviceId);
-  const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
   const fatOpts = rel.fatiadores.map((x) => ({ id: x.id, label: nomeFatiador(x) }));
   const fatRel = rel.fatiadores.find((r) => r.id === f.fatiador);
@@ -140,7 +142,6 @@ function NovaAnalise() {
   const grupo = f.filMarca ? grupoDaMarca(f.filMarca, grupos) : null;
   const linhas = f.filTipo && f.filMarca && grupo ? linhasDaMarca(rel, f.fatiador, f.filTipo, f.filMarca, grupo) : [];
   const perfilNoFatiador = grupo === "perfil";
-  const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
   const pastaPadrao = rel.pasta_saida_padrao ?? "Downloads/FatiaPro";
   const pastaFinal = pastaSaida ?? pastaPadrao;
   const filMarcaNome = f.filMarca;
@@ -242,11 +243,10 @@ function NovaAnalise() {
 
   const roteiroInfo = ROTEIROS.find((r) => r.id === f.roteiro)?.label ?? "—";
   const fatLabel = f.fatiador ? fatiadorLabel(f.fatiador, rel) : null;
-  const maquina = [fatLabel, f.impressora, `${f.bico} mm`].filter(Boolean).join(" · ");
+  const maquina = f.impressora ? maquinaResumo(f.impressora, fatLabel ?? "", f.bico) : "—";
   const material: ReactNode = f.filMarca && f.filLinha
     ? <>{materialTexto(f.filMarca, f.filLinha)}{!perfilNoFatiador && <span className="ml-1.5 inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">perfil genérico</span>}</>
     : f.filTipo ?? "—";
-  const motorLabelSel = MOTORES.find((m) => m.id === f.motor)?.label ?? "—";
   const s1ok = !!f.roteiro;
   const s2ok = f.usarAberta || !!arquivo || !!pecaBib;
   const s3ok = !!f.fatiador && !!f.impressora && !!f.filTipo;
@@ -259,20 +259,20 @@ function NovaAnalise() {
         <Label className="text-xs text-muted-foreground">Computador</Label>
         {devices.length ? (
           <Select value={f.deviceId ?? ""} onValueChange={(v) => setF((p) => ({ ...p, deviceId: v, fatiador: null, impressora: null, motor: null }))}>
-            <SelectTrigger aria-label="Computador"><span className="flex min-w-0 items-center gap-2"><Dot on={conectado} /><SelectValue placeholder="Escolha o computador" /></span></SelectTrigger>
+            <SelectTrigger aria-label="Computador"><div className="flex min-w-0 items-center gap-2"><Dot on={conectado} /><SelectValue className="min-w-0 truncate" placeholder="Escolha o computador" /></div></SelectTrigger>
             <SelectContent>{devices.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
           </Select>
         ) : <p className="text-sm text-muted-foreground">Nenhum computador</p>}
         {erros.device && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.device}</p>}
       </div>
       <dl className="space-y-2 text-sm">
-        {([["Roteiro", roteiroInfo], ["Máquina", maquina || "—"], ["Material", material], ["Motor", motorLabelSel]] as [string, ReactNode][]).map(([k, v]) => (
+        {([["Roteiro", roteiroInfo], ["Máquina", maquina], ["Fatiador:", fatLabel ?? "—"], ["Material", material]] as [string, ReactNode][]).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 text-right font-medium">{v}</dd></div>
         ))}
       </dl>
-      <div className="space-y-1.5" id="sec-motor">
+      <div className="flex flex-wrap items-center gap-2" id="sec-motor">
         <Label className="text-xs text-muted-foreground">Motor</Label>
-        {motoresOk.length ? <Segmented label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} className="w-full" /> : (
+        {motoresOk.length ? <Segmented label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} className="min-w-0 flex-1" /> : (
           <div className="space-y-2 rounded-2xl border border-dashed p-3">
             <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
             {device

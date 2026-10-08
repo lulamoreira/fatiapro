@@ -209,9 +209,7 @@ export function impressoraSemBico(nome: string): string {
 
 export function nomeFilamento(marca: string, linha: string): string {
   const m = marca === MARCA_GENERICA ? "Generico" : marca.trim();
-  const l = linha.trim();
-  if (!m) return l;
-  return l.toLowerCase().startsWith(m.toLowerCase()) ? l : `${m} ${l}`;
+  return materialTexto(m, linha);
 }
 
 export interface NomeArquivoInput {
@@ -305,9 +303,29 @@ export function linhasDaMarca(rel: Relatorio, fatiadorId: string | null, tipo: s
 
 /** "Bambu Lab PLA Lite" (no repeated brand). */
 export const materialTexto = (marca: string, linha: string) => {
+  const m = marca.trim();
   const l = linha.trim();
-  return l.toLowerCase().startsWith(marca.trim().toLowerCase()) ? l : `${marca.trim()} ${l}`.trim();
+  const palavraMarca = m.split(/\s+/)[0] ?? "";
+  const palavraLinha = l.split(/\s+/)[0] ?? "";
+  const resto = palavraMarca && chaveMarca(palavraMarca) === chaveMarca(palavraLinha)
+    ? l.slice(palavraLinha.length).trimStart() : l;
+  return [m, resto].filter(Boolean).join(" ");
 };
+
+/** Summary-only printer label; stored profile and output printer name stay intact. */
+export function maquinaResumo(impressora: string, fatiador: string, bico: string): string {
+  const nome = impressoraSemBico(impressora);
+  const marca = fatiador.trim().split(/\s+/)[0] ?? "";
+  const primeira = nome.split(/\s+/)[0] ?? "";
+  const modelo = marca && chaveMarca(primeira) === chaveMarca(marca)
+    ? nome.slice(primeira.length).trimStart() : nome;
+  return `${modelo} · bico ${bico} mm`;
+}
+
+/** Resolve the only available motor without persisting derived UI state. */
+export function motorSelecionado(atual: Motor | null, disponiveis: readonly Motor[]): Motor | null {
+  return disponiveis.length === 1 ? disponiveis[0] ?? null : atual;
+}
 
 export const TEMP_BICO = { min: 150, max: 320 } as const;
 export const TEMP_MESA = { min: 0, max: 130 } as const;
