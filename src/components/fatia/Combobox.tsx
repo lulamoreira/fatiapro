@@ -20,7 +20,7 @@ export interface ComboboxProps {
   vazio?: string;
   disabled?: boolean;
   /** When set, typed text not in the list is offered as "Usar '<texto>' como …". */
-  criarComo?: string;
+  criarComo?: string | undefined;
 }
 
 /** Searchable single-choice field for long lists (printers, filament brands/lines). */
