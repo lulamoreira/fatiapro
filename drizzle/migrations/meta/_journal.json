@@ -57,6 +57,13 @@
       "when": 1791408474229,
       "tag": "0007_admin_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791490040452,
+      "tag": "0008_ponte_versoes",
+      "breakpoints": true
     }
   ]
 }

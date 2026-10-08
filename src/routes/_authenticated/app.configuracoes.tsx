@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { usePonteVersoes, ultimaPublicada } from "@/hooks/use-ponte-versoes";
+import { compararVersao } from "@/lib/ponte";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Laptop, Monitor, MoreHorizontal, Pencil, Plug } from "lucide-react";
+import { Download, Laptop, Monitor, MoreHorizontal, Pencil, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery, type DeviceRow } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -72,7 +74,10 @@ function ComputadorPage() {
           <h1 className="text-[30px] font-bold tracking-[-0.02em]">Configurações</h1>
           <p className="mt-1 text-muted-foreground">Computadores conectados, FatiaProAI, fatiadores e pasta dos arquivos.</p>
         </div>
-        <Button onClick={gerar} size="lg"><Plug className="size-4" />Conectar computador</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="secondary" size="lg"><Link to="/app/baixar"><Download className="size-4" />Baixar a ponte</Link></Button>
+          <Button onClick={gerar} size="lg"><Plug className="size-4" />Conectar computador</Button>
+        </div>
       </div>
 
       {codigo && (
@@ -84,6 +89,7 @@ function ComputadorPage() {
               <p className="text-sm text-muted-foreground tabular">
                 Válido por {Math.floor(restante / 60)}:{String(restante % 60).padStart(2, "0")} · esta tela atualiza sozinha
               </p>
+              <p className="mt-2 text-sm text-muted-foreground">Ainda não instalou? <Link to="/app/baixar" className="font-semibold text-primary-ink underline">Baixar a ponte</Link></p>
             </>
           ) : (
             <p className="text-sm">O código expirou. <button className="font-semibold text-primary-ink underline" onClick={gerar}>Gerar outro</button></p>
@@ -100,6 +106,10 @@ function ComputadorPage() {
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             A ponte é um programa que você instala no seu Mac ou Windows. Ela encontra seus fatiadores, roda as análises e manda o progresso pra cá. Nada é enviado para a impressora.
           </p>
+          <ol className="mx-auto mt-6 max-w-sm space-y-2 text-left text-sm">
+            <li><span className="font-semibold">1.</span> <Link to="/app/baixar" className="font-semibold text-primary-ink underline">Baixe e instale a ponte</Link></li>
+            <li><span className="font-semibold">2.</span> Clique em "Conectar computador" e digite o código na ponte.</li>
+          </ol>
           {!codigo && <Button className="mt-6" onClick={gerar}>Conectar computador</Button>}
         </div>
       ) : (
@@ -141,6 +151,9 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
   const [confirmar, setConfirmar] = useState(false);
   const pasta = rel.pasta_saida_padrao ?? "Downloads/FatiaPro";
   const sec = (s: string) => `${s}-${d.id}`;
+  const { data: versoes } = usePonteVersoes();
+  const alvo = ultimaPublicada(versoes, d.sistema === "windows" ? "windows" : "macos");
+  const atualizando = alvo && d.versao_ponte && compararVersao(d.versao_ponte, alvo.versao) < 0 ? alvo.versao : null;
 
   const salvar = useMutation({
     mutationFn: async (patch: { nome?: string; limite_gasto_usd?: number; revogado?: boolean }) => {
@@ -183,6 +196,7 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
         <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold", on ? "bg-success/15 text-success-ink" : "bg-muted text-muted-foreground")}>
           <Dot on={on} />{on ? "Conectado" : "Desconectado"}
         </span>
+        {atualizando && <Tag tone="warning">Atualizando para {atualizando}…</Tag>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Mais opções"><MoreHorizontal className="size-5" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">

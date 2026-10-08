@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
+import { Route as AuthenticatedAppBaixarRouteImport } from './routes/_authenticated/app.baixar'
 import { Route as AuthenticatedAppBibliotecaRouteImport } from './routes/_authenticated/app.biblioteca'
 import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
@@ -24,6 +25,7 @@ import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
 import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
+import { Route as ApiPublicBridgeVersaoRouteImport } from './routes/api/public/bridge/versao'
 import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/public/bridge/commands.$id'
 import { Route as ApiPublicBridgeCommandsNextRouteImport } from './routes/api/public/bridge/commands.next'
 import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
@@ -57,6 +59,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
 const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppBaixarRoute = AuthenticatedAppBaixarRouteImport.update({
+  id: '/baixar',
+  path: '/baixar',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppBibliotecaRoute =
@@ -111,6 +118,11 @@ const ApiPublicBridgePairRoute = ApiPublicBridgePairRouteImport.update({
   path: '/api/public/bridge/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBridgeVersaoRoute = ApiPublicBridgeVersaoRouteImport.update({
+  id: '/api/public/bridge/versao',
+  path: '/api/public/bridge/versao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBridgeCommandsIdRoute =
   ApiPublicBridgeCommandsIdRouteImport.update({
     id: '/api/public/bridge/commands/$id',
@@ -146,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -156,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -166,6 +180,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -176,6 +191,7 @@ export interface FileRoutesByTo {
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -189,6 +205,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
+  '/_authenticated/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/_authenticated/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -199,6 +216,7 @@ export interface FileRoutesById {
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
+  '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -212,6 +230,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app'
     | '/app/admin'
+    | '/app/baixar'
     | '/app/biblioteca'
     | '/app/computador'
     | '/app/configuracoes'
@@ -222,6 +241,7 @@ export interface FileRouteTypes {
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -232,6 +252,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app/admin'
+    | '/app/baixar'
     | '/app/biblioteca'
     | '/app/computador'
     | '/app/configuracoes'
@@ -242,6 +263,7 @@ export interface FileRouteTypes {
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -254,6 +276,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/app'
     | '/_authenticated/app/admin'
+    | '/_authenticated/app/baixar'
     | '/_authenticated/app/biblioteca'
     | '/_authenticated/app/computador'
     | '/_authenticated/app/configuracoes'
@@ -264,6 +287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analise/$id'
     | '/api/public/bridge/heartbeat'
     | '/api/public/bridge/pair'
+    | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -277,6 +301,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiPublicBridgeHeartbeatRoute: typeof ApiPublicBridgeHeartbeatRoute
   ApiPublicBridgePairRoute: typeof ApiPublicBridgePairRoute
+  ApiPublicBridgeVersaoRoute: typeof ApiPublicBridgeVersaoRoute
   ApiPublicBridgeCommandsIdRoute: typeof ApiPublicBridgeCommandsIdRoute
   ApiPublicBridgeCommandsNextRoute: typeof ApiPublicBridgeCommandsNextRoute
   ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
@@ -326,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/app/admin'
       preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/baixar': {
+      id: '/_authenticated/app/baixar'
+      path: '/baixar'
+      fullPath: '/app/baixar'
+      preLoaderRoute: typeof AuthenticatedAppBaixarRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/biblioteca': {
@@ -391,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgePairRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bridge/versao': {
+      id: '/api/public/bridge/versao'
+      path: '/api/public/bridge/versao'
+      fullPath: '/api/public/bridge/versao'
+      preLoaderRoute: typeof ApiPublicBridgeVersaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge/commands/$id': {
       id: '/api/public/bridge/commands/$id'
       path: '/api/public/bridge/commands/$id'
@@ -431,6 +470,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
+  AuthenticatedAppBaixarRoute: typeof AuthenticatedAppBaixarRoute
   AuthenticatedAppBibliotecaRoute: typeof AuthenticatedAppBibliotecaRoute
   AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
@@ -443,6 +483,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
+  AuthenticatedAppBaixarRoute: AuthenticatedAppBaixarRoute,
   AuthenticatedAppBibliotecaRoute: AuthenticatedAppBibliotecaRoute,
   AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,
@@ -473,6 +514,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiPublicBridgeHeartbeatRoute: ApiPublicBridgeHeartbeatRoute,
   ApiPublicBridgePairRoute: ApiPublicBridgePairRoute,
+  ApiPublicBridgeVersaoRoute: ApiPublicBridgeVersaoRoute,
   ApiPublicBridgeCommandsIdRoute: ApiPublicBridgeCommandsIdRoute,
   ApiPublicBridgeCommandsNextRoute: ApiPublicBridgeCommandsNextRoute,
   ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,

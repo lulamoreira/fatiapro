@@ -8,6 +8,7 @@ import { PageSkeleton } from "@/components/fatia/AppSkeleton";
 import { Button } from "@/components/ui/button";
 import { AdminUsuarios } from "@/components/admin/AdminUsuarios";
 import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
+import { AdminPonte } from "@/components/admin/AdminPonte";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({
@@ -34,7 +35,7 @@ function AdminPage() {
     },
     staleTime: 0,
   });
-  const [aba, setAba] = useState<"usuarios" | "historico">("usuarios");
+  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte">("usuarios");
 
   if (isLoading) return <PageSkeleton />;
   if (!isAdmin)
@@ -55,9 +56,9 @@ function AdminPage() {
         label="Seção"
         value={aba}
         onChange={setAba}
-        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }]}
+        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }]}
       />
-      {aba === "usuarios" ? <AdminUsuarios /> : <AdminAuditoria />}
+      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : <AdminPonte />}
     </div>
   );
 }

@@ -352,6 +352,48 @@ export type Database = {
           },
         ]
       }
+      ponte_versoes: {
+        Row: {
+          arquivo_path: string
+          assinatura: string
+          criado_em: string
+          id: string
+          nome_arquivo: string
+          notas: string | null
+          plataforma: string
+          publicada: boolean
+          sha256: string
+          tamanho_bytes: number
+          versao: string
+        }
+        Insert: {
+          arquivo_path: string
+          assinatura: string
+          criado_em?: string
+          id?: string
+          nome_arquivo: string
+          notas?: string | null
+          plataforma: string
+          publicada?: boolean
+          sha256: string
+          tamanho_bytes: number
+          versao: string
+        }
+        Update: {
+          arquivo_path?: string
+          assinatura?: string
+          criado_em?: string
+          id?: string
+          nome_arquivo?: string
+          notas?: string | null
+          plataforma?: string
+          publicada?: boolean
+          sha256?: string
+          tamanho_bytes?: number
+          versao?: string
+        }
+        Relationships: []
+      }
       presets: {
         Row: {
           criado_em: string
