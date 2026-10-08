@@ -36,7 +36,7 @@ export function sugerirNomeModelo(o: OpcoesJob): string {
 }
 
 /** Approved proposal items for a job (from its 'proposta' and 'aprovacao' events). */
-function useAjustesAprovados(jobId: string, enabled: boolean) {
+export function useAjustesAprovados(jobId: string, enabled: boolean) {
   return useQuery({
     queryKey: ["ajustes_aprovados", jobId],
     enabled,

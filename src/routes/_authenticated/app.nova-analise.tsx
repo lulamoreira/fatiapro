@@ -89,6 +89,8 @@ function NovaAnalise() {
   const [enviando, setEnviando] = useState(false);
   const [pecaBib, setPecaBib] = useState<PecaEscolhida | null>(null);
   const [ajustes, setAjustes] = useState<AjusteModelo[]>([]);
+  /** Model chosen in "Usar um modelo"; recorded on the job as opcoes.modelo_id/modelo_nome. */
+  const [modeloSel, setModeloSel] = useState<{ id: string; nome: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const isAdmin = useIsAdmin();
   const device = devices.find((d) => d.id === form.deviceId);
@@ -119,11 +121,15 @@ function NovaAnalise() {
   useEffect(() => {
     if (!repetir) return;
     supabase.from("jobs").select("*").eq("id", repetir).maybeSingle().then(({ data }) => {
-      if (data) setF(fromOpcoes(data, data.opcoes));
+      if (!data) return;
+      setF(fromOpcoes(data, data.opcoes));
+      const o = (data.opcoes ?? {}) as { modelo_id?: unknown; modelo_nome?: unknown };
+      setModeloSel(typeof o.modelo_id === "string" ? { id: o.modelo_id, nome: typeof o.modelo_nome === "string" ? o.modelo_nome : "" } : null);
     });
   }, [repetir]);
 
-  function aplicarModelo(opcoes: unknown) {
+  function aplicarModelo(opcoes: unknown, origem: { id: string; nome: string } | null = null) {
+    setModeloSel(origem);
     setF((cur) => ({ ...fromOpcoes({}, opcoes), deviceId: cur.deviceId }));
     const lista = (opcoes as { ajustes_modelo?: unknown } | null)?.ajustes_modelo;
     setAjustes(Array.isArray(lista) ? lista.filter((a): a is AjusteModelo => !!a && typeof (a as AjusteModelo).titulo === "string") : []);
@@ -132,8 +138,8 @@ function NovaAnalise() {
   // Prefill from "Meus modelos → Usar".
   useEffect(() => {
     if (!modelo) return;
-    supabase.from("presets").select("opcoes").eq("id", modelo).maybeSingle().then(({ data }) => {
-      if (data) aplicarModelo(data.opcoes);
+    supabase.from("presets").select("id, nome, opcoes").eq("id", modelo).maybeSingle().then(({ data }) => {
+      if (data) aplicarModelo(data.opcoes, { id: data.id, nome: data.nome });
     });
   }, [modelo]);
 
@@ -238,7 +244,7 @@ function NovaAnalise() {
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
           motor: f.motor!,
-          opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json } as Json,
+          opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json, ...(modeloSel ? { modelo_id: modeloSel.id, modelo_nome: modeloSel.nome } : {}) } as Json,
           arquivo_path,
           nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
         })
@@ -326,7 +332,7 @@ function NovaAnalise() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {presets.length === 0 ? <DropdownMenuItem disabled>Nenhum modelo salvo</DropdownMenuItem> : presets.map((p) => (
-                <DropdownMenuItem key={p.id} onClick={() => aplicarModelo(p.opcoes)}>{p.nome}</DropdownMenuItem>
+                <DropdownMenuItem key={p.id} onClick={() => aplicarModelo(p.opcoes, { id: p.id, nome: p.nome })}>{p.nome}</DropdownMenuItem>
               ))}
               <DropdownMenuItem asChild><Link to="/app/modelos">Abrir Meus modelos</Link></DropdownMenuItem>
             </DropdownMenuContent>
