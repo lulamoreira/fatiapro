@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
-  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto,, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
+  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
