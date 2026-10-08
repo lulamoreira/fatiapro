@@ -47,6 +47,7 @@ function AnalisePage() {
   const [erroRep, setErroRep] = useState<ErroAnalise | null>(null);
   const [questJob, setQuestJob] = useState<string | null>(null);
   const [repetirAposQuest, setRepetirAposQuest] = useState(false);
+  const [pendRep, setPendRep] = useState<string | null>(null);
   const { data: feedback, isFetched: feedbackLido } = useQuery({
     queryKey: ["feedback", id],
     queryFn: async () => (await supabase.from("feedback_respostas").select("id").eq("job_id", id).maybeSingle()).data,
@@ -128,7 +129,7 @@ function AnalisePage() {
       if ("erro" in r) {
         const e = erroAnalise(r.codigo, r.detalhe);
         setErroRep(e);
-        if (e.acao === "questionario" && r.job_pendente) { setRepetirAposQuest(true); setQuestJob(r.job_pendente); }
+        if (e.acao === "questionario" && r.job_pendente) { setPendRep(r.job_pendente); setRepetirAposQuest(true); setQuestJob(r.job_pendente); }
         return;
       }
       setErroRep(null);
@@ -311,7 +312,7 @@ function AnalisePage() {
         <div className="rounded-2xl border border-destructive bg-destructive/10 p-5" role="alert">
           <p className="text-sm font-medium text-destructive">{String((erroEv?.conteudo as { mensagem?: unknown })?.mensagem ?? "A análise falhou.")}</p>
           <Button className="mt-3" variant="destructive" size="sm" disabled={repetir.isPending} onClick={() => repetir.mutate()}>Tentar de novo</Button>
-          {erroRep && <div className="mt-3"><ErroAnaliseAviso erro={erroRep} onQuestionario={() => { setRepetirAposQuest(true); }} /></div>}
+          {erroRep && <div className="mt-3"><ErroAnaliseAviso erro={erroRep} onQuestionario={() => { setRepetirAposQuest(true); setQuestJob(pendRep); }} /></div>}
         </div>
       )}
       {estado === "limite_de_gasto" && (

@@ -7,10 +7,16 @@ import { z } from "zod";
 import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { criarAnalise } from "@/lib/analise.functions";
+import { usePlano } from "@/hooks/use-plano";
+import { erroAnalise, linhaUso, motoresVisiveis, ponteDesatualizada, roteiroComCredito, usaTeste, DIAS_TESTE, type ErroAnalise } from "@/lib/plano";
+import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
+import { Questionario } from "@/components/fatia/Questionario";
+import { Switch } from "@/components/ui/switch";
+import { Wallet } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
-  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
+  BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, maquinaResumo, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
 import { escolherMotor } from "@/lib/motor-choice";
@@ -96,7 +102,12 @@ function NovaAnalise() {
   const isAdmin = useIsAdmin();
   const device = devices.find((d) => d.id === form.deviceId);
   const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
-  const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
+  const motoresOk = motoresVisiveis(isAdmin, rel.motores);
+  const { data: plano } = usePlano();
+  const [premiumOn, setPremiumOn] = useState(false);
+  const [erroCriar, setErroCriar] = useState<ErroAnalise | null>(null);
+  const [pendente, setPendente] = useState<string | null>(null);
+  const [questJob, setQuestJob] = useState<string | null>(null);
   const { data: ultimoMotor } = useQuery({
     queryKey: ["ultimo-motor"],
     queryFn: async () => {
@@ -107,7 +118,13 @@ function NovaAnalise() {
     },
     staleTime: 60_000,
   });
-  const f: FormState = { ...form, motor: escolherMotor(form.motor, ultimoMotor, motoresOk.map((m) => m.id)) };
+  const f: FormState = { ...form, motor: escolherMotor(form.motor, ultimoMotor, motoresOk) };
+  const usaFatiaPro = f.motor === "fatiapro";
+  const premiumPossivel = usaFatiaPro && roteiroComCredito(f.roteiro);
+  const premiumTravado = !!plano && usaTeste(plano);
+  const premium = premiumPossivel && !premiumTravado && premiumOn;
+  const ponteVelha = !!device && usaFatiaPro && ponteDesatualizada(device.versao_ponte);
+  const uso = plano ? linhaUso(plano, f.roteiro, premium) : null;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
   // Default device: first connected, else first.
@@ -188,7 +205,8 @@ function NovaAnalise() {
     if (alvo) setF((p) => (p.fatiador ? p : { ...p, fatiador: alvo }));
   }, [rel.fatiadores, ultimoFatiador, f.fatiador]);
   const preco = f.roteiro === "preco";
-  const custoCurto = useCustoCurto(f.roteiro, f.motor);
+  const custoDolar = useCustoCurto(f.roteiro, f.motor, premium);
+  const custoCurto = usaFatiaPro ? (uso?.texto ?? "—") : custoDolar;
   const [wizard, setWizard] = useState(false);
   const nomeCompleto = nomeArquivoCompleto({ pecaDefinida: f.usarAberta || !!arquivo || !!pecaBib, impressora: f.impressora, marca: filMarcaNome || null, linha: f.filLinha });
 
@@ -224,7 +242,9 @@ function NovaAnalise() {
       if (el && el.offsetParent !== null) el.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
+    if (ponteVelha) return;
     setEnviando(true);
+    setErroCriar(null);
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sessão expirada.");
@@ -244,13 +264,20 @@ function NovaAnalise() {
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
           motor: f.motor === "api" || f.motor === "assinatura" ? f.motor : "fatiapro",
-          premium: false,
+          premium,
           opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json, ...(modeloSel ? { modelo_id: modeloSel.id, modelo_nome: modeloSel.nome } : {}) } as Record<string, unknown>,
           arquivo_path,
           nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
         },
       });
-      if ("erro" in r) { toast.warning(r.detalhe); return; }
+      if ("erro" in r) {
+        const e = erroAnalise(r.codigo, r.detalhe);
+        setErroCriar(e);
+        if (e.acao === "questionario" && r.job_pendente) { setPendente(r.job_pendente); setQuestJob(r.job_pendente); }
+        else toast.warning(e.mensagem);
+        return;
+      }
+      qc.invalidateQueries({ queryKey: ["meu-plano"] });
       const data = { id: r.job_id };
       navigate({ to: "/app/analise/$id", params: { id: data.id } });
     } catch (err) {
@@ -289,18 +316,22 @@ function NovaAnalise() {
           <div key={k} className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 text-right font-medium">{v}</dd></div>
         ))}
       </dl>
-      <div className="space-y-2" id="sec-motor">
-        <p id="claude-choice-label" className="text-xs text-muted-foreground">Como usar a FatiaProAI</p>
-        {motoresOk.length ? <MotorChoice aria-labelledby="claude-choice-label" aria-describedby={erros.motor && !f.motor ? "claude-choice-error" : undefined} options={motoresOk.map((m) => m.id)} value={f.motor} roteiro={f.roteiro} onChange={(v) => set("motor", v)} invalid={!!erros.motor && !f.motor} /> : (
-          <div className={cn("space-y-2 rounded-2xl border border-dashed p-3", erros.motor && "border-destructive/30")}>
-            <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API da FatiaProAI ainda não está configurada neste computador."}</p>
-            {device
-              ? <Button size="sm" variant="outline" onClick={() => setWizard(true)}>Configurar a chave de API</Button>
-              : <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Conectar um computador</Link></Button>}
-          </div>
-        )}
-        {erros.motor && !f.motor && <p id="claude-choice-error" className="text-xs font-medium text-destructive-ink" role="alert">Escolha como usar a FatiaProAI.</p>}
-      </div>
+      {isAdmin && (
+        <div className="space-y-2" id="sec-motor">
+          <p id="claude-choice-label" className="text-xs text-muted-foreground">Como usar a FatiaProAI</p>
+          <MotorChoice aria-labelledby="claude-choice-label" options={motoresOk} value={f.motor} roteiro={f.roteiro} premium={premium} onChange={(v) => set("motor", v)} />
+          {device && !rel.motores.api && <Button size="sm" variant="link" className="h-auto p-0" onClick={() => setWizard(true)}>Configurar a chave de API</Button>}
+        </div>
+      )}
+      {premiumPossivel && (
+        <label className="flex items-start justify-between gap-3 rounded-2xl border p-3">
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold">Análise Premium</span>
+            <span className="block text-xs text-muted-foreground">{premiumTravado ? "Disponível com créditos" : "Análise mais caprichada · usa 2 créditos"}</span>
+          </span>
+          <Switch aria-label="Análise Premium" checked={premium} disabled={premiumTravado} onCheckedChange={setPremiumOn} />
+        </label>
+      )}
       <section aria-label="Arquivo otimizado" className="space-y-1.5 rounded-2xl bg-card p-3 text-sm shadow-sm">
         <p className="text-xs font-semibold text-muted-foreground">Arquivo otimizado</p>
         <p className="break-all font-mono text-xs">{pastaFinal}</p>
@@ -314,8 +345,16 @@ function NovaAnalise() {
           </EnviarComando>
         )}
       </section>
-      <CostCard roteiro={f.roteiro} motor={f.motor} />
-      <Button size="lg" className="w-full" onClick={analisar} disabled={enviando}>{enviando ? "Enviando…" : <>Analisar peça <ArrowRight className="size-4" /></>}</Button>
+      {usaFatiaPro ? (
+        <div className="rounded-2xl bg-gradient-to-br from-primary/12 to-primary/4 p-4" aria-live="polite">
+          <p className="text-xs font-semibold text-muted-foreground">Uso</p>
+          <p className="text-sm font-bold">{uso?.texto ?? "…"}</p>
+          {uso?.verPlanos && <Link to="/app/plano" className="text-xs font-semibold text-primary-ink underline">Ver planos</Link>}
+        </div>
+      ) : <CostCard roteiro={f.roteiro} motor={f.motor} premium={premium} />}
+      {ponteVelha && <p className="rounded-2xl bg-primary/10 p-3 text-xs text-primary-ink" role="status">Atualizando a ponte… a análise fica disponível em instantes</p>}
+      {erroCriar && <ErroAnaliseAviso erro={erroCriar} onQuestionario={() => setQuestJob(pendente)} />}
+      <Button size="lg" className="w-full" onClick={analisar} disabled={enviando || ponteVelha}>{enviando ? "Enviando…" : <>Analisar peça <ArrowRight className="size-4" /></>}</Button>
       <Button variant="ghost" size="sm" className="w-full" onClick={salvarModelo}><BookmarkPlus className="size-4" />Salvar como modelo</Button>
       <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="size-4 text-success" aria-hidden />Nada é enviado para a impressora</p>
     </div>
@@ -340,6 +379,13 @@ function NovaAnalise() {
           </DropdownMenu>
         }
       />
+
+      {plano && (
+        <Link to="/app/plano" className="glass inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold">
+          <Wallet className="size-4 text-primary-ink" aria-hidden />
+          {plano.saldo > 0 || !plano.teste?.ativo ? `${plano.saldo} ${plano.saldo === 1 ? "crédito" : "créditos"}` : `Teste grátis · dia ${plano.teste.dia_atual} de ${DIAS_TESTE}`}
+        </Link>
+      )}
 
       {device && !conectado && (
         <p className="flex items-start gap-2 rounded-2xl bg-warning/15 p-4 text-sm text-warning-ink">
@@ -495,18 +541,19 @@ function NovaAnalise() {
         <aside className="glass sticky top-5 hidden self-start rounded-[22px] p-5 lg:block" aria-label="Resumo">{resumo}</aside>
       </div>
 
-      {device && <ApiKeyWizard deviceId={device.id} conectado={conectado} open={wizard} onOpenChange={setWizard} />}
+      {device && isAdmin && <ApiKeyWizard deviceId={device.id} conectado={conectado} open={wizard} onOpenChange={setWizard} />}
+      <Questionario jobId={questJob} onOpenChange={(o) => { if (!o) setQuestJob(null); }} onEnviado={() => { setErroCriar(null); void analisar(); }} />
 
       {/* Mobile/tablet summary bar above bottom nav */}
       <Sheet>
         <div className="glass fixed inset-x-3 bottom-[84px] z-30 flex items-center gap-3 rounded-[22px] p-2 pl-4 md:bottom-4 md:left-auto md:right-4 md:w-96 lg:hidden">
           <SheetTrigger asChild>
             <button type="button" className="flex min-h-11 min-w-0 flex-1 items-center gap-1 text-left">
-              <span className="min-w-0"><span className="block text-[11px] text-muted-foreground">Custo estimado</span><span className="block truncate text-sm font-bold">{custoCurto}</span></span>
+              <span className="min-w-0"><span className="block text-[11px] text-muted-foreground">{usaFatiaPro ? "Uso" : "Custo estimado"}</span><span className="block truncate text-sm font-bold">{custoCurto}</span></span>
               <ChevronUp className="ml-auto size-4 text-muted-foreground" aria-hidden />
             </button>
           </SheetTrigger>
-          <Button onClick={analisar} disabled={enviando}>{enviando ? "Enviando…" : "Analisar peça"}</Button>
+          <Button onClick={analisar} disabled={enviando || ponteVelha}>{enviando ? "Enviando…" : "Analisar peça"}</Button>
         </div>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-[22px]">
           <SheetTitle className="sr-only">Resumo</SheetTitle>
