@@ -97,16 +97,24 @@ function AnalisePage() {
   const repetir = useMutation({
     mutationFn: async () => {
       if (!job) throw new Error("sem job");
-      const { data, error } = await supabase
-        .from("jobs")
-        .insert({ device_id: job.device_id, roteiro: job.roteiro, fatiador: job.fatiador, opcoes: job.opcoes, motor: job.motor, arquivo_path: job.arquivo_path, nome_peca: job.nome_peca })
-        .select("id")
-        .single();
-      if (error) throw error;
-      return data.id;
+      if (!job.device_id) throw new Error("Escolha um computador.");
+      const r = await criarAnalise({
+        data: {
+          device_id: job.device_id,
+          roteiro: job.roteiro as "config_geral",
+          fatiador: job.fatiador,
+          opcoes: (job.opcoes ?? {}) as Record<string, unknown>,
+          motor: job.motor === "api" || job.motor === "assinatura" ? job.motor : "fatiapro",
+          premium: !!(job as { premium?: boolean }).premium,
+          arquivo_path: job.arquivo_path,
+          nome_peca: job.nome_peca,
+        },
+      });
+      if ("erro" in r) throw new Error(r.detalhe);
+      return r.job_id;
     },
     onSuccess: (nid) => navigate({ to: "/app/analise/$id", params: { id: nid } }),
-    onError: () => toast.error("Não foi possível criar a nova análise."),
+    onError: (e) => toast.warning(e instanceof Error ? e.message : "Não foi possível criar a nova análise."),
   });
 
   if (isLoading) return <Skeleton className="mx-auto h-64 max-w-4xl rounded-3xl" />;
