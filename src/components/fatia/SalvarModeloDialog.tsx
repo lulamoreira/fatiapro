@@ -5,7 +5,7 @@ import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
-import { fatiadorLabel, impressoraSemBico, nomeFilamento } from "@/lib/fatia";
+import { fatiadorLabel, impressoraSemBico, materialTexto, nomeFilamento } from "@/lib/fatia";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,7 +111,7 @@ export function SalvarModeloDialog({ job, trigger }: { job: Tables<"jobs">; trig
     ["Fatiador", rotuloFat(job.fatiador)],
     ["Impressora", o.impressora ?? "—"],
     ["Bico", o.bico ? `${o.bico} mm` : "—"],
-    ["Filamento", [fil?.tipo, fil?.marca, fil?.linha].filter(Boolean).join(" · ") || "—"],
+    ["Filamento", [fil?.tipo, materialTexto(fil?.marca ?? "", fil?.linha ?? "")].filter(Boolean).join(" · ") || "—"],
     ["Para que serve", o.finalidades?.join(", ") || "—"],
     ["Prioridades", o.prioridades?.map((p, i) => `${i + 1}º ${p}`).join(", ") || "—"],
     ["Pasta de saída", o.pasta_saida ?? "padrão do computador"],

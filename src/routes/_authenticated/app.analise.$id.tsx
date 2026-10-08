@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
-import { ESTADOS, fatiadorLabel, isConectado, roteiroLabel, type Estado } from "@/lib/fatia";
+import { ESTADOS, fatiadorLabel, isConectado, materialTexto, roteiroLabel, type Estado } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
@@ -188,7 +188,7 @@ function AnalisePage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {roteiroLabel(job.roteiro)} · {rotuloFat(job.fatiador)}
               {opc.impressora ? ` · ${opc.impressora}` : ""}
-              {opc.filamento?.tipo ? ` · ${[opc.filamento.marca, opc.filamento.linha].filter(Boolean).join(" ")}` : ""}
+              {opc.filamento?.tipo ? ` · ${materialTexto(opc.filamento.marca ?? "", opc.filamento.linha ?? "")}` : ""}
             </p>
           </div>
           <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
