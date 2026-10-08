@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -48,12 +49,13 @@ function HistoricoPage() {
   }
   const { data, isLoading } = useQuery({ ...historicoQuery(pagina), placeholderData: keepPreviousData });
   const { data: resumo } = useQuery(resumoMesQuery);
+  const isAdmin = useIsAdmin();
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {isAdmin && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">Gasto na API este mês</p>
           <p className="mt-1 font-display text-3xl font-bold tabular">{resumo ? formatUSD(resumo.usd) : "…"}</p>
@@ -62,7 +64,7 @@ function HistoricoPage() {
           <p className="text-sm text-muted-foreground">Análises pela assinatura este mês</p>
           <p className="mt-1 font-display text-3xl font-bold tabular">{resumo ? resumo.assinatura : "…"}</p>
         </div>
-      </div>
+      </div>}
 
       {isLoading ? (
         <Skeleton className="h-64 rounded-2xl" />

@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { criarAnalise } from "@/lib/analise.functions";
+import { erroAnalise, etiquetaFonte, type ErroAnalise } from "@/lib/plano";
+import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
+import { Questionario } from "@/components/fatia/Questionario";
+import { MessageSquareHeart } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
 import { ESTADOS, fatiadorLabel, isConectado, materialTexto, roteiroLabel, type Estado } from "@/lib/fatia";
@@ -39,6 +44,14 @@ function AnalisePage() {
   const now = useNow(1000);
   useDevicesLive();
   /** Optimistic phase set on click, before server/bridge confirm. */
+  const [erroRep, setErroRep] = useState<ErroAnalise | null>(null);
+  const [questJob, setQuestJob] = useState<string | null>(null);
+  const [repetirAposQuest, setRepetirAposQuest] = useState(false);
+  const [pendRep, setPendRep] = useState<string | null>(null);
+  const { data: feedback, isFetched: feedbackLido } = useQuery({
+    queryKey: ["feedback", id],
+    queryFn: async () => (await supabase.from("feedback_respostas").select("id").eq("job_id", id).maybeSingle()).data,
+  });
   const [pendente, setPendente] = useState<{ fase: "aplicando" | "outra"; at: number } | null>(null);
   const workingRef = useRef<HTMLElement>(null);
   const deviceId = job?.device_id ?? null;
@@ -110,10 +123,19 @@ function AnalisePage() {
           nome_peca: job.nome_peca,
         },
       });
-      if ("erro" in r) throw new Error(r.detalhe);
-      return r.job_id;
+      return r;
     },
-    onSuccess: (nid) => navigate({ to: "/app/analise/$id", params: { id: nid } }),
+    onSuccess: (r) => {
+      if ("erro" in r) {
+        const e = erroAnalise(r.codigo, r.detalhe);
+        setErroRep(e);
+        if (e.acao === "questionario" && r.job_pendente) { setPendRep(r.job_pendente); setRepetirAposQuest(true); setQuestJob(r.job_pendente); }
+        return;
+      }
+      setErroRep(null);
+      qc.invalidateQueries({ queryKey: ["meu-plano"] });
+      navigate({ to: "/app/analise/$id", params: { id: r.job_id } });
+    },
     onError: (e) => toast.warning(e instanceof Error ? e.message : "Não foi possível criar a nova análise."),
   });
 
@@ -207,7 +229,10 @@ function AnalisePage() {
               {opc.filamento?.tipo ? ` · ${materialTexto(opc.filamento.marca ?? "", opc.filamento.linha ?? "")}` : ""}
             </p>
           </div>
-          <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
+          <div className="flex flex-wrap items-center gap-2">
+            {etiquetaFonte(job) && <Tag tone={etiquetaFonte(job) === "Crédito devolvido" ? "success" : "muted"}>{etiquetaFonte(job)}</Tag>}
+            <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
+          </div>
         </div>
         {estado === "concluido" && (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -273,12 +298,21 @@ function AnalisePage() {
       )}
 
       {resultado && <Result c={resultado.conteudo as unknown as ResultadoConteudo} motor={job.motor} custo={job.custo_real} />}
+      {estado === "concluido" && job.fonte === "teste" && feedbackLido && !feedback && (
+        <button type="button" onClick={() => { setRepetirAposQuest(false); setQuestJob(job.id); }}
+          className="flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left text-sm hover:bg-secondary">
+          <MessageSquareHeart className="size-5 text-primary-ink" aria-hidden />
+          <span><span className="block font-semibold">Conte como foi</span><span className="block text-xs text-muted-foreground">Leva 20 segundos e libera a otimização de hoje.</span></span>
+        </button>
+      )}
       {estado === "concluido" && <div className="flex justify-end"><FecharAnaliseDialog job={job} /></div>}
+      <Questionario jobId={questJob} onOpenChange={(o) => { if (!o) setQuestJob(null); }} onEnviado={() => { if (repetirAposQuest) repetir.mutate(); }} />
 
       {estado === "erro" && (
         <div className="rounded-2xl border border-destructive bg-destructive/10 p-5" role="alert">
           <p className="text-sm font-medium text-destructive">{String((erroEv?.conteudo as { mensagem?: unknown })?.mensagem ?? "A análise falhou.")}</p>
           <Button className="mt-3" variant="destructive" size="sm" disabled={repetir.isPending} onClick={() => repetir.mutate()}>Tentar de novo</Button>
+          {erroRep && <div className="mt-3"><ErroAnaliseAviso erro={erroRep} onQuestionario={() => { setRepetirAposQuest(true); setQuestJob(pendRep); }} /></div>}
         </div>
       )}
       {estado === "limite_de_gasto" && (

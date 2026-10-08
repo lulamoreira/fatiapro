@@ -26,7 +26,14 @@ export function ClaudeSection({ deviceId, rel, conectado }: ClaudeSectionProps) 
     <section id={`claude-${deviceId}`} aria-labelledby={`claude-t-${deviceId}`} className="scroll-mt-6 space-y-3">
       <h3 id={`claude-t-${deviceId}`} className="text-[17px] font-semibold">FatiaProAI neste computador</h3>
       <div className={isAdmin ? "grid grid-cols-1 gap-3 md:grid-cols-2" : "grid grid-cols-1 gap-3"}>
-        <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
+        {!isAdmin && (
+          <div className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm">
+            <p className="font-semibold">Pronta para usar</p>
+            <p className="text-sm text-muted-foreground">A FatiaProAI já vem inclusa. Cada otimização usa créditos do seu plano.</p>
+            <a href="/app/plano" className="text-sm font-medium text-primary-ink underline underline-offset-2">Ver plano e créditos</a>
+          </div>
+        )}
+        {isAdmin && <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
           <div className="flex items-start gap-3">
             <IconTile tone="orange"><KeyRound /></IconTile>
             <div className="min-w-0 flex-1">
@@ -44,7 +51,7 @@ export function ClaudeSection({ deviceId, rel, conectado }: ClaudeSectionProps) 
               : <Button onClick={() => setWizard(true)}>Configurar passo a passo</Button>}
             <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary-ink underline underline-offset-2">Como criar uma chave</a>
           </div>
-        </div>
+        </div>}
 
         {isAdmin && (
           <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">

@@ -170,7 +170,8 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
     if (n && n !== d.nome) salvar.mutate({ nome: n }); else setNome(d.nome);
   }
 
-  const claudePronto = rel.motores.api ? "Pronto (API)" : isAdmin && rel.motores.assinatura ? "Pronto (assinatura)" : null;
+  // Common users always run on FatiaProAI (credits); key/subscription status matters only to admins.
+  const claudePronto = !isAdmin ? "Pronta · usa créditos" : rel.motores.api ? "Pronto (API)" : rel.motores.assinatura ? "Pronto (assinatura)" : "Pronta · usa créditos";
 
   return (
     <article className="space-y-6 rounded-2xl border bg-card p-5 md:p-6">

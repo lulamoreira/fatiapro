@@ -8,8 +8,8 @@ describe("seleção do Claude no Resumo", () => {
   it("prefere API quando o motor anterior não está disponível", () => {
     expect(escolherMotor(null, "assinatura", ["api"])).toBe("api");
   });
-  it("prefere API sem análise anterior", () => {
-    expect(escolherMotor(null, null, ["assinatura", "api"])).toBe("api");
+  it("prefere FatiaProAI sem análise anterior", () => {
+    expect(escolherMotor(null, null, ["fatiapro", "assinatura", "api"])).toBe("fatiapro");
   });
   it("seleciona a única opção", () => {
     expect(escolherMotor(null, null, ["assinatura"])).toBe("assinatura");
