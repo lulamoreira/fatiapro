@@ -71,6 +71,13 @@
       "when": 1791492684185,
       "tag": "0009_cobranca_fase_a",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791494292794,
+      "tag": "0010_admin_cobranca",
+      "breakpoints": true
     }
   ]
 }
