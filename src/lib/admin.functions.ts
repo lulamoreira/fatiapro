@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { situacaoCredito } from "./admin-cobranca";
 import { situacaoUsuario, type AdminUsuarioLinha, type FiltroAdmin } from "./admin";
 
 const POR_PAGINA = 25;
@@ -33,13 +34,21 @@ export const adminPainel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { listAllAuthUsers, fetchAll, isBanido } = await guard(context.userId);
     const now = Date.now();
-    const [users, devices, jobs, profiles, admins] = await Promise.all([
+    const agoraIso = new Date(now).toISOString();
+    const [users, devices, jobs, profiles, admins, lotes, testes, cortesias] = await Promise.all([
       listAllAuthUsers(),
       fetchAll<DevRow>("devices", "id,user_id,ultimo_contato,revogado"),
       fetchAll<JobRow>("jobs", "user_id,motor,criado_em"),
       fetchAll<{ id: string; nome: string | null }>("profiles", "id,nome"),
       fetchAll<{ user_id: string }>("app_admins", "user_id"),
+      fetchAll<{ user_id: string; restante: number; expira_em: string | null }>("creditos_lotes", "user_id,restante,expira_em"),
+      fetchAll<{ user_id: string; inicio: string; fim: string }>("testes_gratis", "user_id,inicio,fim", "inicio"),
+      fetchAll<{ user_id: string; ativa: boolean; tipo: string; inicio: string; fim: string | null }>("cortesias", "user_id,ativa,tipo,inicio,fim"),
     ]);
+    const saldoPor = new Map<string, number>();
+    for (const l of lotes) if (l.restante > 0 && (!l.expira_em || l.expira_em > agoraIso)) saldoPor.set(l.user_id, (saldoPor.get(l.user_id) ?? 0) + l.restante);
+    const testePor = new Map(testes.map((t) => [t.user_id, t]));
+    const cortesiaSet = new Set(cortesias.filter((c) => c.ativa && c.tipo === "uso_diario" && c.inicio <= agoraIso && (!c.fim || c.fim >= agoraIso)).map((c) => c.user_id));
     const adminSet = new Set(admins.map((a) => a.user_id));
     const nomes = new Map(profiles.map((p) => [p.id, p.nome]));
     const devPor = new Map<string, { total: number; on: number }>();
@@ -81,7 +90,8 @@ export const adminPainel = createServerFn({ method: "POST" })
         bloqueado: isBanido(u, now),
         ativo_7d: Math.max(login, j.ultimo) >= now - 7 * DIA,
       };
-      return { ...base, situacao: situacaoUsuario(base) };
+      const credito = situacaoCredito({ saldo: saldoPor.get(u.id) ?? 0, cortesia: cortesiaSet.has(u.id), teste: testePor.get(u.id) ?? null }, new Date(now));
+      return { ...base, situacao: situacaoUsuario(base), credito };
     });
 
     const indicadores = {

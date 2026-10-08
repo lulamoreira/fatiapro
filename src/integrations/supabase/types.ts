@@ -748,6 +748,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_dar_creditos: {
+        Args: {
+          p_admin: string
+          p_motivo: string
+          p_origem: string
+          p_qtd: number
+          p_user: string
+          p_validade_dias: number
+        }
+        Returns: string
+      }
+      admin_remover_creditos: {
+        Args: {
+          p_admin: string
+          p_motivo: string
+          p_qtd: number
+          p_user: string
+        }
+        Returns: undefined
+      }
       claim_next_command: {
         Args: { p_device_id: string }
         Returns: {

@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { AdminUsuarios } from "@/components/admin/AdminUsuarios";
 import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
 import { AdminPonte } from "@/components/admin/AdminPonte";
+import { AdminFeedback } from "@/components/admin/AdminFeedback";
+import { AdminFinanceiro } from "@/components/admin/AdminFinanceiro";
+import { useServerFn } from "@tanstack/react-start";
+import { adminAlertaGasto } from "@/lib/admin-cobranca.functions";
+import { formatUSD } from "@/lib/fatia";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({
@@ -35,7 +40,7 @@ function AdminPage() {
     },
     staleTime: 0,
   });
-  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte">("usuarios");
+  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte" | "feedback" | "financeiro">("usuarios");
 
   if (isLoading) return <PageSkeleton />;
   if (!isAdmin)
@@ -52,13 +57,26 @@ function AdminPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader titulo="Admin · Usuários" subtitulo="Só administradores veem esta área." acao={<Tag tone="primary">Administrador</Tag>} />
+      <AlertaGasto />
       <Segmented
         label="Seção"
         value={aba}
         onChange={setAba}
-        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }]}
+        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }, { id: "feedback", label: "Feedback" }, { id: "financeiro", label: "Financeiro" }]}
       />
-      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : <AdminPonte />}
+      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : aba === "ponte" ? <AdminPonte /> : aba === "feedback" ? <AdminFeedback /> : <AdminFinanceiro />}
     </div>
+  );
+}
+
+/** Red banner on every admin tab when today's AI spend passes alerta_gasto_usd_dia. */
+function AlertaGasto() {
+  const fn = useServerFn(adminAlertaGasto);
+  const { data } = useQuery({ queryKey: ["admin", "alerta-gasto"], queryFn: () => fn(), refetchInterval: 60_000 });
+  if (!data?.alerta) return null;
+  return (
+    <p role="alert" className="rounded-2xl bg-destructive/15 p-3 text-sm font-semibold text-destructive-ink">
+      Gasto com IA hoje: {formatUSD(data.hoje_usd)} (limite de alerta {formatUSD(data.limite_usd)})
+    </p>
   );
 }

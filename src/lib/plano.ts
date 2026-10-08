@@ -74,7 +74,8 @@ const ERROS: Record<string, ErroAnalise> = {
 };
 
 /** criarAnalise error code → message + action. Unknown codes use the server detail. */
-export function erroAnalise(codigo: string, detalhe: string): ErroAnalise {
+export function erroAnalise(codigo: string, detalhe: string, limiteGratis = 20): ErroAnalise {
+  if (codigo === "limite_diario") return { mensagem: `Você chegou ao limite de ${limiteGratis} análises grátis de hoje.`, acao: null };
   return ERROS[codigo] ?? { mensagem: detalhe || "Não foi possível criar a análise.", acao: null };
 }
 
