@@ -64,6 +64,13 @@
       "when": 1791490040452,
       "tag": "0008_ponte_versoes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791492684185,
+      "tag": "0009_cobranca_fase_a",
+      "breakpoints": true
     }
   ]
 }

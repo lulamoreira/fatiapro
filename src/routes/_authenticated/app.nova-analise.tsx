@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { criarAnalise } from "@/lib/analise.functions";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
@@ -237,20 +238,20 @@ function NovaAnalise() {
       } else if (pecaBib && !f.usarAberta) {
         arquivo_path = pecaBib.path; // reuse stored file, no re-upload
       }
-      const { data, error } = await supabase
-        .from("jobs")
-        .insert({
-          device_id: f.deviceId,
+      const r = await criarAnalise({
+        data: {
+          device_id: f.deviceId!,
           roteiro: f.roteiro!,
           fatiador: f.fatiador,
-          motor: f.motor!,
-          opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json, ...(modeloSel ? { modelo_id: modeloSel.id, modelo_nome: modeloSel.nome } : {}) } as Json,
+          motor: f.motor === "api" || f.motor === "assinatura" ? f.motor : "fatiapro",
+          premium: false,
+          opcoes: { ...toOpcoes(f, perfilNoFatiador), pasta_saida: pastaFinal, nome_arquivo: nomeArquivo, ajustes_modelo: ajustes as unknown as Json, ...(modeloSel ? { modelo_id: modeloSel.id, modelo_nome: modeloSel.nome } : {}) } as Record<string, unknown>,
           arquivo_path,
           nome_peca: arquivo && !f.usarAberta ? arquivo.name : pecaBib && !f.usarAberta ? pecaBib.nomeArquivo : null,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
+        },
+      });
+      if ("erro" in r) { toast.warning(r.detalhe); return; }
+      const data = { id: r.job_id };
       navigate({ to: "/app/analise/$id", params: { id: data.id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível criar a análise.");

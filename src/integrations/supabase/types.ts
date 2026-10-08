@@ -56,6 +56,147 @@ export type Database = {
         }
         Relationships: []
       }
+      config_app: {
+        Row: {
+          chave: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          valor: Json
+        }
+        Update: {
+          chave?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
+      cortesias: {
+        Row: {
+          admin_id: string | null
+          ativa: boolean
+          criado_em: string
+          fim: string | null
+          id: string
+          inicio: string
+          motivo: string | null
+          por_dia: number | null
+          premium: boolean
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          ativa?: boolean
+          criado_em?: string
+          fim?: string | null
+          id?: string
+          inicio?: string
+          motivo?: string | null
+          por_dia?: number | null
+          premium?: boolean
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          ativa?: boolean
+          criado_em?: string
+          fim?: string | null
+          id?: string
+          inicio?: string
+          motivo?: string | null
+          por_dia?: number | null
+          premium?: boolean
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creditos_lotes: {
+        Row: {
+          criado_em: string
+          expira_em: string | null
+          id: string
+          origem: string
+          quantidade: number
+          referencia: string | null
+          restante: number
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          expira_em?: string | null
+          id?: string
+          origem: string
+          quantidade: number
+          referencia?: string | null
+          restante: number
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          expira_em?: string | null
+          id?: string
+          origem?: string
+          quantidade?: number
+          referencia?: string | null
+          restante?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creditos_movimentos: {
+        Row: {
+          admin_id: string | null
+          criado_em: string
+          id: string
+          job_id: string | null
+          lote_id: string | null
+          motivo: string | null
+          quantidade: number
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          criado_em?: string
+          id?: string
+          job_id?: string | null
+          lote_id?: string | null
+          motivo?: string | null
+          quantidade: number
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          criado_em?: string
+          id?: string
+          job_id?: string | null
+          lote_id?: string | null
+          motivo?: string | null
+          quantidade?: number
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creditos_movimentos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creditos_movimentos_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "creditos_lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_commands: {
         Row: {
           atualizado_em: string
@@ -105,6 +246,7 @@ export type Database = {
           criado_em: string
           id: string
           limite_gasto_usd: number
+          maquina_hash: string | null
           nome: string
           relatorio: Json
           revogado: boolean
@@ -119,6 +261,7 @@ export type Database = {
           criado_em?: string
           id?: string
           limite_gasto_usd?: number
+          maquina_hash?: string | null
           nome: string
           relatorio?: Json
           revogado?: boolean
@@ -133,6 +276,7 @@ export type Database = {
           criado_em?: string
           id?: string
           limite_gasto_usd?: number
+          maquina_hash?: string | null
           nome?: string
           relatorio?: Json
           revogado?: boolean
@@ -165,6 +309,100 @@ export type Database = {
           tokens_saida_tipicos?: number
         }
         Relationships: []
+      }
+      feedback_respostas: {
+        Row: {
+          comentario: string | null
+          criado_em: string
+          fez_sentido: string
+          id: string
+          imprimiu: string
+          job_id: string
+          problemas: string[]
+          tempo_poupado: string | null
+          user_id: string
+        }
+        Insert: {
+          comentario?: string | null
+          criado_em?: string
+          fez_sentido: string
+          id?: string
+          imprimiu: string
+          job_id: string
+          problemas?: string[]
+          tempo_poupado?: string | null
+          user_id?: string
+        }
+        Update: {
+          comentario?: string | null
+          criado_em?: string
+          fez_sentido?: string
+          id?: string
+          imprimiu?: string
+          job_id?: string
+          problemas?: string[]
+          tempo_poupado?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_respostas_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_chamadas: {
+        Row: {
+          cache_escrita: number
+          cache_leitura: number
+          criado_em: string
+          custo_usd: number
+          duracao_ms: number
+          entrada: number
+          id: string
+          job_id: string
+          modelo: string
+          saida: number
+          user_id: string
+        }
+        Insert: {
+          cache_escrita?: number
+          cache_leitura?: number
+          criado_em?: string
+          custo_usd?: number
+          duracao_ms?: number
+          entrada?: number
+          id?: string
+          job_id: string
+          modelo: string
+          saida?: number
+          user_id: string
+        }
+        Update: {
+          cache_escrita?: number
+          cache_leitura?: number
+          criado_em?: string
+          custo_usd?: number
+          duracao_ms?: number
+          entrada?: number
+          id?: string
+          job_id?: string
+          modelo?: string
+          saida?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_chamadas_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_events: {
         Row: {
@@ -202,15 +440,18 @@ export type Database = {
         Row: {
           arquivo_path: string | null
           atualizado_em: string
+          creditos_reservados: number
           criado_em: string
           custo_real: Json | null
           device_id: string | null
           estado: string
           fatiador: string | null
+          fonte: string | null
           id: string
           motor: string
           nome_peca: string | null
           opcoes: Json
+          premium: boolean
           resultado: Json | null
           roteiro: string
           user_id: string
@@ -218,15 +459,18 @@ export type Database = {
         Insert: {
           arquivo_path?: string | null
           atualizado_em?: string
+          creditos_reservados?: number
           criado_em?: string
           custo_real?: Json | null
           device_id?: string | null
           estado?: string
           fatiador?: string | null
+          fonte?: string | null
           id?: string
           motor: string
           nome_peca?: string | null
           opcoes?: Json
+          premium?: boolean
           resultado?: Json | null
           roteiro: string
           user_id?: string
@@ -234,15 +478,18 @@ export type Database = {
         Update: {
           arquivo_path?: string | null
           atualizado_em?: string
+          creditos_reservados?: number
           criado_em?: string
           custo_real?: Json | null
           device_id?: string | null
           estado?: string
           fatiador?: string | null
+          fonte?: string | null
           id?: string
           motor?: string
           nome_peca?: string | null
           opcoes?: Json
+          premium?: boolean
           resultado?: Json | null
           roteiro?: string
           user_id?: string
@@ -256,6 +503,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maquinas_teste: {
+        Row: {
+          criado_em: string
+          maquina_hash: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          maquina_hash: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          maquina_hash?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pair_attempts: {
         Row: {
@@ -457,6 +722,27 @@ export type Database = {
         }
         Relationships: []
       }
+      testes_gratis: {
+        Row: {
+          fim: string
+          inicio: string
+          maquina_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          fim?: string
+          inicio?: string
+          maquina_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          fim?: string
+          inicio?: string
+          maquina_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -487,15 +773,18 @@ export type Database = {
         Returns: {
           arquivo_path: string | null
           atualizado_em: string
+          creditos_reservados: number
           criado_em: string
           custo_real: Json | null
           device_id: string | null
           estado: string
           fatiador: string | null
+          fonte: string | null
           id: string
           motor: string
           nome_peca: string | null
           opcoes: Json
+          premium: boolean
           resultado: Json | null
           roteiro: string
           user_id: string
@@ -514,7 +803,33 @@ export type Database = {
           expira_em: string
         }[]
       }
+      criar_analise: {
+        Args: {
+          p_arquivo_path: string
+          p_device: string
+          p_fatiador: string
+          p_motor: string
+          p_nome_peca: string
+          p_opcoes: Json
+          p_premium: boolean
+          p_roteiro: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      estornar_credito: { Args: { p_job: string }; Returns: undefined }
+      inicio_dia_sp: { Args: { p?: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      job_contou: {
+        Args: { p_estado: string; p_job: string }
+        Returns: boolean
+      }
+      reservar_credito: {
+        Args: { p_job: string; p_qtd: number; p_user: string }
+        Returns: undefined
+      }
+      saldo_creditos: { Args: { p_user: string }; Returns: number }
+      vencer_lotes: { Args: { p_user: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

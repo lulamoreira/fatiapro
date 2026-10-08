@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppModelosRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authenticated/app.nova-analise'
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
+import { Route as ApiPublicBridgeIaRouteImport } from './routes/api/public/bridge/ia'
 import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
 import { Route as ApiPublicBridgeVersaoRouteImport } from './routes/api/public/bridge/versao'
 import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/public/bridge/commands.$id'
@@ -113,6 +114,11 @@ const ApiPublicBridgeHeartbeatRoute =
     path: '/api/public/bridge/heartbeat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBridgeIaRoute = ApiPublicBridgeIaRouteImport.update({
+  id: '/api/public/bridge/ia',
+  path: '/api/public/bridge/ia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBridgePairRoute = ApiPublicBridgePairRouteImport.update({
   id: '/api/public/bridge/pair',
   path: '/api/public/bridge/pair',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
   '/api/public/bridge/heartbeat': typeof ApiPublicBridgeHeartbeatRoute
+  '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/analise/$id'
     | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/analise/$id'
     | '/api/public/bridge/heartbeat'
+    | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
     | '/api/public/bridge/commands/$id'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicBridgeHeartbeatRoute: typeof ApiPublicBridgeHeartbeatRoute
+  ApiPublicBridgeIaRoute: typeof ApiPublicBridgeIaRoute
   ApiPublicBridgePairRoute: typeof ApiPublicBridgePairRoute
   ApiPublicBridgeVersaoRoute: typeof ApiPublicBridgeVersaoRoute
   ApiPublicBridgeCommandsIdRoute: typeof ApiPublicBridgeCommandsIdRoute
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeHeartbeatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bridge/ia': {
+      id: '/api/public/bridge/ia'
+      path: '/api/public/bridge/ia'
+      fullPath: '/api/public/bridge/ia'
+      preLoaderRoute: typeof ApiPublicBridgeIaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge/pair': {
       id: '/api/public/bridge/pair'
       path: '/api/public/bridge/pair'
@@ -513,6 +533,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicBridgeHeartbeatRoute: ApiPublicBridgeHeartbeatRoute,
+  ApiPublicBridgeIaRoute: ApiPublicBridgeIaRoute,
   ApiPublicBridgePairRoute: ApiPublicBridgePairRoute,
   ApiPublicBridgeVersaoRoute: ApiPublicBridgeVersaoRoute,
   ApiPublicBridgeCommandsIdRoute: ApiPublicBridgeCommandsIdRoute,
