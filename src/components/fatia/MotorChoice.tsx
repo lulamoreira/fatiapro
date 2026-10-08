@@ -5,7 +5,7 @@ import { Check, KeyRound, Star } from "lucide-react";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { estimativasQuery, precosQuery } from "@/lib/queries";
-import { custoApiUSD, formatUSD, type Motor, type Roteiro } from "@/lib/fatia";
+import { custoEstimadoUSD, formatUSDEstimado, type Motor, type Roteiro } from "@/lib/fatia";
 import { cn } from "@/lib/utils";
 
 export interface MotorChoiceProps extends Omit<ComponentProps<typeof RadioGroup>, "value" | "onValueChange" | "onChange" | "children"> {
@@ -13,16 +13,18 @@ export interface MotorChoiceProps extends Omit<ComponentProps<typeof RadioGroup>
   options: readonly Motor[];
   roteiro: Roteiro | null;
   onChange: (motor: Motor) => void;
+  /** opcoes.premium — multiplies the standard estimate. */
+  premium?: boolean;
   invalid?: boolean;
 }
 
-export function MotorChoice({ value, options, roteiro, onChange, invalid, className, ...props }: MotorChoiceProps) {
+export function MotorChoice({ value, options, roteiro, onChange, invalid, premium = false, className, ...props }: MotorChoiceProps) {
   const id = useId();
   const { data: estimativas = [] } = useQuery(estimativasQuery);
   const { data: precos = [] } = useQuery(precosQuery);
   const estimativa = estimativas.find((e) => e.roteiro === roteiro);
-  const preco = precos[0];
-  const custo = preco && estimativa ? `≈ ${formatUSD(custoApiUSD(estimativa, preco))} nesta análise` : "cobrado pela Anthropic";
+  const usd = estimativa ? custoEstimadoUSD(estimativa, precos, premium) : null;
+  const custo = usd != null ? `≈ ${formatUSDEstimado(usd)} nesta análise` : "cobrado pela Anthropic";
 
   return (
     <RadioGroup {...props} value={value ?? ""} orientation="vertical" aria-invalid={invalid || undefined}

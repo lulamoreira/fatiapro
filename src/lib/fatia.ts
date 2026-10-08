@@ -189,6 +189,30 @@ export function custoApiUSD(e: Estimativa, p: Preco): number {
   return (e.tokens_entrada_tipicos * Number(p.preco_entrada_usd_por_milhao) + e.tokens_saida_tipicos * Number(p.preco_saida_usd_por_milhao)) / 1_000_000;
 }
 
+/** Standard analyses are always priced with this model. */
+export const MODELO_PADRAO = "claude-sonnet-5-5";
+/** Measured multiplier for Premium analyses over the standard estimate. */
+export const FATOR_PREMIUM = 2.8;
+
+/** Estimated USD cost using the standard model's price (null if not configured). */
+export function custoEstimadoUSD<P extends Preco & { modelo: string }>(e: Estimativa, precos: readonly P[], premium = false): number | null {
+  const p = precos.find((x) => x.modelo === MODELO_PADRAO);
+  if (!p) return null;
+  return custoApiUSD(e, p) * (premium ? FATOR_PREMIUM : 1);
+}
+
+/** "US$ 0,016" (3 decimals below US$ 0,10, else 2). */
+export function formatUSDEstimado(v: number): string {
+  const d = v < 0.1 ? 3 : 2;
+  return `US$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+}
+
+/** "≈ US$ 0,016 (R$ 0,09)". */
+export function textoCustoEstimado(usd: number, cambio: number): string {
+  const brl = Number.isFinite(cambio) && cambio > 0 ? ` (${formatBRL(usd * cambio).replace(/\s/g, " ")})` : "";
+  return `≈ ${formatUSDEstimado(usd)}${brl}`;
+}
+
 export type UsoPlano = "leve" | "médio" | "pesado";
 export function usoPlano(tokensEntrada: number): UsoPlano {
   if (tokensEntrada < 25_000) return "leve";
