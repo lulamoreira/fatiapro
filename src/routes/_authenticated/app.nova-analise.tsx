@@ -10,8 +10,10 @@ import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, MOTORES, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
-  isConectado, maquinaResumo, motorSelecionado, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
+  isConectado, maquinaResumo, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
 } from "@/lib/fatia";
+import { escolherMotor } from "@/lib/motor-choice";
+import { MotorChoice } from "@/components/fatia/MotorChoice";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { EnviarComando } from "@/components/fatia/EnviarComando";
@@ -92,7 +94,17 @@ function NovaAnalise() {
   const device = devices.find((d) => d.id === form.deviceId);
   const rel = useMemo(() => parseRelatorio(device?.relatorio), [device?.relatorio]);
   const motoresOk = MOTORES.filter((m) => rel.motores[m.id] && (m.id !== "assinatura" || isAdmin));
-  const f: FormState = { ...form, motor: motorSelecionado(form.motor, motoresOk.map((m) => m.id)) };
+  const { data: ultimoMotor } = useQuery({
+    queryKey: ["ultimo-motor"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("jobs").select("motor", { count: "exact" })
+        .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(0, 0);
+      if (error) throw error;
+      return data?.[0]?.motor ?? null;
+    },
+    staleTime: 60_000,
+  });
+  const f: FormState = { ...form, motor: escolherMotor(form.motor, ultimoMotor, motoresOk.map((m) => m.id)) };
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
   // Default device: first connected, else first.
@@ -270,17 +282,17 @@ function NovaAnalise() {
           <div key={k} className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 text-right font-medium">{v}</dd></div>
         ))}
       </dl>
-      <div className="flex flex-wrap items-center gap-2" id="sec-motor">
-        <Label className="text-xs text-muted-foreground">Motor</Label>
-        {motoresOk.length ? <Segmented label="Motor" options={motoresOk} value={f.motor} onChange={(v) => set("motor", v)} className="min-w-0 flex-1" /> : (
-          <div className="space-y-2 rounded-2xl border border-dashed p-3">
+      <div className="space-y-2" id="sec-motor">
+        <p id="claude-choice-label" className="text-xs text-muted-foreground">Como usar o Claude</p>
+        {motoresOk.length ? <MotorChoice aria-labelledby="claude-choice-label" aria-describedby={erros.motor && !f.motor ? "claude-choice-error" : undefined} options={motoresOk.map((m) => m.id)} value={f.motor} roteiro={f.roteiro} onChange={(v) => set("motor", v)} invalid={!!erros.motor && !f.motor} /> : (
+          <div className={cn("space-y-2 rounded-2xl border border-dashed p-3", erros.motor && "border-destructive/30")}>
             <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
             {device
               ? <Button size="sm" variant="outline" onClick={() => setWizard(true)}>Configurar a chave de API</Button>
               : <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Conectar um computador</Link></Button>}
           </div>
         )}
-        {erros.motor && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.motor}</p>}
+        {erros.motor && !f.motor && <p id="claude-choice-error" className="text-xs font-medium text-destructive-ink" role="alert">Escolha como usar o Claude.</p>}
       </div>
       <section aria-label="Arquivo otimizado" className="space-y-1.5 rounded-2xl bg-card p-3 text-sm shadow-sm">
         <p className="text-xs font-semibold text-muted-foreground">Arquivo otimizado</p>

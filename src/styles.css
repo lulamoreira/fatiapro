@@ -45,6 +45,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-choice-hover: var(--choice-hover);
   --color-ring-offset-background: var(--background);
   --color-glass: var(--glass);
   --color-chart-1: var(--chart-1);
@@ -97,6 +98,7 @@
   --border: rgba(11, 27, 43, 0.08);
   --input: rgba(11, 27, 43, 0.12);
   --ring: #0a84ff;
+  --choice-hover: #ffffff;
   --glass: rgba(255, 255, 255, 0.55);
   --glass-border: rgba(255, 255, 255, 0.75);
   --glass-highlight: rgba(255, 255, 255, 0.9);
@@ -135,6 +137,7 @@
 }
 
 .dark {
+  --choice-hover: var(--secondary);
   --background: #07121d;
   --foreground: #eaf2fa;
   --card: rgba(22, 32, 44, 0.82);
