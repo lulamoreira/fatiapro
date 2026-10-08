@@ -1,4 +1,4 @@
 # Marca FatiaProAI
 - [x] Atualizar apenas textos visíveis, preservando assinatura administrativa e links.
-- [ ] Adicionar e executar teste de textos TSX com exceções delimitadas.
-- [ ] Confirmar quantidade de textos alterados e resultado.
+- [x] Adicionar e executar teste de textos TSX com exceções delimitadas (4 testes de marca passaram).
+- [x] Confirmar quantidade de textos alterados e resultado (8 textos; 36 testes passaram).
