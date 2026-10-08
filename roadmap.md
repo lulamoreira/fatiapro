@@ -1,4 +1,4 @@
-# Ajustes no Resumo
-- [x] Unificar material e prévia do arquivo, com testes dos exemplos.
-- [x] Separar máquina/fatiador, remover Motor duplicado e selecionar opção única.
-- [x] Garantir 8px entre status e nome do computador; validar resultados.
+# Escolha do Claude no Resumo
+- [ ] Substituir segmentado por cartões acessíveis com apoio de custo e erro abaixo.
+- [ ] Selecionar motor recente disponível, com fallback API/único motor; testar regras.
+- [ ] Validar seleção, teclado, custo e apresentação sem mudar outras áreas.
