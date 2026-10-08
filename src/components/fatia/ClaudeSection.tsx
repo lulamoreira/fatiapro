@@ -24,7 +24,7 @@ export function ClaudeSection({ deviceId, rel, conectado }: ClaudeSectionProps) 
 
   return (
     <section id={`claude-${deviceId}`} aria-labelledby={`claude-t-${deviceId}`} className="scroll-mt-6 space-y-3">
-      <h3 id={`claude-t-${deviceId}`} className="text-[17px] font-semibold">Claude neste computador</h3>
+      <h3 id={`claude-t-${deviceId}`} className="text-[17px] font-semibold">FatiaProAI neste computador</h3>
       <div className={isAdmin ? "grid grid-cols-1 gap-3 md:grid-cols-2" : "grid grid-cols-1 gap-3"}>
         <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm">
           <div className="flex items-start gap-3">
