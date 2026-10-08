@@ -9,7 +9,7 @@ const exemptFiles = new Set([
   "components/fatia/ApiKeyWizard.tsx",
 ]);
 const technicalProps = new Set([
-  "id", "key", "className", "href", "src", "to", "name", "type", "role",
+  "id", "key", "className", "href", "src", "to", "name", "type", "role", "alvo",
   "aria-labelledby", "aria-describedby", "htmlFor", "queryKey", "value",
 ]);
 
