@@ -303,3 +303,12 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-destaque-azul { animation: none; }
 }
+
+/* Library: freshly saved piece pulses for ~3s. */
+@utility animate-destaque-peca {
+  animation: destaque-azul 1s ease-in-out 3;
+  border-color: var(--primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-destaque-peca { animation: none; }
+}
