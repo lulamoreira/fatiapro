@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
+import { Route as AuthenticatedAppBaixarRouteImport } from './routes/_authenticated/app.baixar'
 import { Route as AuthenticatedAppBibliotecaRouteImport } from './routes/_authenticated/app.biblioteca'
 import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
@@ -58,6 +59,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
 const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppBaixarRoute = AuthenticatedAppBaixarRouteImport.update({
+  id: '/baixar',
+  path: '/baixar',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppBibliotecaRoute =
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
+  '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
+  '/_authenticated/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/_authenticated/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
   '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app'
     | '/app/admin'
+    | '/app/baixar'
     | '/app/biblioteca'
     | '/app/computador'
     | '/app/configuracoes'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app/admin'
+    | '/app/baixar'
     | '/app/biblioteca'
     | '/app/computador'
     | '/app/configuracoes'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/app'
     | '/_authenticated/app/admin'
+    | '/_authenticated/app/baixar'
     | '/_authenticated/app/biblioteca'
     | '/_authenticated/app/computador'
     | '/_authenticated/app/configuracoes'
@@ -339,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/app/admin'
       preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/baixar': {
+      id: '/_authenticated/app/baixar'
+      path: '/baixar'
+      fullPath: '/app/baixar'
+      preLoaderRoute: typeof AuthenticatedAppBaixarRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/biblioteca': {
@@ -451,6 +470,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
+  AuthenticatedAppBaixarRoute: typeof AuthenticatedAppBaixarRoute
   AuthenticatedAppBibliotecaRoute: typeof AuthenticatedAppBibliotecaRoute
   AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
@@ -463,6 +483,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
+  AuthenticatedAppBaixarRoute: AuthenticatedAppBaixarRoute,
   AuthenticatedAppBibliotecaRoute: AuthenticatedAppBibliotecaRoute,
   AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,

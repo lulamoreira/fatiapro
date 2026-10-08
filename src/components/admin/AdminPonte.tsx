@@ -27,12 +27,12 @@ async function enviar(path: string, f: File, onProg: (p: number) => void): Promi
   const { data: s } = await supabase.auth.getSession();
   const token = s.session?.access_token;
   if (!token) throw new Error("sem sessão");
-  const base = import.meta.env.VITE_SUPABASE_URL as string;
+  const base = import.meta.env['VITE_SUPABASE_URL'] as string;
   await new Promise<void>((res, rej) => {
     const x = new XMLHttpRequest();
     x.open("POST", `${base}/storage/v1/object/ponte/${path}`);
     x.setRequestHeader("Authorization", `Bearer ${token}`);
-    x.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
+    x.setRequestHeader("apikey", import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string);
     x.setRequestHeader("Content-Type", f.type || "application/octet-stream");
     x.setRequestHeader("x-upsert", "false");
     x.upload.onprogress = (e) => e.lengthComputable && onProg(Math.round((e.loaded / e.total) * 100));
