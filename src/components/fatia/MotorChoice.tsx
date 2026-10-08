@@ -8,7 +8,7 @@ import { estimativasQuery, precosQuery } from "@/lib/queries";
 import { custoApiUSD, formatUSD, type Motor, type Roteiro } from "@/lib/fatia";
 import { cn } from "@/lib/utils";
 
-export interface MotorChoiceProps extends Omit<ComponentProps<typeof RadioGroup>, "value" | "onValueChange" | "children"> {
+export interface MotorChoiceProps extends Omit<ComponentProps<typeof RadioGroup>, "value" | "onValueChange" | "onChange" | "children"> {
   value: Motor | null;
   options: readonly Motor[];
   roteiro: Roteiro | null;
@@ -28,7 +28,7 @@ export function MotorChoice({ value, options, roteiro, onChange, invalid, classN
     <RadioGroup {...props} value={value ?? ""} orientation="vertical" aria-invalid={invalid || undefined}
       onValueChange={(motor) => { if (motor === "api" || motor === "assinatura") onChange(motor); }}
       className={cn("w-full gap-2 rounded-[14px]", invalid && "ring-2 ring-destructive/25 ring-offset-2", className)}>
-      {options.map((motor) => {
+      {(["api", "assinatura"] as const).filter((motor) => options.includes(motor)).map((motor) => {
         const selected = value === motor;
         const Icon = motor === "api" ? KeyRound : Star;
         return (
