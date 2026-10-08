@@ -78,6 +78,13 @@
       "when": 1791494292794,
       "tag": "0010_admin_cobranca",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791502937705,
+      "tag": "0011_impressoras_escolhidas",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,7 @@ import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, maquinaResumo, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
+  opcoesImpressora, parseEscolhidas, separarPerfil, autoImpressora, SEM_BICO,
 } from "@/lib/fatia";
 import { escolherMotor } from "@/lib/motor-choice";
 import { MotorChoice } from "@/components/fatia/MotorChoice";
@@ -169,10 +170,22 @@ function NovaAnalise() {
     });
   }, [peca]);
 
+  const [impModelo, setImpModelo] = useState<{ fatiador: string | null; modelo: string } | null>(null);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
   const fatOpts = rel.fatiadores.map((x) => ({ id: x.id, label: nomeFatiador(x) }));
   const fatRel = rel.fatiadores.find((r) => r.id === f.fatiador);
-  const impressoras = fatRel?.impressoras ?? [];
+  const impOpc = opcoesImpressora(fatRel?.impressoras ?? [], device ? parseEscolhidas(device.impressoras_escolhidas)[f.fatiador ?? ""] : undefined, f.impressora);
+  const rotuloDe = (m: string) => (impOpc.modelos.find((g) => g.modelo === m)?.fora ? `${m} (fora das suas impressoras)` : m);
+  const rotulosModelo = impOpc.modelos.map((g) => rotuloDe(g.modelo));
+  const modeloAtual = (impModelo && impModelo.fatiador === f.fatiador ? impModelo.modelo : null) ?? (f.impressora ? separarPerfil(f.impressora).modelo : null);
+  const grupoModelo = impOpc.modelos.find((g) => g.modelo === modeloAtual);
+  function escolherModelo(rotulo: string) {
+    const g = impOpc.modelos.find((x) => rotuloDe(x.modelo) === rotulo);
+    if (!g) return;
+    setImpModelo({ fatiador: f.fatiador, modelo: g.modelo });
+    const b = g.bicos.length === 1 ? g.bicos[0] : g.bicos.find((x) => x.bico === f.bico);
+    setF((p) => ({ ...p, impressora: b?.perfil ?? null, bico: b && b.bico !== SEM_BICO ? b.bico : p.bico }));
+  }
   const fatNome = fatRel ? nomeFatiador(fatRel) : "fatiador";
   const grupos = f.filTipo ? gruposMarca(rel, f.fatiador, f.filTipo, f.filMarca) : { perfil: [], outras: [] };
   const grupo = f.filMarca ? grupoDaMarca(f.filMarca, grupos) : null;
@@ -204,6 +217,14 @@ function NovaAnalise() {
     const alvo = rel.fatiadores.length === 1 ? rel.fatiadores[0]!.id : rel.fatiadores.find((x) => x.id === ultimoFatiador)?.id;
     if (alvo) setF((p) => (p.fatiador ? p : { ...p, fatiador: alvo }));
   }, [rel.fatiadores, ultimoFatiador, f.fatiador]);
+  // One chosen model (and nozzle) comes preselected.
+  const autoImp = autoImpressora(impOpc.modelos);
+  useEffect(() => {
+    if (!autoImp || f.impressora || impModelo?.fatiador === f.fatiador) return;
+    setImpModelo({ fatiador: f.fatiador, modelo: autoImp.modelo });
+    const perfil = autoImp.perfil;
+    if (perfil) setF((p) => (p.impressora ? p : { ...p, impressora: perfil, bico: separarPerfil(perfil).bico === SEM_BICO ? p.bico : separarPerfil(perfil).bico }));
+  }, [autoImp?.modelo, autoImp?.perfil, f.fatiador, f.impressora]);
   const preco = f.roteiro === "preco";
   const custoDolar = useCustoCurto(f.roteiro, f.motor, premium);
   const custoCurto = usaFatiaPro ? (uso?.texto ?? "—") : custoDolar;
@@ -472,13 +493,21 @@ function NovaAnalise() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
               <div className="space-y-1.5">
                 <Label>Impressora</Label>
-                <Combobox label="Impressora" options={impressoras} value={f.impressora} onChange={(v) => set("impressora", v)}
-                  placeholder={f.fatiador ? (impressoras.length ? "Escolha a impressora" : "Nenhuma impressora encontrada") : "Escolha o fatiador acima"} disabled={!impressoras.length} />
+                <Combobox label="Impressora" options={rotulosModelo} value={modeloAtual ? rotuloDe(modeloAtual) : null} onChange={escolherModelo}
+                  placeholder={f.fatiador ? (impOpc.modelos.length ? "Escolha a impressora" : "Nenhuma impressora encontrada") : "Escolha o fatiador acima"} disabled={!impOpc.modelos.length} />
+                {f.fatiador && !impOpc.filtrado && impOpc.modelos.length > 0 && device && (
+                  <Link to="/app/configuracoes" hash={`imp-${device.id}`} className="text-xs font-medium text-primary underline-offset-2 hover:underline">Escolher minhas impressoras</Link>
+                )}
                 {erros.impressora && <Erro>{erros.impressora}</Erro>}
               </div>
               <div className="space-y-1.5">
                 <Label>Bico</Label>
-                <Segmented label="Bico" options={BICOS.map((b) => ({ id: String(b), label: `${b} mm` }))} value={String(f.bico)} onChange={(v) => set("bico", BICOS.find((b) => String(b) === v) ?? f.bico)} />
+                {grupoModelo && !(grupoModelo.bicos.length === 1 && grupoModelo.bicos[0]!.bico === SEM_BICO) ? (
+                  <Segmented label="Bico" options={grupoModelo.bicos.map((b) => ({ id: b.perfil, label: `${b.bico} mm` }))} value={f.impressora ?? ""}
+                    onChange={(v) => { const b = grupoModelo.bicos.find((x) => x.perfil === v); if (b) setF((p) => ({ ...p, impressora: b.perfil, bico: b.bico })); }} />
+                ) : (
+                  <Segmented label="Bico" options={BICOS.map((b) => ({ id: String(b), label: `${b} mm` }))} value={String(f.bico)} onChange={(v) => set("bico", BICOS.find((b) => String(b) === v) ?? f.bico)} />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
