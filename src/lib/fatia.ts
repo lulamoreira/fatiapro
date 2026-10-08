@@ -60,7 +60,7 @@ export const fatiadorLabel = (f: string | null | undefined, rel?: { fatiadores: 
   !f ? "—" : rel?.fatiadores.find((x) => x.id === f)?.nome || FATIADORES.find((x) => x.id === f)?.label || f;
 /** Name for a report entry. */
 export const nomeFatiador = (f: { id: string; nome: string | null }) => f.nome || FATIADORES.find((x) => x.id === f.id)?.label || f.id;
-export const motorLabel = (m: string | null | undefined) => (m === "api" ? "API" : m === "assinatura" ? "Assinatura" : "—");
+export const motorLabel = (m: string | null | undefined) => (m === "fatiapro" ? "FatiaProAI" : m === "api" ? "API" : m === "assinatura" ? "Assinatura" : "—");
 
 /* ---------- Relatório (written by the bridge) ---------- */
 
