@@ -46,6 +46,7 @@ export interface BridgeBody {
   novo_estado?: unknown;
   resultado?: unknown;
   custo_real?: unknown;
+  maquina_hash?: unknown;
 }
 
 export async function readJson(request: Request): Promise<BridgeBody | null> {
