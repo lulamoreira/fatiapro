@@ -120,7 +120,7 @@ export function AdminPonte() {
                 <span className="w-20 text-sm text-muted-foreground">{formatBytes(Number(v.tamanho_bytes))}</span>
                 <span className="flex-1 text-sm text-muted-foreground">{new Date(v.criado_em).toLocaleDateString("pt-BR")}</span>
                 <Tag tone={v.publicada ? "success" : "warning"}>{v.publicada ? "Publicada" : "Rascunho"}</Tag>
-                <Button size="sm" variant="secondary" onClick={() => (v.publicada ? alternar(v) : setConfirmar(v))}>{v.publicada ? "Despublicar" : "Publicar"}</Button>
+                <Button size="sm" variant="secondary" onClick={() => setConfirmar(v)}>{v.publicada ? "Despublicar" : "Publicar"}</Button>
               </li>
             ))}
           </ul>
@@ -130,12 +130,12 @@ export function AdminPonte() {
       <AlertDialog open={!!confirmar} onOpenChange={(o) => !o && setConfirmar(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Publicar a versão {confirmar?.versao}?</AlertDialogTitle>
-            <AlertDialogDescription>Todas as pontes vão se atualizar para esta versão nas próximas horas.</AlertDialogDescription>
+            <AlertDialogTitle>{confirmar?.publicada ? "Despublicar" : "Publicar"} a versão {confirmar?.versao}?</AlertDialogTitle>
+            <AlertDialogDescription>{confirmar?.publicada ? "As pontes deixam de receber esta versão." : "Todas as pontes vão se atualizar para esta versão nas próximas horas."}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmar && alternar(confirmar)}>Publicar</AlertDialogAction>
+            <AlertDialogAction onClick={() => confirmar && alternar(confirmar)}>{confirmar?.publicada ? "Despublicar" : "Publicar"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
