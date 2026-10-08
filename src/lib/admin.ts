@@ -16,6 +16,8 @@ export interface AdminUsuarioLinha {
   bloqueado: boolean;
   ativo_7d: boolean;
   situacao: Situacao;
+  /** "Teste · dia D/14", "Cortesia", "N créditos" or "Sem créditos". */
+  credito: string;
 }
 
 /** Blocked wins over admin; admin over no-computer. */
@@ -56,4 +58,11 @@ export const ACAO_LABEL: Record<string, string> = {
   desbloquear: "Desbloqueou",
   tornar_admin: "Tornou administrador",
   remover_admin: "Removeu de administrador",
+  dar_creditos: "Deu créditos para",
+  ajustar_creditos: "Adicionou créditos (ajuste) para",
+  remover_creditos: "Removeu créditos de",
+  dar_cortesia: "Deu cortesia de uso para",
+  encerrar_cortesia: "Encerrou a cortesia de",
+  reiniciar_teste: "Reiniciou o teste grátis de",
+  config_cobranca: "Alterou as configurações de cobrança",
 };

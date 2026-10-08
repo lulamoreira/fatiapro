@@ -33,11 +33,11 @@ export async function listAllAuthUsers(): Promise<User[]> {
 }
 
 /** Reads all rows of a table in 1000-row pages with stable order. */
-export async function fetchAll<T>(table: "devices" | "jobs" | "profiles" | "app_admins", cols: string): Promise<T[]> {
+export async function fetchAll<T>(table: "devices" | "jobs" | "profiles" | "app_admins" | "creditos_lotes" | "testes_gratis" | "cortesias", cols: string, ordem = "criado_em"): Promise<T[]> {
   const out: T[] = [];
   const size = 1000;
   for (let from = 0; ; from += size) {
-    const { data, error } = await supabaseAdmin.from(table).select(cols).order("criado_em", { ascending: false }).range(from, from + size - 1);
+    const { data, error } = await supabaseAdmin.from(table).select(cols).order(ordem, { ascending: false }).order(table === "testes_gratis" || table === "app_admins" ? "user_id" : "id", { ascending: false }).range(from, from + size - 1);
     if (error) throw new Error(`Falha ao ler ${table}`);
     out.push(...((data ?? []) as T[]));
     if (!data || data.length < size) break;

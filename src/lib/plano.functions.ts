@@ -1,7 +1,7 @@
 /**
  * meuPlano — read-only summary of the caller's plan. The service-role client is
  * used ONLY to run saldo_creditos / vencer_lotes for context.userId (those
- * functions are service_role-only); every other read goes through the RLS client.
+ * functions are service_role-only) and to read the single config key limite_diario_gratis; every other read goes through the RLS client.
  * Day boundaries use America/Sao_Paulo, like criar_analise.
  */
 import { createServerFn } from "@tanstack/react-start";
@@ -10,7 +10,7 @@ import type { PlanoInfo } from "./plano";
 import { DIAS_TESTE } from "./plano";
 
 const DIA_MS = 86_400_000;
-const LIMITE_GRATIS_PADRAO = 20; // config_app is admin-only; matches the seeded limite_diario_gratis
+const LIMITE_GRATIS_PADRAO = 20; // fallback when config_app has no valid limite_diario_gratis
 
 /** Start of the current São Paulo day as a UTC Date. */
 function inicioDiaSP(agora: Date): Date {
@@ -33,6 +33,9 @@ export const meuPlano = createServerFn({ method: "GET" })
     const saldoR = await supabaseAdmin.rpc("saldo_creditos" as never, { p_user: userId } as never);
     if (saldoR.error) throw new Error("Falha ao ler o saldo");
     const saldo = Number(saldoR.data ?? 0);
+    const cfg = await supabaseAdmin.from("config_app").select("valor").eq("chave", "limite_diario_gratis").maybeSingle();
+    const limCfg = Number(cfg.data?.valor);
+    const limite = Number.isInteger(limCfg) && limCfg > 0 ? limCfg : LIMITE_GRATIS_PADRAO;
 
     const [adm, prox, teste, cort, jobsHoje] = await Promise.all([
       supabase.from("app_admins").select("user_id").eq("user_id", userId).maybeSingle(),
@@ -83,7 +86,7 @@ export const meuPlano = createServerFn({ method: "GET" })
       proximo_vencimento: p0?.expira_em ? { quantidade: p0.restante, expira_em: p0.expira_em } : null,
       teste: testeInfo,
       cortesia: c ? { tipo: c.tipo as "creditos" | "uso_diario", por_dia: c.por_dia, premium: c.premium, fim: c.fim, usadas_hoje: contar("cortesia") } : null,
-      gratis_hoje: { usadas: hojeJobs.filter((j) => j.fonte === "gratis").length, limite: LIMITE_GRATIS_PADRAO },
+      gratis_hoje: { usadas: hojeJobs.filter((j) => j.fonte === "gratis").length, limite },
       is_admin: !!adm.data,
     };
   });

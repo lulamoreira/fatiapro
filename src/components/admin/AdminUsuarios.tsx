@@ -65,8 +65,8 @@ export function AdminUsuarios() {
         <p className="py-10 text-center text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
       ) : (
         <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
-          <div className="hidden grid-cols-[2.2fr_1fr_1fr_1fr_0.8fr_0.9fr_1fr_auto] gap-3 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground lg:grid">
-            <span>Usuário</span><span>Cadastro</span><span>Último acesso</span><span>Computadores</span><span>Análises</span><span>Motor</span><span>Situação</span><span className="w-14" />
+          <div className="hidden grid-cols-[2fr_0.9fr_0.9fr_0.9fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground lg:grid">
+            <span>Usuário</span><span>Cadastro</span><span>Último acesso</span><span>Computadores</span><span>Análises</span><span>Motor</span><span>Situação</span><span>Créditos</span><span className="w-14" />
           </div>
           <ul>{q.data?.linhas.map((l) => <Linha key={l.id} l={l} onVer={() => setAberto(l.id)} />)}</ul>
         </div>
@@ -100,7 +100,7 @@ function Indicador({ titulo, valor, extra }: { titulo: string; valor?: number | 
 function Linha({ l, onVer }: { l: AdminUsuarioLinha; onVer: () => void }) {
   const s = SITUACAO[l.situacao];
   return (
-    <li className="grid grid-cols-[1fr_auto] items-center gap-3 border-b px-4 py-3 last:border-b-0 lg:grid-cols-[2.2fr_1fr_1fr_1fr_0.8fr_0.9fr_1fr_auto]">
+    <li className="grid grid-cols-[1fr_auto] items-center gap-3 border-b px-4 py-3 last:border-b-0 lg:grid-cols-[2fr_0.9fr_0.9fr_0.9fr_0.7fr_0.8fr_1fr_0.9fr_auto]">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar nome={l.nome} email={l.email} />
         <div className="min-w-0">
@@ -111,6 +111,7 @@ function Linha({ l, onVer }: { l: AdminUsuarioLinha; onVer: () => void }) {
             <span>{relativo(l.ultimo_acesso)}</span>
             <span className="inline-flex items-center gap-1"><Dot on={l.computadores_on > 0} />{l.computadores}</span>
             <span>{l.analises} análises</span>
+            <span>{l.credito}</span>
           </p>
         </div>
       </div>
@@ -120,6 +121,7 @@ function Linha({ l, onVer }: { l: AdminUsuarioLinha; onVer: () => void }) {
       <span className="hidden text-sm lg:block">{l.analises}</span>
       <span className="hidden text-sm lg:block">{motorLabel(l.motor_mais_usado)}</span>
       <span className="hidden lg:block"><Tag tone={s.tone}>{s.label}</Tag></span>
+      <span className="hidden text-sm lg:block">{l.credito}</span>
       <Button variant="ghost" size="sm" onClick={onVer} aria-label={`Ver ${l.email}`}>Ver →</Button>
     </li>
   );
