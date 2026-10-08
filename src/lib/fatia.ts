@@ -354,3 +354,75 @@ export function motorSelecionado(atual: Motor | null, disponiveis: readonly Moto
 
 export const TEMP_BICO = { min: 150, max: 320 } as const;
 export const TEMP_MESA = { min: 0, max: 130 } as const;
+
+/* ---------- Minhas impressoras (printer profiles grouped by model and nozzle) ---------- */
+
+export const MARCAS_IMPRESSORA = ["Bambu Lab", "Snapmaker", "Anycubic", "Creality", "Prusa", "Elegoo", "Qidi", "Voron", "Sovol", "Flashforge"] as const;
+export const SEM_BICO = "—";
+
+export interface BicoPerfil { bico: string; perfil: string }
+export interface ModeloImpressora { marca: string; modelo: string; bicos: BicoPerfil[] }
+
+/** "Bambu Lab A1 0.4 nozzle" → { modelo: "Bambu Lab A1", bico: "0.4" }; user suffixes (" - Copy") stay in the model. */
+export function separarPerfil(nome: string): { modelo: string; bico: string } {
+  const m = /^(.*?)\s*\(?\s*(\d+(?:\.\d+)?(?:\s*\+\s*\d+(?:\.\d+)?)*)\s*nozzle\s*\)?\s*(.*)$/i.exec(nome.trim());
+  if (!m || !m[1]) return { modelo: nome.trim(), bico: SEM_BICO };
+  const resto = (m[3] ?? "").trim();
+  return { modelo: [m[1].trim(), resto].filter(Boolean).join(" "), bico: (m[2] ?? "").replace(/\s+/g, "") };
+}
+
+export function marcaImpressora(modelo: string): string {
+  const k = chaveMarca(modelo);
+  return MARCAS_IMPRESSORA.find((b) => k.startsWith(chaveMarca(b))) ?? "Outras";
+}
+
+const numBico = (b: string) => (b === SEM_BICO ? Infinity : parseFloat(b));
+
+export function agruparImpressoras(nomes: readonly string[]): ModeloImpressora[] {
+  const mapa = new Map<string, ModeloImpressora>();
+  for (const perfil of nomes) {
+    if (!perfil.trim()) continue;
+    const { modelo, bico } = separarPerfil(perfil);
+    const g = mapa.get(modelo) ?? { marca: marcaImpressora(modelo), modelo, bicos: [] };
+    if (!g.bicos.some((b) => b.perfil === perfil)) g.bicos.push({ bico, perfil });
+    mapa.set(modelo, g);
+  }
+  const ordemMarca = (m: string) => (m === "Outras" ? "\uffff" : m);
+  return [...mapa.values()]
+    .map((g) => ({ ...g, bicos: g.bicos.sort((a, b) => numBico(a.bico) - numBico(b.bico) || a.bico.length - b.bico.length || a.bico.localeCompare(b.bico)) }))
+    .sort((a, b) => ordemMarca(a.marca).localeCompare(ordemMarca(b.marca), "pt-BR") || a.modelo.localeCompare(b.modelo, "pt-BR", { numeric: true }));
+}
+
+/** Parses devices.impressoras_escolhidas defensively. */
+export function parseEscolhidas(raw: unknown): Record<string, string[]> {
+  if (!isRecord(raw)) return {};
+  const out: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries(raw)) out[k] = strArr(v);
+  return out;
+}
+
+/** Profile to mark when the model checkbox is ticked: 0.4 if present, else the first. */
+export const bicoPadrao = (g: ModeloImpressora) => (g.bicos.find((b) => b.bico === "0.4") ?? g.bicos[0])?.perfil ?? null;
+
+export interface OpcoesImpressora { modelos: (ModeloImpressora & { fora: boolean })[]; filtrado: boolean }
+
+/**
+ * Printers offered in Nova análise: only chosen profiles that still exist in the
+ * report (or everything when nothing was chosen). A saved/repeated profile outside
+ * the choice is still shown, flagged `fora`.
+ */
+export function opcoesImpressora(todos: readonly string[], escolhidos: readonly string[] | undefined, atual: string | null): OpcoesImpressora {
+  const validos = (escolhidos ?? []).filter((p) => todos.includes(p));
+  const filtrado = validos.length > 0;
+  const base = filtrado ? validos : [...todos];
+  const fora = filtrado && atual && !base.includes(atual) ? atual : null;
+  const grupos = agruparImpressoras(fora ? [...base, fora] : base);
+  return { filtrado, modelos: grupos.map((g) => ({ ...g, fora: !!fora && g.bicos.every((b) => b.perfil === fora) })) };
+}
+
+/** Auto-select: one model → that model; one nozzle too → that profile. */
+export function autoImpressora(modelos: readonly ModeloImpressora[]): { modelo: string; perfil: string | null } | null {
+  if (modelos.length !== 1) return null;
+  const g = modelos[0]!;
+  return { modelo: g.modelo, perfil: g.bicos.length === 1 ? g.bicos[0]!.perfil : null };
+}
