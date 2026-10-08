@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { parametrosCriarAnalise } from "@/lib/analise-params";
 
 const Entrada = z.object({
   device_id: z.string().uuid(),
