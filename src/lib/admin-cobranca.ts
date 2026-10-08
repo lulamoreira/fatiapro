@@ -85,7 +85,7 @@ export function resumoFinanceiro(i: { chamadas: readonly ChamadaRow[]; jobs: rea
   const cliente = grupo(i.jobs.filter((j) => ehCliente(j.fonte)), custoJob);
   const admin = grupo(i.jobs.filter((j) => j.fonte === "admin"), custoJob);
   // reservas are negative, estornos positive: consumed = -(sum)
-  const creditos = -i.movimentos.filter((m) => m.tipo === "reserva" || m.tipo === "estorno").reduce((s, m) => s + m.quantidade, 0);
+  const creditos = 0 - i.movimentos.filter((m) => m.tipo === "reserva" || m.tipo === "estorno").reduce((s, m) => s + m.quantidade, 0);
   const custoCreditosUSD = i.jobs.filter((j) => j.fonte === "creditos").reduce((s, j) => s + (custoJob.get(j.id) ?? 0), 0);
   return {
     cliente, admin,
