@@ -17,6 +17,7 @@
 - Browser code uses the RLS client directly; column-level GRANTs restrict what users may write (devices: nome/limite/revogado; jobs: estado→cancelado); why: enforce spec permissions in the database, not the UI.
 - Every list query uses `count: 'exact'`, `.range()` and order `criado_em desc, id desc`; why: never rely on the 1000-row default.
 - `devices.relatorio` shape is parsed defensively by `parseRelatorio` in `src/lib/fatia.ts` (fatiadores[{id,nome,versao,impressoras,filamentos,adicionado_manual}], motores{assinatura,api}); slicers come only from this report and are named via `fatiadorLabel`/`nomeFatiador` (known 4 ids are only a name fallback); why: it comes from an external program and users can add any Bambu/Orca-family slicer.
-- The app never calls AI, stores no API keys, and has no print action; why: product rule.
+- AI is called only by the server route /api/public/bridge/ia with ANTHROPIC_API_KEY read from process.env; the browser never calls AI and the app has no print action; why: keep the provider key server-only.
+- Jobs are created only through `criarAnalise` → SQL `criar_analise` (service_role-only EXECUTE, one transaction, advisory lock per user); credit functions are service_role-only; regression script in supabase/tests/creditos.sql; why: no credit rule may depend on the browser.
 - Admin area data/actions go only through `src/lib/admin.functions.ts` (requireSupabaseAuth + service-role app_admins check in every handler, audit row in `admin_audit`, which has RLS and no policies); why: admin reads cross-user data and must never trust the browser.
 - The bridge self-update reads /api/public/bridge/versao; installers live in the private `ponte` bucket, downloaded only via server-signed URLs; why: no public reads of installers.
