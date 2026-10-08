@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { Download, Laptop, Monitor, MoreHorizontal, Pencil, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery, type DeviceRow } from "@/lib/queries";
-import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
+import { isConectado, nomeFatiador, parseEscolhidas, parseRelatorio } from "@/lib/fatia";
+import { MinhasImpressoras } from "@/components/fatia/MinhasImpressoras";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { AdicionarFatiadorDialog } from "@/components/fatia/AdicionarFatiadorDialog";
@@ -144,6 +145,8 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
   const qc = useQueryClient();
   const isAdmin = useIsAdmin();
   const rel = parseRelatorio(d.relatorio);
+  const escolhidas = parseEscolhidas(d.impressoras_escolhidas);
+  const semEscolha = rel.fatiadores.length > 0 && !rel.fatiadores.some((f) => (escolhidas[f.id]?.length ?? 0) > 0);
   const on = isConectado(d.ultimo_contato, now);
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(d.nome);
@@ -207,6 +210,13 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
         </DropdownMenu>
       </header>
 
+      {semEscolha && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4">
+          <p className="text-sm font-medium">Escolha suas impressoras para agilizar a Nova análise</p>
+          <Button size="sm" onClick={() => document.getElementById(sec("imp"))?.scrollIntoView({ behavior: "smooth" })}>Escolher impressoras</Button>
+        </div>
+      )}
+
       {/* b) Summary tiles */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Quadrinho alvo={sec("fat")} titulo="Fatiadores" valor={`${rel.fatiadores.length} ${rel.fatiadores.length === 1 ? "pronto" : "prontos"}`}
@@ -245,6 +255,8 @@ function DeviceCard({ d, now }: { d: DeviceRow; now: number }) {
           </ul>
         )}
       </section>
+
+      <MinhasImpressoras deviceId={d.id} secId={sec("imp")} fatiadores={rel.fatiadores} escolhidas={escolhidas} />
 
       {/* e) Output folder */}
       <section id={sec("pasta")} aria-labelledby={`${sec("pasta")}-t`} className="scroll-mt-6 space-y-2">
