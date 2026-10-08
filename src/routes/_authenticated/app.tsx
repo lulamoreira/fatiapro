@@ -20,7 +20,7 @@ const NAV = [
   { to: "/app/historico", label: "Histórico", curto: "Histórico", icon: History },
   { to: "/app/biblioteca", label: "Biblioteca de peças", curto: "Peças", icon: Box },
   { to: "/app/modelos", label: "Meus modelos", curto: "Modelos", icon: Bookmark },
-  { to: "/app/computador", label: "Seu computador", curto: "Computador", icon: Monitor },
+  { to: "/app/configuracoes", label: "Configurações", curto: "Config.", icon: Settings },
 ] as const;
 
 export const Logo = ({ className }: { className?: string }) => (
@@ -40,7 +40,7 @@ function useStatusComputador() {
 function StatusCard() {
   const { device, conectado, fatiadores } = useStatusComputador();
   return (
-    <Link to="/app/computador" className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-colors hover:bg-secondary">
+    <Link to="/app/configuracoes" className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-colors hover:bg-secondary">
       <Dot on={conectado} />
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold">{device?.nome ?? "Nenhum computador"}</span>
@@ -104,7 +104,7 @@ function AppLayout() {
         <header className="flex items-center justify-between px-4 pt-4 md:hidden">
           <Logo className="text-lg" />
           <div className="flex items-center gap-1">
-            <Link to="/app/computador" aria-label={status.conectado ? "Computador conectado" : "Computador desconectado"} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground">
+            <Link to="/app/configuracoes" aria-label={status.conectado ? "Computador conectado" : "Computador desconectado"} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground">
               <Dot on={status.conectado} />{status.conectado ? "Conectado" : "Desconectado"}
             </Link>
             {isAdmin && <Link to="/app/admin" aria-label="Admin" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><Shield className="size-4" /></Link>}

@@ -116,7 +116,7 @@ export function ApiKeyWizard({ deviceId, conectado, open, onOpenChange }: ApiKey
             {!cmdId && (
               <>
                 <Button size="lg" className="w-full" onClick={enviar} disabled={ocupado}>Abrir a janela no meu computador</Button>
-                {!conectado && <p className="text-xs text-muted-foreground">Seu computador está desconectado. O pedido fica guardado e roda quando ele voltar.</p>}
+                {!conectado && <p className="text-xs text-muted-foreground">O computador está desconectado. O pedido fica guardado e roda quando ele voltar.</p>}
               </>
             )}
             {cmdId && (
