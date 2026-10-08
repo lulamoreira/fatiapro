@@ -7,6 +7,7 @@ const src = join(process.cwd(), "src");
 const exemptFiles = new Set([
   "components/admin/UsuarioPainel.tsx",
   "components/fatia/ApiKeyWizard.tsx",
+  "components/fatia/MotorChoice.tsx", // admin-only options (api/assinatura are never offered to common users)
 ]);
 const technicalProps = new Set([
   "id", "key", "className", "href", "src", "to", "name", "type", "role", "alvo",

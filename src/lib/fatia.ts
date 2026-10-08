@@ -7,7 +7,7 @@ export type Roteiro = "config_geral" | "reduzir_tempo" | "checklist" | "preco";
 /** Slicer id comes from the bridge report (^[a-z0-9_-]{2,40}$). */
 export type FatiadorId = string;
 export const FATIADOR_ID_RE = /^[a-z0-9_-]{2,40}$/;
-export type Motor = "assinatura" | "api";
+export type Motor = "fatiapro" | "assinatura" | "api";
 export type Estado =
   | "na_fila"
   | "analisando"
@@ -33,8 +33,9 @@ export const FATIADORES: { id: FatiadorId; label: string }[] = [
 ];
 
 export const MOTORES: { id: Motor; label: string }[] = [
-  { id: "assinatura", label: "Minha assinatura Claude (admin)" },
-  { id: "api", label: "Sua chave de API" },
+  { id: "fatiapro", label: "FatiaProAI" },
+  { id: "api", label: "Minha chave de API" },
+  { id: "assinatura", label: "Minha assinatura" },
 ];
 
 export const ESTADOS: Record<Estado, { label: string; tone: "muted" | "primary" | "warning" | "success" | "destructive" }> = {
