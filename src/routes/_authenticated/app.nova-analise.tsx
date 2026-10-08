@@ -170,19 +170,19 @@ function NovaAnalise() {
     });
   }, [peca]);
 
-  const [modeloSel, setModeloSel] = useState<{ fatiador: string | null; modelo: string } | null>(null);
+  const [impModelo, setImpModelo] = useState<{ fatiador: string | null; modelo: string } | null>(null);
   const conectado = device ? isConectado(device.ultimo_contato, now) : false;
   const fatOpts = rel.fatiadores.map((x) => ({ id: x.id, label: nomeFatiador(x) }));
   const fatRel = rel.fatiadores.find((r) => r.id === f.fatiador);
   const impOpc = opcoesImpressora(fatRel?.impressoras ?? [], device ? parseEscolhidas(device.impressoras_escolhidas)[f.fatiador ?? ""] : undefined, f.impressora);
   const rotuloDe = (m: string) => (impOpc.modelos.find((g) => g.modelo === m)?.fora ? `${m} (fora das suas impressoras)` : m);
   const rotulosModelo = impOpc.modelos.map((g) => rotuloDe(g.modelo));
-  const modeloAtual = (modeloSel && modeloSel.fatiador === f.fatiador ? modeloSel.modelo : null) ?? (f.impressora ? separarPerfil(f.impressora).modelo : null);
+  const modeloAtual = (impModelo && impModelo.fatiador === f.fatiador ? impModelo.modelo : null) ?? (f.impressora ? separarPerfil(f.impressora).modelo : null);
   const grupoModelo = impOpc.modelos.find((g) => g.modelo === modeloAtual);
   function escolherModelo(rotulo: string) {
     const g = impOpc.modelos.find((x) => rotuloDe(x.modelo) === rotulo);
     if (!g) return;
-    setModeloSel({ fatiador: f.fatiador, modelo: g.modelo });
+    setImpModelo({ fatiador: f.fatiador, modelo: g.modelo });
     const b = g.bicos.length === 1 ? g.bicos[0] : g.bicos.find((x) => x.bico === f.bico);
     setF((p) => ({ ...p, impressora: b?.perfil ?? null, bico: b && b.bico !== SEM_BICO ? b.bico : p.bico }));
   }
@@ -220,8 +220,8 @@ function NovaAnalise() {
   // One chosen model (and nozzle) comes preselected.
   const autoImp = autoImpressora(impOpc.modelos);
   useEffect(() => {
-    if (!autoImp || f.impressora || modeloSel?.fatiador === f.fatiador) return;
-    setModeloSel({ fatiador: f.fatiador, modelo: autoImp.modelo });
+    if (!autoImp || f.impressora || impModelo?.fatiador === f.fatiador) return;
+    setImpModelo({ fatiador: f.fatiador, modelo: autoImp.modelo });
     const perfil = autoImp.perfil;
     if (perfil) setF((p) => (p.impressora ? p : { ...p, impressora: perfil, bico: separarPerfil(perfil).bico === SEM_BICO ? p.bico : separarPerfil(perfil).bico }));
   }, [autoImp?.modelo, autoImp?.perfil, f.fatiador, f.impressora]);
