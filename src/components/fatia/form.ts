@@ -1,5 +1,5 @@
 /** Nova-análise form state, (de)serialization to job.opcoes and validation. */
-import { MARCA_OUTRA, type FatiadorId, type Motor, type Roteiro } from "@/lib/fatia";
+import { MARCA_OUTRA, TEMP_BICO, TEMP_MESA, type FatiadorId, type Motor, type Roteiro } from "@/lib/fatia";
 
 export interface PrecoCampos {
   precoRolo: string;
@@ -23,7 +23,9 @@ export interface FormState {
   bico: string;
   filTipo: string | null;
   filMarca: string | null;
-  filMarcaOutra: string;
+  /** Optional label temperatures, used when the slicer has no profile for the brand. */
+  tempBico: string;
+  tempMesa: string;
   filLinha: string | null;
   finalidades: string[];
   prioridades: string[];
@@ -41,7 +43,8 @@ export const FORM_INICIAL: FormState = {
   bico: "0.4",
   filTipo: null,
   filMarca: null,
-  filMarcaOutra: "",
+  tempBico: "",
+  tempMesa: "",
   filLinha: null,
   finalidades: [],
   prioridades: [],
@@ -50,13 +53,22 @@ export const FORM_INICIAL: FormState = {
   motor: null,
 };
 
-export function toOpcoes(f: FormState) {
+/** `perfilNoFatiador`: the chosen brand has a profile in the selected slicer. */
+export function toOpcoes(f: FormState, perfilNoFatiador = false) {
+  const tb = perfilNoFatiador ? null : num(f.tempBico);
+  const tm = perfilNoFatiador ? null : num(f.tempMesa);
   return {
     usar_peca_aberta: f.usarAberta,
     impressora: f.impressora,
     bico: f.bico,
-    filamento: { tipo: f.filTipo, marca: f.filMarca === MARCA_OUTRA ? f.filMarcaOutra.trim() || MARCA_OUTRA : f.filMarca, linha: f.filLinha },
-    filamento_marca_escolhida: f.filMarca,
+    filamento: {
+      tipo: f.filTipo,
+      marca: f.filMarca,
+      linha: f.filLinha,
+      perfil_no_fatiador: perfilNoFatiador,
+      ...(tb != null ? { temp_bico: tb } : {}),
+      ...(tm != null ? { temp_mesa: tm } : {}),
+    },
     finalidades: f.finalidades,
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
@@ -93,7 +105,7 @@ interface OpcoesSalvas {
   usar_peca_aberta?: boolean;
   impressora?: string | null;
   bico?: string;
-  filamento?: { tipo?: string | null; marca?: string | null; linha?: string | null };
+  filamento?: { tipo?: string | null; marca?: string | null; linha?: string | null; temp_bico?: unknown; temp_mesa?: unknown };
   filamento_marca_escolhida?: string | null;
   finalidades?: unknown;
   prioridades?: unknown;
@@ -119,8 +131,10 @@ export function fromOpcoes(
     impressora: o.impressora ?? null,
     bico: o.bico ?? "0.4",
     filTipo: o.filamento?.tipo ?? null,
-    filMarca: o.filamento_marca_escolhida ?? o.filamento?.marca ?? null,
-    filMarcaOutra: o.filamento_marca_escolhida === MARCA_OUTRA ? str(o.filamento?.marca) : "",
+    // Old jobs stored "Outra…" in filamento_marca_escolhida and the typed brand in filamento.marca.
+    filMarca: (o.filamento?.marca && o.filamento.marca !== MARCA_OUTRA ? o.filamento.marca : o.filamento_marca_escolhida !== MARCA_OUTRA ? o.filamento_marca_escolhida : null) ?? null,
+    tempBico: str(o.filamento?.temp_bico),
+    tempMesa: str(o.filamento?.temp_mesa),
     filLinha: o.filamento?.linha ?? null,
     finalidades: strArr(o.finalidades),
     prioridades: strArr(o.prioridades).slice(0, 2),
@@ -140,7 +154,7 @@ export function fromOpcoes(
   };
 }
 
-export type ErroKey = "device" | "roteiro" | "fatiador" | "peca" | "impressora" | "filamento" | "motor" | "gramasRestantes" | keyof PrecoCampos;
+export type ErroKey = "device" | "roteiro" | "fatiador" | "peca" | "impressora" | "filamento" | "motor" | "gramasRestantes" | "tempBico" | "tempMesa" | keyof PrecoCampos;
 export type Erros = Partial<Record<ErroKey, string>>;
 
 export function validar(f: FormState, temArquivo: boolean): Erros {
@@ -153,8 +167,10 @@ export function validar(f: FormState, temArquivo: boolean): Erros {
   if (f.fatiador && !f.impressora) e.impressora = "Escolha a impressora.";
   if (!f.filTipo) e.filamento = "Escolha o tipo de filamento.";
   else if (!f.filMarca) e.filamento = "Escolha a marca.";
-  else if (f.filMarca === MARCA_OUTRA && !f.filMarcaOutra.trim()) e.filamento = "Digite a marca.";
   else if (!f.filLinha) e.filamento = "Escolha a linha.";
+  const fora = (v: string, r: { min: number; max: number }) => { const n = num(v); return v.trim() !== "" && (n == null || n < r.min || n > r.max); };
+  if (fora(f.tempBico, TEMP_BICO)) e.tempBico = `Entre ${TEMP_BICO.min} e ${TEMP_BICO.max} °C`;
+  if (fora(f.tempMesa, TEMP_MESA)) e.tempMesa = `Entre ${TEMP_MESA.min} e ${TEMP_MESA.max} °C`;
   if (!f.motor) e.motor = "Escolha o motor.";
   if (f.roteiro === "checklist" && !(Number(f.gramasRestantes) > 0)) e.gramasRestantes = "Informe as gramas restantes no rolo.";
   if (preco) {
