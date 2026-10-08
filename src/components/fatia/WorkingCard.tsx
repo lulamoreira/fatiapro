@@ -76,7 +76,7 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
       {desconectado && (
         <p className="mt-2 flex items-center gap-2 rounded-xl bg-warning/25 p-3 text-sm text-warning-foreground dark:text-warning">
           <AlertTriangle className="size-4 shrink-0" aria-hidden />
-          Seu computador parece desconectado. A análise continua sozinha quando ele voltar.
+          O computador parece desconectado. A análise continua sozinha quando ele voltar.
         </p>
       )}
       {semEventosMs > 3 * 60_000 && (

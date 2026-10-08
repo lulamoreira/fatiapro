@@ -277,7 +277,7 @@ function NovaAnalise() {
             <p className="text-xs text-muted-foreground">{isAdmin ? "Nenhum motor pronto neste computador." : "A chave de API do Claude ainda não está configurada neste computador."}</p>
             {device
               ? <Button size="sm" variant="outline" onClick={() => setWizard(true)}>Configurar a chave de API</Button>
-              : <Button asChild size="sm" variant="outline"><Link to="/app/computador">Conectar um computador</Link></Button>}
+              : <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Conectar um computador</Link></Button>}
           </div>
         )}
         {erros.motor && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.motor}</p>}
@@ -325,7 +325,7 @@ function NovaAnalise() {
       {device && !conectado && (
         <p className="flex items-start gap-2 rounded-2xl bg-warning/15 p-4 text-sm text-warning-ink">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Seu computador está desconectado agora. Você pode criar o pedido: ele fica na fila e roda quando o computador voltar.
+          O computador está desconectado agora. Você pode criar o pedido: ele fica na fila e roda quando o computador voltar.
         </p>
       )}
 
@@ -397,7 +397,7 @@ function NovaAnalise() {
               {fatOpts.length === 0 ? (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
                   <p className="text-sm text-muted-foreground">Conecte um computador para escolher o fatiador</p>
-                  <Button asChild size="sm" variant="outline"><Link to="/app/computador">Seu computador</Link></Button>
+                  <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Configurações</Link></Button>
                 </div>
               ) : (
                 <Segmented label="Fatiador" className={cn(!f.fatiador && "animate-destaque-azul")} options={fatOpts} value={f.fatiador} onChange={(v) => setF((p) => ({ ...p, fatiador: v, impressora: null, filMarca: null, filLinha: null }))} />

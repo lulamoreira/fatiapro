@@ -45,7 +45,7 @@ export function ArquivoCard({ arquivoLocal, pastaLocal, confirmacao, disabled, o
 }
 
 export function avisoAcao(conectado: boolean): string {
-  return conectado ? "Pedido enviado. A pasta vai abrir no seu computador." : "Seu computador está desconectado. A pasta abre quando ele voltar.";
+  return conectado ? "Pedido enviado. A pasta vai abrir no seu computador." : "O computador está desconectado. A pasta abre quando ele voltar.";
 }
 
 export function arquivoDoResultado(resultado: unknown): { arquivoLocal: string; pastaLocal: string | null } | null {

@@ -41,7 +41,7 @@ export function AdicionarFatiadorDialog({ deviceId, conectado }: { deviceId: str
         {!cmdId ? (
           <>
             <Button size="lg" className="w-full" onClick={enviar} disabled={ocupado}>Escolher o programa no computador</Button>
-            {!conectado && <p className="text-xs text-muted-foreground">Seu computador está desconectado. O pedido roda quando ele voltar.</p>}
+            {!conectado && <p className="text-xs text-muted-foreground">O computador está desconectado. O pedido roda quando ele voltar.</p>}
           </>
         ) : (
           <div aria-live="polite" className="space-y-3">

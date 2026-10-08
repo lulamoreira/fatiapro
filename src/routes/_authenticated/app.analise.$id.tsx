@@ -266,7 +266,7 @@ function AnalisePage() {
       )}
       {estado === "limite_de_gasto" && (
         <div className="rounded-2xl border border-destructive bg-destructive/10 p-5 text-sm" role="alert">
-          A análise parou porque chegou no limite de gasto do computador. Ajuste em <Link to="/app/computador" className="font-semibold underline">Seu computador</Link>.
+          A análise parou porque chegou no limite de gasto do computador. Ajuste em <Link to="/app/configuracoes" className="font-semibold underline">Configurações</Link>.
         </div>
       )}
     </div>
