@@ -65,3 +65,26 @@ describe("fatiadores vindos do relatório", () => {
     expect(_nc({ pecaDefinida: true, impressora: "X1C", marca: "Bambu", linha: "PLA" })).toBe(true);
   });
 });
+
+import { gruposMarca as _gm, grupoDaMarca as _gd, linhasDaMarca as _ld } from "./fatia";
+describe("lista de marcas em 3 grupos", () => {
+  const rel = _pr({ fatiadores: [
+    { id: "anycubic", filamentos: { PLA: { Anycubic: ["Anycubic PLA"], "Genérica": ["PLA"] } } },
+    { id: "bambu", filamentos: { PLA: { BambuLab: ["PLA Basic", "PLA Lite"] } } },
+  ] });
+  it("grupo b só do fatiador; grupo c sem repetir (BambuLab = Bambu Lab) e sem as do grupo b", () => {
+    const g = _gm(rel, "anycubic", "PLA");
+    expect(g.perfil).toEqual(["Anycubic"]);
+    expect(g.outras.filter((m) => m.replace(/\s/g, "").toLowerCase() === "bambulab")).toHaveLength(1);
+    expect(g.outras).not.toContain("Anycubic");
+    expect(g.outras).toContain("GTMax3D");
+  });
+  it("marca de modelo salvo que não existe cai em Outras marcas", () => {
+    const g = _gm(rel, "anycubic", "PLA", "Marca X");
+    expect(_gd("Marca X", g)).toBe("outras");
+    expect(g.outras).toContain("Marca X");
+  });
+  it("linhas do grupo c vêm de qualquer fatiador + o tipo", () => {
+    expect(_ld(rel, "anycubic", "PLA", "Bambu Lab", "outras")).toEqual(["PLA Basic", "PLA Lite", "PLA"]);
+  });
+});

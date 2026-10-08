@@ -288,3 +288,15 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Guided-order hint: soft blue ring pulsing twice on the slicer control. */
+@keyframes destaque-azul {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 0%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 35%, transparent); }
+}
+@utility animate-destaque-azul {
+  animation: destaque-azul 0.9s ease-in-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-destaque-azul { animation: none; }
+}

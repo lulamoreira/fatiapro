@@ -242,3 +242,72 @@ export function nomeArquivoOtimizado(i: NomeArquivoInput): string {
   ];
   return `${partes.join("_")}.3mf`;
 }
+
+/* ---------- Brand list for Nova análise (3 groups) ---------- */
+
+export const MARCAS_COMUNS = [
+  "Bambu Lab", "Anycubic", "Creality", "Elegoo", "eSun", "Polymaker", "Sunlu", "Prusament",
+  "Overture", "Snapmaker", "Voolt3D", "3D Fila", "3D Lab", "Cliever", "GTMax3D",
+] as const;
+
+/** Compare key: no accents, case or spaces ("BambuLab" = "Bambu Lab"). */
+export const chaveMarca = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s_-]+/g, "").toLowerCase();
+
+const unicos = (lista: string[], excluir: Set<string> = new Set()) => {
+  const vistos = new Set(excluir);
+  const out: string[] = [];
+  for (const m of lista) {
+    const t = m.trim();
+    const k = chaveMarca(t);
+    if (!t || vistos.has(k)) continue;
+    vistos.add(k);
+    out.push(t);
+  }
+  return out;
+};
+
+export interface GruposMarca { perfil: string[]; outras: string[] }
+
+/**
+ * Group b = brands with a profile in the selected slicer; group c = brands of
+ * this type in any slicer of the report + common brands (+ the current value,
+ * so a loaded model never loses its choice), minus group b. Genérica is separate.
+ */
+export function gruposMarca(rel: Relatorio, fatiadorId: string | null, tipo: string, atual?: string | null): GruposMarca {
+  const gen = chaveMarca(MARCA_GENERICA);
+  const fat = rel.fatiadores.find((f) => f.id === fatiadorId);
+  const perfil = unicos(Object.keys(fat?.filamentos[tipo] ?? {}), new Set([gen, chaveMarca(MARCA_OUTRA)]));
+  const excl = new Set([gen, chaveMarca(MARCA_OUTRA), ...perfil.map(chaveMarca)]);
+  const todas = rel.fatiadores.flatMap((f) => Object.keys(f.filamentos[tipo] ?? {}));
+  const outras = unicos([...todas, ...MARCAS_COMUNS, ...(atual ? [atual] : [])], excl).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return { perfil, outras };
+}
+
+export type GrupoMarca = "generica" | "perfil" | "outras";
+export function grupoDaMarca(marca: string, g: GruposMarca): GrupoMarca {
+  const k = chaveMarca(marca);
+  if (k === chaveMarca(MARCA_GENERICA)) return "generica";
+  return g.perfil.some((m) => chaveMarca(m) === k) ? "perfil" : "outras";
+}
+
+/** Lines: group b from the selected slicer; group c from any slicer + the type itself. */
+export function linhasDaMarca(rel: Relatorio, fatiadorId: string | null, tipo: string, marca: string, grupo: GrupoMarca): string[] {
+  if (grupo === "generica") return [tipo];
+  const k = chaveMarca(marca);
+  const de = (f: FatiadorRelatorio) => Object.entries(f.filamentos[tipo] ?? {}).filter(([m]) => chaveMarca(m) === k).flatMap(([, l]) => l);
+  if (grupo === "perfil") {
+    const fat = rel.fatiadores.find((f) => f.id === fatiadorId);
+    const l = fat ? unicos(de(fat)) : [];
+    return l.length ? l : [tipo];
+  }
+  return unicos([...rel.fatiadores.flatMap(de), tipo]);
+}
+
+/** "Bambu Lab PLA Lite" (no repeated brand). */
+export const materialTexto = (marca: string, linha: string) => {
+  const l = linha.trim();
+  return l.toLowerCase().startsWith(marca.trim().toLowerCase()) ? l : `${marca.trim()} ${l}`.trim();
+};
+
+export const TEMP_BICO = { min: 150, max: 320 } as const;
+export const TEMP_MESA = { min: 0, max: 130 } as const;
