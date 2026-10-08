@@ -13,6 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar } from "./AdminUsuarios";
+import { CreditosSecao } from "./CreditosSecao";
 
 type Acao = "bloquear" | "desbloquear" | "tornar_admin" | "remover_admin";
 const TEXTOS: Record<Acao, { titulo: string; texto: string; ok: string }> = {
@@ -81,6 +82,8 @@ export function UsuarioPainel({ id, onClose }: { id: string | null; onClose: () 
               <div className="rounded-xl bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Este mês</p><p className="font-bold">{formatUSD(u.gasto_api.mes)}</p></div>
               <div className="rounded-xl bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Total</p><p className="font-bold">{formatUSD(u.gasto_api.total)}</p></div>
             </section>
+
+            <CreditosSecao alvo={u.id} />
 
             <section aria-labelledby="an">
               <h3 id="an" className="mb-2 text-sm font-semibold">Últimas análises ({u.total_analises} no total)</h3>

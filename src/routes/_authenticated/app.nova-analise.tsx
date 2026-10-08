@@ -271,7 +271,7 @@ function NovaAnalise() {
         },
       });
       if ("erro" in r) {
-        const e = erroAnalise(r.codigo, r.detalhe);
+        const e = erroAnalise(r.codigo, r.detalhe, plano?.gratis_hoje.limite);
         setErroCriar(e);
         if (e.acao === "questionario" && r.job_pendente) { setPendente(r.job_pendente); setQuestJob(r.job_pendente); }
         else toast.warning(e.mensagem);
