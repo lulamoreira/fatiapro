@@ -10,11 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
-- Motivational phrases use a shuffled-bag helper in `src/lib/frases-animo.ts` and an isolated timed component below WorkingCard; why: testable timing.
-- Open-piece notice availability, device-specific save shortcuts and timeline version parsing use pure helpers in `src/lib/peca-aberta.ts`, rendered by `PecaAberta` components; why: testable presentation rules.
 - Branding tests parse TSX via the TS AST, exempting only the admin subscription block; why: catch user-facing literals, not identifiers.
-- Nova análise resolves available motor defaults with the pure `escolherMotor` helper and renders choices through Radix radio cards; why: keep history fallback testable and keyboard/ARIA behavior consistent without changing server permissions.
-- Material labels and output filename material segments share `materialTexto` (via `nomeFilamento` for filenames); why: keep brand deduplication consistent across current and saved analyses/models without rewriting stored data.
 - The bridge (ponte) talks only to `/api/public/bridge/*` server routes, authenticated by a device token whose sha256 is stored in `devices.token_hash`; why: the browser must never see tokens and service-role access stays server-side (`src/lib/bridge.server.ts`, loaded via dynamic import).
 - Browser code uses the RLS client directly; column-level GRANTs restrict what users may write (devices: nome/limite/revogado; jobs: estado→cancelado); why: enforce spec permissions in the database, not the UI.
 - Lists use `count: 'exact'`, `.range()`, order `criado_em desc, id desc`; why: avoid the 1000-row default.
