@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, FilePlus2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,7 +102,7 @@ export function VisaoUsuario() {
         <Link to="/app/analise/$id" params={{ id: k.ultima.id }} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 text-sm shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <span className="min-w-0">
             <span className="block text-xs font-semibold text-muted-foreground">Última análise</span>
-            <span className="block truncate font-semibold">{k.ultima.nome_peca ?? "Peça aberta no fatiador"}</span>
+            <span className="block truncate font-semibold">{nomePecaExibicao(k.ultima.nome_peca)}</span>
             <span className="block text-xs text-muted-foreground">{roteiroLabel(k.ultima.roteiro)} · {dataCurta(k.ultima.criado_em)}</span>
           </span>
           {(() => { const e = ESTADOS[k.ultima.estado as Estado] ?? ESTADOS.na_fila; return <Tag tone={e.tone}>{e.label}</Tag>; })()}

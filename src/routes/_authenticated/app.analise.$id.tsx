@@ -1,4 +1,5 @@
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -227,7 +228,7 @@ function AnalisePage() {
       <header className="rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">{job.nome_peca ?? "Peça aberta no fatiador"}</h1>
+            <h1 className="text-2xl font-bold">{nomePecaExibicao(job.nome_peca)}</h1>
             <ResumoPedidoLinha opcoes={job.opcoes} roteiro={job.roteiro} extra={job.fatiador ? rotuloFat(job.fatiador) : undefined} data={job.criado_em} />
           </div>
           <div className="flex flex-wrap items-center gap-2">

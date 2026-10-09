@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -71,7 +72,7 @@ function PuxarDoHistorico({ onPick }: { onPick: (g: number | null, s: number | n
               return (
                 <li key={j.id}>
                   <button type="button" className="w-full rounded-xl p-3 text-left hover:bg-accent" onClick={() => { onPick(f?.gramas ?? null, f?.segundos ?? null); setOpen(false); }}>
-                    <p className="font-medium">{j.nome_peca ?? "Peça aberta no fatiador"}</p>
+                    <p className="font-medium">{nomePecaExibicao(j.nome_peca)}</p>
                     <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {formatGramas(f?.gramas)} · {formatDuracao(f?.segundos)}</p>
                   </button>
                 </li>

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { Json } from "@/integrations/supabase/types";
+import { nomeParaGravar } from "@/lib/nome-peca";
 
 const TIPOS = ["progresso", "proposta", "aprovacao", "pedido_outra", "resultado", "erro", "cancelamento", "acao"] as const;
 const ESTADOS = ["na_fila", "analisando", "aguardando_aprovacao", "aplicando", "concluido", "erro", "cancelado", "limite_de_gasto"] as const;
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/api/public/bridge/jobs/$id/events")({
           const dev = await b.authDevice(request);
           if (!dev) return b.erro("token_invalido", 401);
           if (!UUID.test(params.id)) return b.erro("job_nao_encontrado", 404);
-          const { data: job } = await b.supabaseAdmin.from("jobs").select("id").eq("id", params.id).eq("device_id", dev.id).maybeSingle();
+          const { data: job } = await b.supabaseAdmin.from("jobs").select("id, nome_peca").eq("id", params.id).eq("device_id", dev.id).maybeSingle();
           if (!job) return b.erro("job_nao_encontrado", 404);
 
           const body = await b.readJson(request);
@@ -38,6 +39,11 @@ export const Route = createFileRoute("/api/public/bridge/jobs/$id/events")({
           if (typeof novo === "string") patch.estado = novo;
           if (body?.resultado !== undefined) patch.resultado = body.resultado as Json;
           if (body?.custo_real !== undefined) patch.custo_real = body.custo_real as Json;
+          // Nome da peça aberta no fatiador: só preenche quando vazio; inválido é ignorado.
+          const nome = nomeParaGravar(job.nome_peca, body?.nome_peca);
+          if (nome) {
+            await b.supabaseAdmin.from("jobs").update({ nome_peca: nome }).eq("id", job.id).is("nome_peca", null);
+          }
           if (Object.keys(patch).length) {
             const { error: e2 } = await b.supabaseAdmin.from("jobs").update(patch).eq("id", job.id);
             if (e2) return b.erro("erro_interno", 500);

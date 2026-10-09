@@ -1,4 +1,5 @@
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -95,7 +96,7 @@ function HistoricoPage() {
               <tbody>
                 {data.rows.map((j) => {
                   const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
-                  const peca = j.nome_peca ?? "Peça aberta no fatiador";
+                  const peca = nomePecaExibicao(j.nome_peca);
                   const abrir = () => navigate({ to: "/app/analise/$id", params: { id: j.id } });
                   return (
                     <tr
@@ -131,7 +132,7 @@ function HistoricoPage() {
           <ul className="space-y-3 md:hidden">
             {data.rows.map((j) => {
               const est = ESTADOS[j.estado as Estado] ?? ESTADOS.na_fila;
-              const peca = j.nome_peca ?? "Peça aberta no fatiador";
+              const peca = nomePecaExibicao(j.nome_peca);
               return (
                 <li key={j.id} className="lift rounded-2xl border bg-card/70 p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
