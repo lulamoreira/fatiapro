@@ -657,6 +657,110 @@ export type Database = {
         }
         Relationships: []
       }
+      negocio: {
+        Row: {
+          atualizado_em: string
+          cidade: string | null
+          documento: string | null
+          email: string | null
+          logo_path: string | null
+          nome: string
+          proximo_numero: number
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          cidade?: string | null
+          documento?: string | null
+          email?: string | null
+          logo_path?: string | null
+          nome: string
+          proximo_numero?: number
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          cidade?: string | null
+          documento?: string | null
+          email?: string | null
+          logo_path?: string | null
+          nome?: string
+          proximo_numero?: number
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      orcamentos: {
+        Row: {
+          cliente_contato: string | null
+          cliente_nome: string
+          criado_em: string
+          descricao: string
+          forma_pagamento: string | null
+          foto_path: string | null
+          id: string
+          job_id: string | null
+          numero: number
+          observacoes: string | null
+          prazo_entrega: string | null
+          preco_unitario_centavos: number
+          quantidade: number
+          status: string
+          total_centavos: number
+          user_id: string
+          validade_dias: number
+        }
+        Insert: {
+          cliente_contato?: string | null
+          cliente_nome: string
+          criado_em?: string
+          descricao: string
+          forma_pagamento?: string | null
+          foto_path?: string | null
+          id?: string
+          job_id?: string | null
+          numero: number
+          observacoes?: string | null
+          prazo_entrega?: string | null
+          preco_unitario_centavos: number
+          quantidade: number
+          status?: string
+          total_centavos: number
+          user_id: string
+          validade_dias?: number
+        }
+        Update: {
+          cliente_contato?: string | null
+          cliente_nome?: string
+          criado_em?: string
+          descricao?: string
+          forma_pagamento?: string | null
+          foto_path?: string | null
+          id?: string
+          job_id?: string | null
+          numero?: number
+          observacoes?: string | null
+          prazo_entrega?: string | null
+          preco_unitario_centavos?: number
+          quantidade?: number
+          status?: string
+          total_centavos?: number
+          user_id?: string
+          validade_dias?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacotes: {
         Row: {
           ativo: boolean
@@ -1088,6 +1192,25 @@ export type Database = {
           p_user: string
         }
         Returns: Json
+      }
+      criar_orcamento: {
+        Args: {
+          p_cliente_contato: string
+          p_cliente_nome: string
+          p_descricao: string
+          p_forma_pagamento: string
+          p_foto_path: string
+          p_job_id: string
+          p_observacoes: string
+          p_prazo_entrega: string
+          p_preco_unitario_centavos: number
+          p_quantidade: number
+          p_validade_dias: number
+        }
+        Returns: {
+          id: string
+          numero: number
+        }[]
       }
       estornar_credito: { Args: { p_job: string }; Returns: undefined }
       estornar_pedido: {
