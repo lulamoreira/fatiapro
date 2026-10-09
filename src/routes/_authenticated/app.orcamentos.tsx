@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { lerOrcSearch } from "@/lib/inicio";
 import { FiltrosAtivos } from "@/components/fatia/FiltrosAtivos";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -84,7 +85,7 @@ function OrcamentosPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[30px] font-bold tracking-[-0.02em]">Orçamentos</h1>
+          <div className="flex items-center gap-3"><h1 className="text-[30px] font-bold tracking-[-0.02em]">Orçamentos</h1><BotaoAjuda tela="orcamentos" /></div>
           <p className="mt-1 text-muted-foreground">Orçamentos em PDF para seus clientes. Não gastam créditos.</p>
         </div>
         <Button size="lg" onClick={() => (negocio ? setNovo(true) : setAviso(true))}><Plus className="size-4" aria-hidden />Novo orçamento</Button>

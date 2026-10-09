@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -387,7 +388,7 @@ function NovaAnalise() {
       <PageHeader
         titulo="Nova análise"
         subtitulo="Escolha o que você quer e o seu computador faz o resto."
-        acao={
+        acao={<div className="flex items-center gap-2"><BotaoAjuda tela="novaAnalise" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className="glass inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold"><Bookmark className="size-4 text-primary-ink" aria-hidden />Usar um modelo<ChevronDown className="size-4" aria-hidden /></button>
@@ -398,7 +399,7 @@ function NovaAnalise() {
               ))}
               <DropdownMenuItem asChild><Link to="/app/modelos">Abrir Meus modelos</Link></DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu></div>
         }
       />
 

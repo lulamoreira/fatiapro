@@ -1,4 +1,5 @@
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { nomePecaExibicao } from "@/lib/nome-peca";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -228,7 +229,7 @@ function AnalisePage() {
       <header className="rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">{nomePecaExibicao(job.nome_peca)}</h1>
+            <div className="flex items-center gap-3"><h1 className="text-2xl font-bold">{nomePecaExibicao(job.nome_peca)}</h1><BotaoAjuda tela="analise" /></div>
             <ResumoPedidoLinha opcoes={job.opcoes} roteiro={job.roteiro} extra={job.fatiador ? rotuloFat(job.fatiador) : undefined} data={job.criado_em} />
           </div>
           <div className="flex flex-wrap items-center gap-2">

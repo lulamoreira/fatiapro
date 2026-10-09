@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { usePonteVersoes, ultimaPublicada } from "@/hooks/use-ponte-versoes";
 import { compararVersao } from "@/lib/ponte";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -73,7 +74,7 @@ function ComputadorPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[30px] font-bold tracking-[-0.02em]">Configurações</h1>
+          <div className="flex items-center gap-3"><h1 className="text-[30px] font-bold tracking-[-0.02em]">Configurações</h1><BotaoAjuda tela="configuracoes" /></div>
           <p className="mt-1 text-muted-foreground">Computadores conectados, FatiaProAI, fatiadores e pasta dos arquivos.</p>
         </div>
         <div className="flex flex-wrap gap-2">

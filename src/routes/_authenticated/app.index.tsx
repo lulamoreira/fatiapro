@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { FilePlus2 } from "lucide-react";
@@ -45,7 +46,7 @@ function InicioPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-[30px] font-bold leading-tight tracking-[-0.02em]">Olá{nome ? `, ${nome}` : ""}</h1>
+          <div className="flex items-center gap-3"><h1 className="text-[30px] font-bold leading-tight tracking-[-0.02em]">Olá{nome ? `, ${nome}` : ""}</h1><BotaoAjuda tela="inicio" /></div>
           <p className="mt-1 text-muted-foreground first-letter:uppercase">{hoje}</p>
         </div>
         <Button asChild size="lg" className="bg-brand shadow-brand text-primary-foreground">

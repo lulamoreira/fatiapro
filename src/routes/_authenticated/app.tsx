@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield } from "lucide-react";
+import { Home, Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield, CircleHelp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -27,6 +27,13 @@ const NAV = [
   { to: "/app/modelos", label: "Meus modelos", curto: "Modelos", icon: Bookmark },
   { to: "/app/plano", label: "Plano e créditos", curto: "Plano", icon: Wallet },
   { to: "/app/configuracoes", label: "Configurações", curto: "Configurações", icon: Settings },
+] as const;
+
+/** Desktop sidebar: same items with "Ajuda" just above Configurações (not in the full mobile bar). */
+const NAV_LATERAL = [
+  ...NAV.filter((n) => n.to !== "/app/configuracoes"),
+  { to: "/app/ajuda", label: "Ajuda", curto: "Ajuda", icon: CircleHelp },
+  ...NAV.filter((n) => n.to === "/app/configuracoes"),
 ] as const;
 
 export const Logo = ({ className }: { className?: string }) => (
@@ -74,7 +81,7 @@ function AppLayout() {
       <aside className="glass sticky top-5 m-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col rounded-[22px] p-3 md:flex" aria-label="Menu">
         <div className="px-3 pb-5 pt-3"><Link to="/app" aria-label="FatiaPro — Início" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Logo /></Link></div>
         <nav className="flex flex-1 flex-col gap-1" aria-label="Menu principal">
-          {NAV.map((n) => (
+          {NAV_LATERAL.map((n) => (
             <Link
               key={n.to}
               to={n.to}
@@ -117,6 +124,7 @@ function AppLayout() {
             <Link to="/app/configuracoes" aria-label={status.conectado ? "Computador conectado" : "Computador desconectado"} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground">
               <Dot on={status.conectado} />{status.conectado ? "Conectado" : "Desconectado"}
             </Link>
+            <Link to="/app/ajuda" aria-label="Ajuda" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><CircleHelp className="size-4" /></Link>
             {isAdmin && <Link to="/app/admin" aria-label="Admin" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><Shield className="size-4" /></Link>}
             <button onClick={sair} aria-label="Sair" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><LogOut className="size-4" /></button>
           </div>

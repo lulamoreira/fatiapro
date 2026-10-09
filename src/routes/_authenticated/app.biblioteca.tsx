@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -112,6 +113,7 @@ function BibliotecaPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <h1 className="text-[30px] font-bold tracking-[-0.02em]">Biblioteca de peças</h1>
+          <BotaoAjuda tela="biblioteca" />
           <Button asChild><Link to="/app/nova-analise"><Wand2 className="size-4" aria-hidden />Nova análise</Link></Button>
         </div>
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); navigate({ to: "/app/biblioteca", search: { pagina: 0, q: busca } }); }}>
