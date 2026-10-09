@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent } from "@testing-library/react";
 
 const resgatar = vi.fn(async () => ({ ok: true as const, creditos: 5, expira_em: "2027-01-01T00:00:00Z" }));
 vi.mock("@tanstack/react-start", () => ({ useServerFn: () => resgatar, createServerFn: () => ({}) }));
@@ -31,14 +31,13 @@ describe("vendas pausadas na tela", () => {
     const onComprar = vi.fn();
     render(<PacotesGrade pacotes={pacotes} suspensas={false} mensagem={null} ocupado={false} comprandoId={null} onComprar={onComprar} />);
     expect(screen.queryByText("Vendas pausadas")).toBeNull();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Comprar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Comprar" }));
     expect(onComprar).toHaveBeenCalledWith("a");
   });
   it("cupom continua resgatável com vendas suspensas", async () => {
     render(<QueryClientProvider client={new QueryClient()}><CupomForm /></QueryClientProvider>);
-    const u = userEvent.setup();
-    await u.type(screen.getByLabelText("Tenho um cupom"), "PROMO");
-    await u.click(screen.getByRole("button", { name: "Aplicar" }));
+    fireEvent.change(screen.getByLabelText("Tenho um cupom"), { target: { value: "PROMO" } });
+    fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
     expect(resgatar).toHaveBeenCalledWith({ data: { codigo: "PROMO" } });
     expect(await screen.findByText(/Cupom aplicado: \+5 créditos/)).toBeInTheDocument();
   });
