@@ -5,7 +5,7 @@
 
 export const ESTADOS_FILTRO = ["concluido", "aguardando_aprovacao", "em_andamento", "erro", "cancelado"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
-export const ROTEIROS_FILTRO = ["config_geral", "reduzir_tempo", "checklist", "preco"] as const;
+export const ROTEIROS_FILTRO = ["config_geral", "reduzir_tempo", "checklist", "preco", "otimizacao"] as const;
 export type RoteiroFiltro = (typeof ROTEIROS_FILTRO)[number];
 export const PERIODOS_FILTRO = ["mes", "30d"] as const;
 export type PeriodoFiltro = (typeof PERIODOS_FILTRO)[number];
@@ -46,10 +46,11 @@ export function inicioMesSP(agora = new Date()): Date {
 }
 
 /** Translates the URL filter into database conditions. */
-export function filtroHistorico(f: HistoricoSearch, agora = new Date()): { estados?: string[]; roteiro?: string; desde?: string } {
-  const out: { estados?: string[]; roteiro?: string; desde?: string } = {};
+export function filtroHistorico(f: HistoricoSearch, agora = new Date()): { estados?: string[]; roteiro?: string; roteirosIn?: string[]; desde?: string } {
+  const out: { estados?: string[]; roteiro?: string; roteirosIn?: string[]; desde?: string } = {};
   if (f.estado) out.estados = f.estado === "em_andamento" ? ["na_fila", "analisando", "aplicando"] : [f.estado];
-  if (f.roteiro) out.roteiro = f.roteiro;
+  if (f.roteiro === "otimizacao") out.roteirosIn = ["config_geral", "reduzir_tempo"];
+  else if (f.roteiro) out.roteiro = f.roteiro;
   if (f.periodo === "mes") out.desde = inicioMesSP(agora).toISOString();
   if (f.periodo === "30d") out.desde = new Date(agora.getTime() - 30 * 86_400_000).toISOString();
   return out;
@@ -57,7 +58,7 @@ export function filtroHistorico(f: HistoricoSearch, agora = new Date()): { estad
 
 export const ROTULO_FILTRO: Record<string, string> = {
   concluido: "Concluídas", aguardando_aprovacao: "Esperando aprovação", em_andamento: "Em andamento", erro: "Com erro", cancelado: "Canceladas",
-  config_geral: "Configuração geral", reduzir_tempo: "Reduzir tempo", checklist: "Checklist", preco: "Preço de venda",
+  config_geral: "Configuração geral", reduzir_tempo: "Reduzir tempo", checklist: "Checklist", preco: "Preço de venda", otimizacao: "Otimizações",
   mes: "Este mês", "30d": "Últimos 30 dias", enviado: "Enviados", aprovado: "Aprovados", recusado: "Recusados",
 };
 

@@ -4,7 +4,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { filtroHistorico, lerHistoricoSearch } from "@/lib/inicio";
 import { FiltrosAtivos } from "@/components/fatia/FiltrosAtivos";
-import { devicesQuery, historicoQuery, resumoMesQuery, PAGE_SIZE } from "@/lib/queries";
+import { ResumoPedidoLinha } from "@/components/fatia/ResumoPedido";
+import { kpisUsuarioQuery } from "@/components/inicio/VisaoUsuario";
+import { devicesQuery, historicoQuery, PAGE_SIZE } from "@/lib/queries";
 import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, isConectado, motorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
 import { Tag } from "@/components/fatia/Chip";
 import { arquivoDoResultado, avisoAcao } from "@/components/fatia/ArquivoCard";
@@ -52,7 +54,8 @@ function HistoricoPage() {
     toast.success(avisoAcao(isConectado(d?.ultimo_contato, Date.now())));
   }
   const { data, isLoading } = useQuery({ ...historicoQuery(pagina, filtros), placeholderData: keepPreviousData });
-  const { data: resumo } = useQuery(resumoMesQuery);
+  const { data: k } = useQuery(kpisUsuarioQuery);
+  const resumo = k ? { usd: Number(k.api_usd_mes), assinatura: k.assinatura_mes } : undefined;
   const isAdmin = useIsAdmin();
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
 
@@ -105,7 +108,7 @@ function HistoricoPage() {
                     >
                       <td className="p-3">
                         <Link to="/app/analise/$id" params={{ id: j.id }} onClick={(e) => e.stopPropagation()} className="font-medium text-primary-ink hover:underline">{peca}</Link>
-                        <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
+                        <ResumoPedidoLinha opcoes={j.opcoes} roteiro={j.roteiro} data={j.criado_em} />
                       </td>
                       <td className="p-3">{rotuloFat(j.fatiador)}</td>
                       <td className="p-3 tabular">{antesDepois(j.resultado)}</td>
@@ -134,7 +137,7 @@ function HistoricoPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <Link to="/app/analise/$id" params={{ id: j.id }} aria-label={`Abrir análise de ${peca}`} className="break-words font-medium text-primary-ink hover:underline">{peca}</Link>
-                      <p className="text-xs text-muted-foreground">{roteiroLabel(j.roteiro)} · {new Date(j.criado_em).toLocaleDateString("pt-BR")}</p>
+                      <ResumoPedidoLinha opcoes={j.opcoes} roteiro={j.roteiro} data={j.criado_em} />
                     </div>
                     <Tag tone={est.tone}>{est.label}</Tag>
                   </div>

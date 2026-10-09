@@ -73,7 +73,7 @@ export function VisaoUsuario() {
 
       <Secao titulo="Suas análises">
         <Kpi rotulo="Análises feitas" link={linkHistorico()} valor={formatInt(k.analises_total)} contexto={`${formatInt(k.analises_mes)} este mês`} />
-        <Kpi rotulo="Arquivos otimizados" link={linkHistorico({ estado: "concluido" })} valor={formatInt(k.otimizados)} contexto="Configuração geral e Reduzir tempo" />
+        <Kpi rotulo="Arquivos otimizados" link={linkHistorico({ estado: "concluido", roteiro: "otimizacao" })} valor={formatInt(k.otimizados)} contexto="Configuração geral e Reduzir tempo" />
         <Kpi rotulo="Tempo economizado" tom={k.segundos_economizados > 0 ? "sucesso" : "normal"} link={linkHistorico({ estado: "concluido", roteiro: "reduzir_tempo" })} valor={formatHorasMin(k.segundos_economizados)} contexto="de impressão, em Reduzir tempo" />
         <Kpi rotulo="Filamento economizado" link={linkHistorico({ estado: "concluido", roteiro: "reduzir_tempo" })} valor={formatPeso(k.gramas_economizadas)} contexto="em Reduzir tempo" />
         <Kpi rotulo="Checklists feitos" link={linkHistorico({ roteiro: "checklist" })} valor={formatInt(k.checklists)} />
