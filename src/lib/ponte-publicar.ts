@@ -98,6 +98,12 @@ export async function concluirPublicacao(raw: unknown, deps: PonteDeps): Promise
     tamanho_bytes: p.tamanho_bytes, sha256: p.sha256, assinatura: p.assinatura, notas,
     publicada: extra.data.publicar, publicada_por_assinatura: true,
   });
-  await deps.auditar({ versao: p.versao, plataforma: p.plataforma, sha256: p.sha256 });
+  // A versão já está gravada: falha na auditoria não pode virar 500.
+  try {
+    await deps.auditar({ versao: p.versao, plataforma: p.plataforma, sha256: p.sha256 });
+  } catch (e) {
+    console.error("[ponte-publicar] auditoria falhou", e instanceof Error ? e.message : "erro");
+    return { status: 200, body: { ok: true, versao: p.versao, publicada: extra.data.publicar, auditoria: false } };
+  }
   return { status: 200, body: { ok: true, versao: p.versao, publicada: extra.data.publicar } };
 }

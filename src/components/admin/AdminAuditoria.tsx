@@ -22,7 +22,11 @@ export function AdminAuditoria() {
         {q.data.linhas.map((r) => (
           <li key={r.id} className="flex flex-col gap-1 border-b px-4 py-3 last:border-b-0 md:flex-row md:items-center md:justify-between">
             <p className="text-sm">
-              <span className="font-semibold">{r.admin_email}</span> · {ACAO_LABEL[r.acao] ?? r.acao} · <span className="font-semibold">{r.alvo_email}</span>
+              {r.acao === "ponte_publicada_por_assinatura" ? (
+                <>{ACAO_LABEL[r.acao]} · versão <span className="font-semibold">{String(r.detalhe?.versao ?? "?")}</span> · {String(r.detalhe?.plataforma ?? "?")}</>
+              ) : (
+                <><span className="font-semibold">{r.admin_email}</span> · {ACAO_LABEL[r.acao] ?? r.acao} · <span className="font-semibold">{r.alvo_email}</span></>
+              )}
             </p>
             <time className="text-xs text-muted-foreground" dateTime={r.criado_em}>{new Date(r.criado_em).toLocaleString("pt-BR")}</time>
           </li>
