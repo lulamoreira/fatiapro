@@ -71,7 +71,7 @@ export function PedidoRetorno({ id }: { id: string }) {
   });
   const aprovado = p?.status === "aprovado";
   useEffect(() => {
-    if (aprovado) { qc.invalidateQueries({ queryKey: ["plano"] }); qc.invalidateQueries({ queryKey: ["creditos-lotes"] }); qc.invalidateQueries({ queryKey: ["creditos-extrato"] }); qc.invalidateQueries({ queryKey: ["minhas-compras"] }); }
+    if (aprovado) { qc.invalidateQueries({ queryKey: ["meu-plano"] }); qc.invalidateQueries({ queryKey: ["creditos-lotes"] }); qc.invalidateQueries({ queryKey: ["creditos-extrato"] }); qc.invalidateQueries({ queryKey: ["minhas-compras"] }); }
   }, [aprovado, qc]);
   if (!p) return null;
   if (aprovado) return (
