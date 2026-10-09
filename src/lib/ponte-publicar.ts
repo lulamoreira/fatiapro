@@ -76,7 +76,7 @@ export async function iniciarPublicacao(raw: unknown, deps: PonteDeps): Promise<
 }
 
 async function sha256Hex(buf: Uint8Array): Promise<string> {
-  const d = await crypto.subtle.digest("SHA-256", buf);
+  const d = await crypto.subtle.digest("SHA-256", buf as Uint8Array<ArrayBuffer>);
   return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 

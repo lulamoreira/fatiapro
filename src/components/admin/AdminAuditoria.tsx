@@ -23,7 +23,7 @@ export function AdminAuditoria() {
           <li key={r.id} className="flex flex-col gap-1 border-b px-4 py-3 last:border-b-0 md:flex-row md:items-center md:justify-between">
             <p className="text-sm">
               {r.acao === "ponte_publicada_por_assinatura" ? (
-                <>{ACAO_LABEL[r.acao]} · versão <span className="font-semibold">{String(r.detalhe?.versao ?? "?")}</span> · {String(r.detalhe?.plataforma ?? "?")}</>
+                <>{ACAO_LABEL[r.acao]} · versão <span className="font-semibold">{r.detalhe.versao || "?"}</span> · {r.detalhe.plataforma || "?"}</>
               ) : (
                 <><span className="font-semibold">{r.admin_email}</span> · {ACAO_LABEL[r.acao] ?? r.acao} · <span className="font-semibold">{r.alvo_email}</span></>
               )}
