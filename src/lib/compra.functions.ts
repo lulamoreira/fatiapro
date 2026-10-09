@@ -4,7 +4,8 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { CompraInput, montarPreferencia, urlCheckout } from "./mercadopago";
+import { z } from "zod";
+import { CompraInput, ConferirErro, conferirPedidoLogica, montarPreferencia, urlCheckout } from "./mercadopago";
 
 const MAX_PENDENTES_HORA = 5;
 
@@ -44,4 +45,19 @@ export const criarCompra = createServerFn({ method: "POST" })
     const url = urlCheckout(token, pref);
     if (!url) throw new Error("O Mercado Pago não respondeu. Tente de novo.");
     return { url, pedido_id: pedido.id };
+  });
+
+/** Re-checks an order on the Mercado Pago API (owner or admin only; at most once per 5 s per order). */
+export const conferirPedido = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ pedido_id: z.string().uuid() }).strip().parse(d))
+  .handler(async ({ data, context }) => {
+    const { depsConferir } = await import("./mercadopago.server");
+    try {
+      return await conferirPedidoLogica(data.pedido_id, context.userId, depsConferir());
+    } catch (e) {
+      if (e instanceof ConferirErro) throw new Error(e.message);
+      console.error("conferirPedido:", (e as Error).message);
+      throw new Error("Não foi possível conferir agora.");
+    }
   });
