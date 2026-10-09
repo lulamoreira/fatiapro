@@ -1228,6 +1228,8 @@ export type Database = {
         Args: { p_estado: string; p_job: string }
         Returns: boolean
       }
+      kpis_admin: { Args: { p_periodo: string }; Returns: Json }
+      kpis_usuario: { Args: never; Returns: Json }
       reservar_credito: {
         Args: { p_job: string; p_qtd: number; p_user: string }
         Returns: undefined
@@ -1238,6 +1240,7 @@ export type Database = {
       }
       saldo_creditos: { Args: { p_user: string }; Returns: number }
       vencer_lotes: { Args: { p_user: string }; Returns: undefined }
+      versao_num: { Args: { v: string }; Returns: number[] }
     }
     Enums: {
       [_ in never]: never
