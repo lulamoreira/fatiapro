@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 
 const resgatar = vi.fn(async () => ({ ok: true as const, creditos: 5, expira_em: "2027-01-01T00:00:00Z" }));
@@ -38,6 +38,7 @@ describe("vendas pausadas na tela", () => {
     render(<QueryClientProvider client={new QueryClient()}><CupomForm /></QueryClientProvider>);
     fireEvent.change(screen.getByPlaceholderText("CÓDIGO"), { target: { value: "PROMO" } });
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
+    await waitFor(() => expect(resgatar).toHaveBeenCalled());
     expect(resgatar).toHaveBeenCalledWith({ data: { codigo: "PROMO" } });
     expect(await screen.findByText(/Cupom aplicado: \+5 créditos/)).toBeInTheDocument();
   });
