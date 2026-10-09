@@ -3,6 +3,7 @@
  * the questionnaire and the analysis header. No I/O; unit-tested in plano.test.ts.
  * The database (criar_analise) is the source of truth; these only describe it.
  */
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import type { Motor, Roteiro } from "./fatia";
 import { compararVersao } from "./ponte";
 
