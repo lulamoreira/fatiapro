@@ -14,4 +14,11 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  it("/ajuda abre sem login (fora do layout autenticado)", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const ids = router.matchRoutes("/ajuda").map((m) => m.routeId);
+    expect(ids.at(-1)).toBe("/ajuda");
+    expect(ids.some((id) => id.startsWith("/_authenticated"))).toBe(false);
+  });
 });
