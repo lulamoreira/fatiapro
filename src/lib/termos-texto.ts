@@ -107,8 +107,8 @@ export const PRIVACIDADE_SECOES: SecaoLegal[] = [
  },
  {
   "n": 4,
-  "titulo": "Bases legais (LGPD, art",
-  "texto": "7º). Execução do contrato (prestar o serviço que você contratou); legítimo interesse (segurança, prevenção de fraudes, melhoria do produto, sempre respeitando seus direitos); cumprimento de obrigação legal (registros fiscais e de pagamentos)."
+   "titulo": "Bases legais (LGPD, art. 7º)",
+   "texto": "Execução do contrato (prestar o serviço que você contratou); legítimo interesse (segurança, prevenção de fraudes, melhoria do produto, sempre respeitando seus direitos); cumprimento de obrigação legal (registros fiscais e de pagamentos)."
  },
  {
   "n": 5,
@@ -127,8 +127,8 @@ export const PRIVACIDADE_SECOES: SecaoLegal[] = [
  },
  {
   "n": 8,
-  "titulo": "Seus direitos (LGPD, art",
-  "texto": "18). Confirmar se tratamos seus dados; acessar; corrigir; pedir anonimização, bloqueio ou eliminação de dados desnecessários; portabilidade; informação sobre compartilhamento; revisão de decisões automatizadas; e excluir sua conta. Peça pelo quitanda3d@gmail.com; respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD)."
+   "titulo": "Seus direitos (LGPD, art. 18)",
+   "texto": "Confirmar se tratamos seus dados; acessar; corrigir; pedir anonimização, bloqueio ou eliminação de dados desnecessários; portabilidade; informação sobre compartilhamento; revisão de decisões automatizadas; e excluir sua conta. Peça pelo quitanda3d@gmail.com; respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD)."
  },
  {
   "n": 9,
