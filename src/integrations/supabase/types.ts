@@ -1015,6 +1015,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_resetar_meu_aceite: { Args: never; Returns: undefined }
       claim_next_command: {
         Args: { p_device_id: string }
         Returns: {
