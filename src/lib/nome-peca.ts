@@ -25,7 +25,7 @@ const RE_EVENTO = /Usando a peça aberta no [^:]+: (.+?) \(versão das/;
 export function extrairNomeDoEvento(texto: unknown): string | null {
   if (typeof texto !== "string") return null;
   const m = RE_EVENTO.exec(texto);
-  return m ? m[1] : null;
+  return m?.[1] ?? null;
 }
 
 /** Texto exibido: o nome real (inclusive "Projeto sem título"); padrão só sem nome. */
