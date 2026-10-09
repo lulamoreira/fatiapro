@@ -85,7 +85,7 @@ export type ResultadoPagamento = "creditado" | "valor_divergente" | "recusado" |
  * A forged notification cannot create an approved payment in our account.
  */
 export async function processarPagamento(paymentId: string, deps: PagamentoDeps, pg?: Pagamento | null): Promise<ResultadoPagamento> {
-  const p = pg ?? (await deps.buscarPagamento(paymentId));
+  const p = pg !== undefined ? pg : await deps.buscarPagamento(paymentId);
   if (!p || !p.external_reference) return "ignorado";
   const pedido = await deps.buscarPedido(p.external_reference);
   if (!pedido) return "ignorado";
