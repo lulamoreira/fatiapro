@@ -12,14 +12,34 @@ export const CompraInput = z.object({ pacote_id: z.string().uuid() }).strip();
 
 export interface PacoteRow { id: string; nome: string; creditos: number; preco_centavos: number }
 
-export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string | null, agora: Date) {
+/** Splits at the first space: first_name = first word, last_name = the rest; each capped at 60 chars. */
+export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string | null, agora: Date, nome: string | null = null) {
   const volta = `${SITE}/app/plano?pedido=${pedidoId}`;
+  const payer: Record<string, string> = {};
+  if (email) payer.email = email;
+  const texto = (nome ?? "").trim();
+  if (texto) {
+    const espaco = texto.indexOf(" ");
+    const first = espaco === -1 ? texto : texto.slice(0, espaco);
+    const last = espaco === -1 ? "" : texto.slice(espaco + 1).trim();
+    payer.first_name = first.slice(0, 60);
+    if (last) payer.last_name = last.slice(0, 60);
+  }
   return {
-    items: [{ id: p.id, title: `FatiaPro — ${p.nome}`, quantity: 1, unit_price: p.preco_centavos / 100, currency_id: "BRL" }],
+    items: [{
+      id: p.id,
+      title: `FatiaPro — ${p.nome}`,
+      description: `${p.creditos} créditos FatiaPro para otimização de fatiamento 3D`,
+      category_id: "virtual_goods",
+      quantity: 1,
+      unit_price: p.preco_centavos / 100,
+      currency_id: "BRL",
+    }],
     external_reference: pedidoId,
-    ...(email ? { payer: { email } } : {}),
+    ...(Object.keys(payer).length > 0 ? { payer } : {}),
     back_urls: { success: volta, failure: volta, pending: volta },
     auto_return: "approved",
+    binary_mode: true,
     statement_descriptor: "FATIAPRO",
     expires: true,
     expiration_date_to: new Date(agora.getTime() + 2 * 3600_000).toISOString(),
