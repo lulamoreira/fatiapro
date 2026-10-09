@@ -709,6 +709,7 @@ export type Database = {
           preco_unitario_centavos: number
           quantidade: number
           status: string
+          total_bigint: number | null
           total_centavos: number
           user_id: string
           validade_dias: number
@@ -728,6 +729,7 @@ export type Database = {
           preco_unitario_centavos: number
           quantidade: number
           status?: string
+          total_bigint?: number | null
           total_centavos: number
           user_id: string
           validade_dias?: number
@@ -747,6 +749,7 @@ export type Database = {
           preco_unitario_centavos?: number
           quantidade?: number
           status?: string
+          total_bigint?: number | null
           total_centavos?: number
           user_id?: string
           validade_dias?: number
