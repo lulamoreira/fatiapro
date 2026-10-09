@@ -949,16 +949,22 @@ export type Database = {
           criado_em: string
           id: string
           nome: string | null
+          termos_aceitos_em: string | null
+          termos_versao: string | null
         }
         Insert: {
           criado_em?: string
           id: string
           nome?: string | null
+          termos_aceitos_em?: string | null
+          termos_versao?: string | null
         }
         Update: {
           criado_em?: string
           id?: string
           nome?: string | null
+          termos_aceitos_em?: string | null
+          termos_versao?: string | null
         }
         Relationships: []
       }
@@ -988,6 +994,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aceitar_termos: { Args: { p_versao: string }; Returns: undefined }
       admin_dar_creditos: {
         Args: {
           p_admin: string
