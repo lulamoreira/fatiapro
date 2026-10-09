@@ -1094,6 +1094,7 @@ export type Database = {
         Args: { p_motivo: string; p_pedido: string }
         Returns: undefined
       }
+      expirar_pedidos_pendentes: { Args: never; Returns: number }
       impressoras_escolhidas_valido: { Args: { v: Json }; Returns: boolean }
       inicio_dia_sp: { Args: { p?: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
