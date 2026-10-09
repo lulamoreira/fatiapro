@@ -26,6 +26,6 @@ BEGIN
   r := public.kpis_usuario();
   IF (r->>'analises_total')::int <> (SELECT count(*) FROM jobs WHERE user_id = adm) THEN RAISE EXCEPTION 'FALHOU: total do usuário'; END IF;
   IF has_function_privilege('anon', 'public.kpis_admin(text)', 'EXECUTE') THEN RAISE EXCEPTION 'FALHOU: anon executa'; END IF;
-  RAISE NOTICE 'kpis: OK';
+  RAISE EXCEPTION 'kpis: OK (rollback)';
 END $$;
 ROLLBACK;
