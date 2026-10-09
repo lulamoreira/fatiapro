@@ -134,6 +134,13 @@
       "when": 1791549036138,
       "tag": "0018_termos_aceite",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791552830589,
+      "tag": "0019_validate_signup_terms_version",
+      "breakpoints": true
     }
   ]
 }
