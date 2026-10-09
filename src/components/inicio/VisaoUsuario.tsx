@@ -7,6 +7,7 @@ import { devicesQuery } from "@/lib/queries";
 import { ESTADOS, formatUSD, isConectado, roteiroLabel, type Estado } from "@/lib/fatia";
 import { DIAS_TESTE } from "@/lib/plano";
 import { usePlano } from "@/hooks/use-plano";
+import { useStatusVendas } from "@/hooks/use-status-vendas";
 import { useNow } from "@/hooks/use-now";
 import { formatHorasMin, formatInt, formatPct, formatPeso, formatReais, linkHistorico, linkOrc } from "@/lib/inicio";
 import { Dot, EmptyState, Tag } from "@/components/fatia/Chip";
@@ -36,6 +37,7 @@ const dataCurta = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { d
 export function VisaoUsuario() {
   const { data: k, isLoading } = useQuery(kpisUsuarioQuery);
   const { data: p } = usePlano();
+  const vendasPausadas = useStatusVendas().data?.suspensas === true;
   const { data: devices = [] } = useQuery(devicesQuery);
   const now = useNow(10_000);
 
