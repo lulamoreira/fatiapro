@@ -14,7 +14,7 @@ import { MessageSquareHeart } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
 import { ResumoPedidoLinha } from "@/components/fatia/ResumoPedido";
-import { ESTADOS, fatiadorLabel, isConectado, materialTexto, roteiroLabel, type Estado } from "@/lib/fatia";
+import { ESTADOS, fatiadorLabel, isConectado, type Estado } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";

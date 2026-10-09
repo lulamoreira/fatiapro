@@ -126,7 +126,7 @@ export const resumoMesQuery = queryOptions({
         if (j.motor === "api") {
           const c = j.custo_real as { usd?: unknown } | null;
           if (c && typeof c.usd === "number") usd += c.usd;
-        } else assinatura += 1;
+        } else if (j.motor === "assinatura") assinatura += 1;
       }
       if (from + step >= (count ?? 0)) break;
     }

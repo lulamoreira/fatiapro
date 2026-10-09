@@ -7,7 +7,7 @@ import { FiltrosAtivos } from "@/components/fatia/FiltrosAtivos";
 import { ResumoPedidoLinha } from "@/components/fatia/ResumoPedido";
 import { kpisUsuarioQuery } from "@/components/inicio/VisaoUsuario";
 import { devicesQuery, historicoQuery, PAGE_SIZE } from "@/lib/queries";
-import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, isConectado, motorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
+import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, isConectado, motorLabel, type Estado } from "@/lib/fatia";
 import { Tag } from "@/components/fatia/Chip";
 import { arquivoDoResultado, avisoAcao } from "@/components/fatia/ArquivoCard";
 import { supabase } from "@/integrations/supabase/client";
