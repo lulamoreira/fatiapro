@@ -529,6 +529,7 @@ export type Database = {
         Row: {
           criado_em: string
           id: string
+          motivo: string | null
           payment_id: string | null
           status: string | null
           valido: boolean
@@ -536,6 +537,7 @@ export type Database = {
         Insert: {
           criado_em?: string
           id?: string
+          motivo?: string | null
           payment_id?: string | null
           status?: string | null
           valido?: boolean
@@ -543,6 +545,7 @@ export type Database = {
         Update: {
           criado_em?: string
           id?: string
+          motivo?: string | null
           payment_id?: string | null
           status?: string | null
           valido?: boolean
@@ -683,6 +686,7 @@ export type Database = {
       pedidos: {
         Row: {
           atualizado_em: string
+          conferido_em: string | null
           creditos: number
           criado_em: string
           id: string
@@ -698,6 +702,7 @@ export type Database = {
         }
         Insert: {
           atualizado_em?: string
+          conferido_em?: string | null
           creditos: number
           criado_em?: string
           id?: string
@@ -713,6 +718,7 @@ export type Database = {
         }
         Update: {
           atualizado_em?: string
+          conferido_em?: string | null
           creditos?: number
           criado_em?: string
           id?: string
