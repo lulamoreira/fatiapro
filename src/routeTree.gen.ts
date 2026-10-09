@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
 import { Route as AuthenticatedAppModelosRouteImport } from './routes/_authenticated/app.modelos'
 import { Route as AuthenticatedAppNovaAnaliseRouteImport } from './routes/_authenticated/app.nova-analise'
+import { Route as AuthenticatedAppOrcamentosRouteImport } from './routes/_authenticated/app.orcamentos'
 import { Route as AuthenticatedAppPlanoRouteImport } from './routes/_authenticated/app.plano'
 import { Route as AuthenticatedAppAnaliseIdRouteImport } from './routes/_authenticated/app.analise.$id'
 import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/public/bridge/heartbeat'
@@ -116,6 +117,12 @@ const AuthenticatedAppNovaAnaliseRoute =
   AuthenticatedAppNovaAnaliseRouteImport.update({
     id: '/nova-analise',
     path: '/nova-analise',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrcamentosRoute =
+  AuthenticatedAppOrcamentosRouteImport.update({
+    id: '/orcamentos',
+    path: '/orcamentos',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppPlanoRoute = AuthenticatedAppPlanoRouteImport.update({
@@ -212,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/modelos': typeof AuthenticatedAppModelosRoute
   '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/app/orcamentos': typeof AuthenticatedAppOrcamentosRoute
   '/app/plano': typeof AuthenticatedAppPlanoRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -241,6 +249,7 @@ export interface FileRoutesByTo {
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/modelos': typeof AuthenticatedAppModelosRoute
   '/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/app/orcamentos': typeof AuthenticatedAppOrcamentosRoute
   '/app/plano': typeof AuthenticatedAppPlanoRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -273,6 +282,7 @@ export interface FileRoutesById {
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/_authenticated/app/modelos': typeof AuthenticatedAppModelosRoute
   '/_authenticated/app/nova-analise': typeof AuthenticatedAppNovaAnaliseRoute
+  '/_authenticated/app/orcamentos': typeof AuthenticatedAppOrcamentosRoute
   '/_authenticated/app/plano': typeof AuthenticatedAppPlanoRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/analise/$id': typeof AuthenticatedAppAnaliseIdRoute
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/app/historico'
     | '/app/modelos'
     | '/app/nova-analise'
+    | '/app/orcamentos'
     | '/app/plano'
     | '/app/'
     | '/app/analise/$id'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/app/historico'
     | '/app/modelos'
     | '/app/nova-analise'
+    | '/app/orcamentos'
     | '/app/plano'
     | '/app'
     | '/app/analise/$id'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/historico'
     | '/_authenticated/app/modelos'
     | '/_authenticated/app/nova-analise'
+    | '/_authenticated/app/orcamentos'
     | '/_authenticated/app/plano'
     | '/_authenticated/app/'
     | '/_authenticated/app/analise/$id'
@@ -509,6 +522,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNovaAnaliseRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/orcamentos': {
+      id: '/_authenticated/app/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/app/orcamentos'
+      preLoaderRoute: typeof AuthenticatedAppOrcamentosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/plano': {
       id: '/_authenticated/app/plano'
       path: '/plano'
@@ -619,6 +639,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
   AuthenticatedAppModelosRoute: typeof AuthenticatedAppModelosRoute
   AuthenticatedAppNovaAnaliseRoute: typeof AuthenticatedAppNovaAnaliseRoute
+  AuthenticatedAppOrcamentosRoute: typeof AuthenticatedAppOrcamentosRoute
   AuthenticatedAppPlanoRoute: typeof AuthenticatedAppPlanoRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAnaliseIdRoute: typeof AuthenticatedAppAnaliseIdRoute
@@ -633,6 +654,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
   AuthenticatedAppModelosRoute: AuthenticatedAppModelosRoute,
   AuthenticatedAppNovaAnaliseRoute: AuthenticatedAppNovaAnaliseRoute,
+  AuthenticatedAppOrcamentosRoute: AuthenticatedAppOrcamentosRoute,
   AuthenticatedAppPlanoRoute: AuthenticatedAppPlanoRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAnaliseIdRoute: AuthenticatedAppAnaliseIdRoute,

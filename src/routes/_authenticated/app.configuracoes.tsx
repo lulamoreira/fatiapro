@@ -8,6 +8,7 @@ import { Download, Laptop, Monitor, MoreHorizontal, Pencil, Plug } from "lucide-
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery, type DeviceRow } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseEscolhidas, parseRelatorio } from "@/lib/fatia";
+import { MeuNegocio } from "@/components/fatia/MeuNegocio";
 import { MinhasImpressoras } from "@/components/fatia/MinhasImpressoras";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -80,6 +81,8 @@ function ComputadorPage() {
           <Button onClick={gerar} size="lg"><Plug className="size-4" />Conectar computador</Button>
         </div>
       </div>
+
+      <MeuNegocio />
 
       {codigo && (
         <div className="rounded-3xl border-2 border-primary bg-accent p-6 text-center">

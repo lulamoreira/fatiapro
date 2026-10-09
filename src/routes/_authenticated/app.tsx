@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Box, Bookmark, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield } from "lucide-react";
+import { Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -21,6 +21,7 @@ const NAV = [
   { to: "/app/nova-analise", label: "Nova análise", curto: "Nova", icon: FilePlus2 },
   { to: "/app/historico", label: "Histórico", curto: "Histórico", icon: History },
   { to: "/app/biblioteca", label: "Biblioteca de peças", curto: "Peças", icon: Box },
+  { to: "/app/orcamentos", label: "Orçamentos", curto: "Orçamentos", icon: FileText },
   { to: "/app/modelos", label: "Meus modelos", curto: "Modelos", icon: Bookmark },
   { to: "/app/plano", label: "Plano e créditos", curto: "Plano", icon: Wallet },
   { to: "/app/configuracoes", label: "Configurações", curto: "Configurações", icon: Settings },

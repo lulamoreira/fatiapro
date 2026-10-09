@@ -27,6 +27,7 @@ import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/
 import { Tag } from "@/components/fatia/Chip";
 import { Approval, type Proposta } from "@/components/fatia/Approval";
 import { Result, type ResultadoConteudo } from "@/components/fatia/Result";
+import { GerarOrcamento } from "@/components/fatia/GerarOrcamento";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -307,6 +308,7 @@ function AnalisePage() {
       )}
 
       {resultado && <Result c={resultado.conteudo as unknown as ResultadoConteudo} motor={job.motor} custo={job.custo_real} />}
+      {resultado && estado === "concluido" && job.roteiro === "preco" && <GerarOrcamento jobId={job.id} nomePeca={job.nome_peca} conteudo={resultado.conteudo} />}
       {estado === "concluido" && job.fonte === "teste" && feedbackLido && !feedback && (
         <button type="button" onClick={() => { setRepetirAposQuest(false); setQuestJob(job.id); }}
           className="flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left text-sm hover:bg-secondary">
