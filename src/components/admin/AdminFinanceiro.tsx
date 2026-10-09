@@ -35,6 +35,13 @@ export function AdminFinanceiro() {
             <Card titulo="Créditos consumidos" valor={String(d.creditos_consumidos)} extra="reservas − devoluções" />
             <Card titulo="Custo médio por crédito" valor={d.custo_por_credito_brl == null ? "—" : brl(d.custo_por_credito_brl)} />
           </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <Card titulo="Receita bruta" valor={brl(d.receita.bruta)} extra={`${d.receita.pedidos} pedidos aprovados`} />
+            <Card titulo="Taxa estimada" valor={brl(d.receita.taxa)} extra="Pix ou cartão" />
+            <Card titulo="Receita líquida" valor={brl(d.receita.liquida)} />
+            <Card titulo="Custo da IA" valor={brl(d.receita.custo_ia)} />
+            <Card titulo="Margem" valor={brl(d.receita.margem)} extra={d.receita.margem_pct == null ? "—" : `${d.receita.margem_pct.toFixed(1).replace(".", ",")}%`} />
+          </div>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <Grupo titulo="Uso de clientes" g={d.cliente} />
             <Grupo titulo="Uso do administrador" g={d.admin} />

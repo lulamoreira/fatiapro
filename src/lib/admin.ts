@@ -66,4 +66,6 @@ export const ACAO_LABEL: Record<string, string> = {
   reiniciar_teste: "Reiniciou o teste grátis de",
   config_cobranca: "Alterou as configurações de cobrança",
   ponte_publicada_por_assinatura: "Versão da ponte publicada (assinada)",
+  pacote_criado: "Criou um pacote de créditos",
+  pacote_editado: "Editou um pacote de créditos",
 };
