@@ -47,71 +47,116 @@ export function normalizarDataId(id: string): string {
   return /[a-z]/i.test(id) ? id.toLowerCase() : id;
 }
 
+export type MotivoAssinatura = "ok" | "sem_cabecalho" | "formato" | "v1_diferente";
+
 /** x-signature "ts=...,v1=..."; manifest `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`; HMAC-SHA256 hex. */
-export async function assinaturaValida(xSignature: string | null, xRequestId: string | null, dataId: string | null, secret: string): Promise<boolean> {
-  if (!xSignature || !xRequestId || !dataId || !secret) return false;
+export async function verificarAssinatura(xSignature: string | null, xRequestId: string | null, dataId: string | null, secret: string): Promise<MotivoAssinatura> {
+  if (!xSignature || !xRequestId || !dataId || !secret) return "sem_cabecalho";
   const partes = Object.fromEntries(xSignature.split(",").map((p) => p.trim().split("=", 2) as [string, string]));
   const ts = partes["ts"], v1 = partes["v1"];
-  if (!ts || !v1) return false;
+  if (!ts || !v1 || !/^[0-9a-f]{64}$/i.test(v1)) return "formato";
   const manifesto = `id:${normalizarDataId(dataId)};request-id:${xRequestId};ts:${ts};`;
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const mac = hex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(manifesto)));
-  return iguais(mac, v1.toLowerCase());
+  return iguais(mac, v1.toLowerCase()) ? "ok" : "v1_diferente";
 }
 
-/* ---------------- Webhook processing ---------------- */
+export async function assinaturaValida(xSignature: string | null, xRequestId: string | null, dataId: string | null, secret: string): Promise<boolean> {
+  return (await verificarAssinatura(xSignature, xRequestId, dataId, secret)) === "ok";
+}
+
+/* ---------------- Payment processing ---------------- */
 export interface Pagamento { id: string | number; status: string; transaction_amount: number; currency_id: string; external_reference: string | null; payment_type_id: string | null }
 export interface PedidoRow { id: string; status: string; valor_centavos: number }
 
-export interface WebhookDeps {
-  secret: string;
+export interface PagamentoDeps {
   buscarPagamento(id: string): Promise<Pagamento | null>;
   buscarPedido(id: string): Promise<PedidoRow | null>;
   creditar(pedidoId: string, paymentId: string, metodo: string | null): Promise<void>;
   estornar(pedidoId: string, motivo: string): Promise<void>;
   /** Changes status only while the order is still 'pendente'. */
   marcarSePendente(pedidoId: string, status: "recusado" | "cancelado", paymentId: string): Promise<void>;
-  registrarEvento(e: { payment_id: string | null; status: string | null; valido: boolean }): Promise<void>;
+}
+
+export type ResultadoPagamento = "creditado" | "valor_divergente" | "recusado" | "estornado" | "ignorado";
+
+/**
+ * Queries the payment on the Mercado Pago API (our token) and acts only on that answer.
+ * A forged notification cannot create an approved payment in our account.
+ */
+export async function processarPagamento(paymentId: string, deps: PagamentoDeps, pg?: Pagamento | null): Promise<ResultadoPagamento> {
+  const p = pg !== undefined ? pg : await deps.buscarPagamento(paymentId);
+  if (!p || !p.external_reference) return "ignorado";
+  const pedido = await deps.buscarPedido(p.external_reference);
+  if (!pedido) return "ignorado";
+  const pid = String(p.id);
+  if (p.status === "approved") {
+    if (Math.round(Number(p.transaction_amount) * 100) !== pedido.valor_centavos || p.currency_id !== "BRL") {
+      console.error("mercadopago: valor divergente", { pedido: pedido.id, payment: pid });
+      await deps.marcarSePendente(pedido.id, "recusado", pid);
+      return "valor_divergente";
+    }
+    await deps.creditar(pedido.id, pid, p.payment_type_id);
+    return "creditado";
+  }
+  if (p.status === "rejected" || p.status === "cancelled") {
+    await deps.marcarSePendente(pedido.id, p.status === "rejected" ? "recusado" : "cancelado", pid);
+    return "recusado";
+  }
+  if (p.status === "refunded" || p.status === "charged_back") {
+    await deps.estornar(pedido.id, p.status === "refunded" ? "pagamento devolvido" : "contestação do pagamento");
+    return "estornado";
+  }
+  return "ignorado";
+}
+
+export interface WebhookDeps extends PagamentoDeps {
+  secret: string;
+  registrarEvento(e: { payment_id: string | null; status: string | null; valido: boolean; motivo: MotivoAssinatura }): Promise<void>;
 }
 
 export interface WebhookReq { url: string; headers: { get(n: string): string | null }; corpo: unknown }
 
+/** Signature is checked and logged but does not block: credit depends only on the API answer. Always 200. */
 export async function processarWebhook(req: WebhookReq, deps: WebhookDeps): Promise<{ status: number; body: Record<string, unknown> }> {
   const u = new URL(req.url);
   const dataId = u.searchParams.get("data.id") ?? u.searchParams.get("id");
   const corpo = (req.corpo && typeof req.corpo === "object" ? req.corpo : {}) as Record<string, unknown>;
   const tipo = u.searchParams.get("type") ?? u.searchParams.get("topic") ?? (typeof corpo["type"] === "string" ? corpo["type"] : null);
-  const valido = await assinaturaValida(req.headers.get("x-signature"), req.headers.get("x-request-id"), dataId, deps.secret);
-  if (!valido) {
-    await deps.registrarEvento({ payment_id: dataId, status: null, valido: false }).catch(() => {});
-    return { status: 401, body: { erro: "assinatura_invalida" } };
-  }
-  if (tipo !== "payment" || !dataId) {
-    await deps.registrarEvento({ payment_id: dataId, status: tipo, valido: true }).catch(() => {});
+  const motivo = await verificarAssinatura(req.headers.get("x-signature"), req.headers.get("x-request-id"), dataId, deps.secret);
+  const valido = motivo === "ok";
+  if (tipo !== "payment" || !dataId || !/^\d{1,30}$/.test(dataId)) {
+    await deps.registrarEvento({ payment_id: dataId?.slice(0, 64) ?? null, status: tipo?.slice(0, 40) ?? null, valido, motivo }).catch(() => {});
     return { status: 200, body: { ok: true, ignorado: true } };
   }
   const pg = await deps.buscarPagamento(dataId);
-  await deps.registrarEvento({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido: true }).catch(() => {});
-  if (!pg || !pg.external_reference) return { status: 200, body: { ok: true, ignorado: true } };
-  const pedido = await deps.buscarPedido(pg.external_reference);
-  if (!pedido) return { status: 200, body: { ok: true, ignorado: true } };
-  const pid = String(pg.id);
+  await deps.registrarEvento({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido, motivo }).catch(() => {});
+  const r = await processarPagamento(dataId, deps, pg);
+  return { status: 200, body: { ok: true, resultado: r } };
+}
 
-  if (pg.status === "approved") {
-    if (Math.round(Number(pg.transaction_amount) * 100) !== pedido.valor_centavos || pg.currency_id !== "BRL") {
-      console.error("mercadopago: valor divergente", { pedido: pedido.id, payment: pid });
-      await deps.marcarSePendente(pedido.id, "recusado", pid);
-      return { status: 200, body: { ok: true, creditado: false } };
-    }
-    await deps.creditar(pedido.id, pid, pg.payment_type_id);
-    return { status: 200, body: { ok: true, creditado: true } };
+/* ---------------- conferirPedido ---------------- */
+export interface ConferirDeps extends PagamentoDeps {
+  donoDoPedido(pedidoId: string): Promise<string | null>;
+  ehAdmin(userId: string): Promise<boolean>;
+  /** Atomically claims the 5 s slot; false if checked less than 5 s ago. */
+  reservarConferencia(pedidoId: string): Promise<boolean>;
+  pagamentosDoPedido(pedidoId: string): Promise<Pagamento[]>;
+  statusPedido(pedidoId: string): Promise<string>;
+}
+
+export class ConferirErro extends Error {}
+
+export async function conferirPedidoLogica(pedidoId: string, userId: string, deps: ConferirDeps): Promise<{ status: string; conferido: boolean }> {
+  const dono = await deps.donoDoPedido(pedidoId);
+  if (!dono || (dono !== userId && !(await deps.ehAdmin(userId)))) throw new ConferirErro("Pedido não encontrado.");
+  if (!(await deps.reservarConferencia(pedidoId))) return { status: await deps.statusPedido(pedidoId), conferido: false };
+  const pagamentos = (await deps.pagamentosDoPedido(pedidoId)).slice(0, 5);
+  for (const pg of pagamentos) {
+    if (pg.external_reference !== pedidoId) continue;
+    await processarPagamento(String(pg.id), deps, pg);
   }
-  if (pg.status === "rejected" || pg.status === "cancelled") {
-    await deps.marcarSePendente(pedido.id, pg.status === "rejected" ? "recusado" : "cancelado", pid);
-  } else if (pg.status === "refunded" || pg.status === "charged_back") {
-    await deps.estornar(pedido.id, pg.status === "refunded" ? "pagamento devolvido" : "contestação do pagamento");
-  }
-  return { status: 200, body: { ok: true } };
+  return { status: await deps.statusPedido(pedidoId), conferido: true };
 }
 
 /* ---------------- Presentation helpers ---------------- */
