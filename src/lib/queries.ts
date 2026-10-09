@@ -85,7 +85,7 @@ export const jobEventsQuery = (id: string) =>
   });
 
 export const PAGE_SIZE = 25;
-export const historicoQuery = (page: number, f: { estados?: string[]; roteiro?: string; desde?: string } = {}) =>
+export const historicoQuery = (page: number, f: { estados?: string[]; roteiro?: string; roteirosIn?: string[]; desde?: string } = {}) =>
   queryOptions({
     queryKey: ["historico", page, f],
     queryFn: async () => {
@@ -93,6 +93,7 @@ export const historicoQuery = (page: number, f: { estados?: string[]; roteiro?: 
       let q = supabase.from("jobs").select("*", { count: "exact" });
       if (f.estados?.length) q = q.in("estado", f.estados);
       if (f.roteiro) q = q.eq("roteiro", f.roteiro);
+      if (f.roteirosIn?.length) q = q.in("roteiro", f.roteirosIn);
       if (f.desde) q = q.gte("criado_em", f.desde);
       const { data, error, count } = await q
         .order("criado_em", { ascending: false })
@@ -125,7 +126,7 @@ export const resumoMesQuery = queryOptions({
         if (j.motor === "api") {
           const c = j.custo_real as { usd?: unknown } | null;
           if (c && typeof c.usd === "number") usd += c.usd;
-        } else assinatura += 1;
+        } else if (j.motor === "assinatura") assinatura += 1;
       }
       if (from + step >= (count ?? 0)) break;
     }

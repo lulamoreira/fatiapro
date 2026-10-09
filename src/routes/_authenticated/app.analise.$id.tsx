@@ -13,7 +13,8 @@ import { PecaAbertaEvento } from "@/components/fatia/PecaAberta";
 import { MessageSquareHeart } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
-import { ESTADOS, fatiadorLabel, isConectado, materialTexto, roteiroLabel, type Estado } from "@/lib/fatia";
+import { ResumoPedidoLinha } from "@/components/fatia/ResumoPedido";
+import { ESTADOS, fatiadorLabel, isConectado, type Estado } from "@/lib/fatia";
 import { useNow } from "@/hooks/use-now";
 import { useDevicesLive } from "@/hooks/use-devices-live";
 import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
@@ -227,11 +228,7 @@ function AnalisePage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">{job.nome_peca ?? "Peça aberta no fatiador"}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {roteiroLabel(job.roteiro)} · {rotuloFat(job.fatiador)}
-              {opc.impressora ? ` · ${opc.impressora}` : ""}
-              {opc.filamento?.tipo ? ` · ${materialTexto(opc.filamento.marca ?? "", opc.filamento.linha ?? "")}` : ""}
-            </p>
+            <ResumoPedidoLinha opcoes={job.opcoes} roteiro={job.roteiro} extra={job.fatiador ? rotuloFat(job.fatiador) : undefined} data={job.criado_em} />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {etiquetaFonte(job) && <Tag tone={etiquetaFonte(job) === "Crédito devolvido" ? "success" : "muted"}>{etiquetaFonte(job)}</Tag>}
