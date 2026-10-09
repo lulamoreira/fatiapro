@@ -16,14 +16,14 @@ export interface PacoteRow { id: string; nome: string; creditos: number; preco_c
 export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string | null, agora: Date, nome: string | null = null) {
   const volta = `${SITE}/app/plano?pedido=${pedidoId}`;
   const payer: Record<string, string> = {};
-  if (email) payer.email = email;
+  if (email) payer["email"] = email;
   const texto = (nome ?? "").trim();
   if (texto) {
     const espaco = texto.indexOf(" ");
     const first = espaco === -1 ? texto : texto.slice(0, espaco);
     const last = espaco === -1 ? "" : texto.slice(espaco + 1).trim();
-    payer.first_name = first.slice(0, 60);
-    if (last) payer.last_name = last.slice(0, 60);
+    payer["first_name"] = first.slice(0, 60);
+    if (last) payer["last_name"] = last.slice(0, 60);
   }
   return {
     items: [{
