@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield } from "lucide-react";
+import { Home, Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV = [
+  { to: "/app", label: "Início", curto: "Início", icon: Home },
   { to: "/app/nova-analise", label: "Nova análise", curto: "Nova", icon: FilePlus2 },
   { to: "/app/historico", label: "Histórico", curto: "Histórico", icon: History },
   { to: "/app/biblioteca", label: "Biblioteca de peças", curto: "Peças", icon: Box },
@@ -71,7 +72,7 @@ function AppLayout() {
       <AceiteTermosModal />
       {/* Desktop glass sidebar */}
       <aside className="glass sticky top-5 m-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col rounded-[22px] p-3 md:flex" aria-label="Menu">
-        <div className="px-3 pb-5 pt-3"><Logo /></div>
+        <div className="px-3 pb-5 pt-3"><Link to="/app" aria-label="FatiaPro — Início" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Logo /></Link></div>
         <nav className="flex flex-1 flex-col gap-1" aria-label="Menu principal">
           {NAV.map((n) => (
             <Link
@@ -110,7 +111,7 @@ function AppLayout() {
         {/* Mobile top bar: logo + computer status dot */}
         <DicaInstalar />
         <header className="flex items-center justify-between px-4 pt-4 md:hidden">
-          <Logo className="text-lg" />
+          <Link to="/app" aria-label="FatiaPro — Início"><Logo className="text-lg" /></Link>
           <div className="flex items-center gap-1">
             <Link to="/app/configuracoes" aria-label={status.conectado ? "Computador conectado" : "Computador desconectado"} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground">
               <Dot on={status.conectado} />{status.conectado ? "Conectado" : "Desconectado"}
