@@ -87,7 +87,7 @@ function Pedidos() {
         <ul className="divide-y text-sm">{q.data.linhas.map((p) => (
           <li key={p.id} className="flex flex-wrap justify-between gap-2 py-2">
             <span className="min-w-0"><span className="block truncate font-medium">{p.email}</span><span className="text-xs text-muted-foreground">{dataHora(p.criado_em)} · {p.pacotes?.nome ?? `${p.creditos} créditos`}{p.metodo ? ` · ${p.metodo}` : ""}</span></span>
-            <span className="flex items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "neutral"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag></span>
+            <span className="flex items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "muted"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag></span>
           </li>
         ))}</ul>
       )}
@@ -108,7 +108,7 @@ function Eventos() {
         <ul className="divide-y text-sm">{q.data.linhas.map((e) => (
           <li key={e.id} className="flex justify-between gap-2 py-2">
             <span className="text-muted-foreground">{dataHora(e.criado_em)} · pagamento {e.payment_id ?? "—"} · {e.status ?? "—"}</span>
-            <Tag tone={e.valido ? "success" : "neutral"}>{e.valido ? "Assinatura válida" : "Assinatura inválida"}</Tag>
+            <Tag tone={e.valido ? "success" : "muted"}>{e.valido ? "Assinatura válida" : "Assinatura inválida"}</Tag>
           </li>
         ))}</ul>
       )}
