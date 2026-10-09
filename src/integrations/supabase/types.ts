@@ -630,6 +630,7 @@ export type Database = {
           notas: string | null
           plataforma: string
           publicada: boolean
+          publicada_por_assinatura: boolean
           sha256: string
           tamanho_bytes: number
           versao: string
@@ -643,6 +644,7 @@ export type Database = {
           notas?: string | null
           plataforma: string
           publicada?: boolean
+          publicada_por_assinatura?: boolean
           sha256: string
           tamanho_bytes: number
           versao: string
@@ -656,6 +658,7 @@ export type Database = {
           notas?: string | null
           plataforma?: string
           publicada?: boolean
+          publicada_por_assinatura?: boolean
           sha256?: string
           tamanho_bytes?: number
           versao?: string
