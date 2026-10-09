@@ -71,6 +71,11 @@ export function faixaDesconto(descontos: FaixaDesconto[], quantidade: number): F
 export const paraCentavos = (reais: number) => Math.round(reais * 100);
 export const totalCentavos = (quantidade: number, unitarioCentavos: number) => quantidade * unitarioCentavos;
 export const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+/** Total em centavos: usa a coluna bigint; linhas antigas caem na coluna int. */
+export const totalDe = (o: { total_centavos: number; total_bigint?: number | null }) => o.total_bigint ?? o.total_centavos;
+const EXT_PECA = /\.(stl|3mf|step|stp|obj)$/i;
+/** Remove só a extensão de arquivo de modelo 3D do fim do nome. */
+export const nomeSemExtensao = (nome: string) => nome.replace(EXT_PECA, "");
 export const numeroOrc = (n: number) => `ORC-${String(n).padStart(4, "0")}`;
 export const dataBR = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
@@ -84,7 +89,7 @@ export const FORMAS_PAGAMENTO = ["Pix", "Cartão", "Dinheiro", "Boleto", "A comb
 export interface NegocioDados { nome: string; documento: string | null; email: string | null; whatsapp: string | null; cidade: string | null }
 export interface OrcamentoDados {
   numero: number; criado_em: string; cliente_nome: string; cliente_contato: string | null; descricao: string;
-  quantidade: number; preco_unitario_centavos: number; total_centavos: number; prazo_entrega: string | null;
+  quantidade: number; preco_unitario_centavos: number; total_centavos: number; total_bigint?: number | null; prazo_entrega: string | null;
   validade_dias: number; forma_pagamento: string | null; observacoes: string | null;
 }
 
@@ -99,8 +104,8 @@ export function conteudoPdf(n: NegocioDados, o: OrcamentoDados) {
     valido: `Válido até ${dataBR(validade)}`,
     para: [o.cliente_nome, o.cliente_contato].filter((x): x is string => !!x),
     cabecalho: ["Descrição", "Qtd", "Valor unitário", "Total"],
-    linha: [o.descricao, String(o.quantidade), brl(o.preco_unitario_centavos), brl(o.total_centavos)],
-    total: `TOTAL ${brl(o.total_centavos)}`,
+    linha: [o.descricao, String(o.quantidade), brl(o.preco_unitario_centavos), brl(totalDe(o))],
+    total: `TOTAL ${brl(totalDe(o))}`,
     condicoes: [
       o.prazo_entrega ? `Prazo de entrega: ${o.prazo_entrega}` : null,
       o.forma_pagamento ? `Forma de pagamento: ${o.forma_pagamento}` : null,
