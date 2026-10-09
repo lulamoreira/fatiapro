@@ -80,7 +80,7 @@ export function CreditosSecao({ alvo }: { alvo: string }) {
           <ul className="divide-y text-sm">
             {d.extrato.map((e) => (
               <li key={e.id} className="flex justify-between gap-2 px-3 py-2">
-                <span className="min-w-0"><span className="block truncate">{descricaoMovimento(e.tipo, e.jobs?.nome_peca)}</span>{e.motivo && e.tipo !== "reserva" && <span className="block truncate text-xs text-muted-foreground">{e.motivo}</span>}<span className="block text-xs text-muted-foreground">{dt(e.criado_em)}</span></span>
+                <span className="min-w-0"><span className="block truncate">{descricaoMovimento(e.tipo, e.jobs?.nome_peca, e.motivo)}</span>{e.motivo && e.tipo !== "reserva" && <span className="block truncate text-xs text-muted-foreground">{e.motivo}</span>}<span className="block text-xs text-muted-foreground">{dt(e.criado_em)}</span></span>
                 <span className="shrink-0 font-semibold tabular">{e.quantidade > 0 ? `+${e.quantidade}` : `−${Math.abs(e.quantidade)}`}</span>
               </li>
             ))}

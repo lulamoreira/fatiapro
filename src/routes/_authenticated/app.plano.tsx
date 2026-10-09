@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { MinhasCompras, PacotesCompra, PedidoRetorno } from "@/components/fatia/Compras";
+import { CupomForm } from "@/components/fatia/CupomForm";
 
 export const Route = createFileRoute("/_authenticated/app/plano")({
   head: () => ({ meta: [{ title: "Plano e créditos — FatiaPro" }, { name: "description", content: "Seu saldo de créditos, teste grátis, extrato e pacotes." }] }),
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/app/plano")({
 
 const POR_PAGINA = 20;
 const data = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
-const dataCurta = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+const dataCurta = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 function PlanoPage() {
   const { data: p, isLoading } = usePlano();
@@ -41,7 +42,7 @@ function PlanoPage() {
     queryKey: ["creditos-extrato", pagina],
     queryFn: async () => {
       const de = pagina * POR_PAGINA;
-      const { data: d, count, error } = await supabase.from("creditos_movimentos").select("id, tipo, quantidade, criado_em, job_id, jobs(nome_peca)", { count: "exact" })
+      const { data: d, count, error } = await supabase.from("creditos_movimentos").select("id, tipo, quantidade, motivo, criado_em, job_id, jobs(nome_peca)", { count: "exact" })
         .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, de + POR_PAGINA - 1);
       if (error) throw error;
       return { linhas: d ?? [], total: count ?? 0 };
@@ -105,7 +106,7 @@ function PlanoPage() {
         {!extrato?.linhas.length ? <p className="text-sm text-muted-foreground">Nenhum movimento ainda.</p> : (
           <ul className="divide-y">
             {extrato.linhas.map((m) => {
-              const desc = descricaoMovimento(m.tipo, m.jobs?.nome_peca);
+              const desc = descricaoMovimento(m.tipo, m.jobs?.nome_peca, m.motivo);
               return (
                 <li key={m.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                   <span className="min-w-0">
@@ -130,6 +131,7 @@ function PlanoPage() {
       </section>
 
       <PacotesCompra />
+      <CupomForm />
       <MinhasCompras />
     </div>
   );

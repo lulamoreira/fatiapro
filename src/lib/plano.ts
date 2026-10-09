@@ -134,7 +134,8 @@ export const ORIGEM_LOTE: Record<string, string> = {
   teste: "Teste", cortesia: "Cortesia", compra: "Compra", assinatura: "Assinatura", cupom: "Cupom", ajuste: "Ajuste",
 };
 
-export function descricaoMovimento(tipo: string, nomePeca: string | null | undefined): string {
+export function descricaoMovimento(tipo: string, nomePeca: string | null | undefined, motivo?: string | null): string {
+  if (tipo === "entrada" && motivo?.startsWith("cupom ")) return `Cupom ${motivo.slice(6)}`;
   switch (tipo) {
     case "entrada": return "Entrada";
     case "reserva": return `Análise "${nomePeca ?? "Peça aberta no fatiador"}"`;
