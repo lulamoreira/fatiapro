@@ -2,6 +2,7 @@ import { useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { conferirPedido } from "@/lib/compra.functions";
 import { adminMpEventos, adminPacotes, adminPedidos, adminSalvarPacote } from "@/lib/admin-pacotes.functions";
 import { STATUS_PEDIDO, brlCentavos } from "@/lib/mercadopago";
 import { Tag } from "@/components/fatia/Chip";
@@ -87,7 +88,7 @@ function Pedidos() {
         <ul className="divide-y text-sm">{q.data.linhas.map((p) => (
           <li key={p.id} className="flex flex-wrap justify-between gap-2 py-2">
             <span className="min-w-0"><span className="block truncate font-medium">{p.email}</span><span className="text-xs text-muted-foreground">{dataHora(p.criado_em)} · {p.pacotes?.nome ?? `${p.creditos} créditos`}{p.metodo ? ` · ${p.metodo}` : ""}</span></span>
-            <span className="flex items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "muted"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag></span>
+            <span className="flex flex-wrap items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "muted"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag><ConferirBotao id={p.id} /></span>
           </li>
         ))}</ul>
       )}
@@ -95,6 +96,22 @@ function Pedidos() {
     </section>
   );
 }
+
+function ConferirBotao({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const fn = useServerFn(conferirPedido);
+  const m = useMutation({
+    mutationFn: () => fn({ data: { pedido_id: id } }),
+    onSuccess: (r) => {
+      toast[r.conferido ? "success" : "info"](r.conferido ? `Conferido: ${STATUS_PEDIDO[r.status] ?? r.status}` : "Conferido há pouco — aguarde 5 segundos.");
+      qc.invalidateQueries({ queryKey: ["admin", "pedidos"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate()}>{m.isPending ? "Conferindo…" : "Conferir no Mercado Pago"}</Button>;
+}
+
+const MOTIVO_ASSINATURA: Record<string, string> = { ok: "Assinatura válida", sem_cabecalho: "Sem cabeçalho", formato: "Formato inválido", v1_diferente: "Assinatura diferente" };
 
 function Eventos() {
   const fn = useServerFn(adminMpEventos);
@@ -108,7 +125,7 @@ function Eventos() {
         <ul className="divide-y text-sm">{q.data.linhas.map((e) => (
           <li key={e.id} className="flex justify-between gap-2 py-2">
             <span className="text-muted-foreground">{dataHora(e.criado_em)} · pagamento {e.payment_id ?? "—"} · {e.status ?? "—"}</span>
-            <Tag tone={e.valido ? "success" : "muted"}>{e.valido ? "Assinatura válida" : "Assinatura inválida"}</Tag>
+            <Tag tone={e.valido ? "success" : "muted"}>{e.motivo ? MOTIVO_ASSINATURA[e.motivo] ?? e.motivo : e.valido ? "Assinatura válida" : "Assinatura inválida"}</Tag>
           </li>
         ))}</ul>
       )}

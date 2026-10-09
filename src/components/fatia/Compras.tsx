@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { CheckCircle2, Clock, PartyPopper, ShieldCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { criarCompra } from "@/lib/compra.functions";
+import { conferirPedido, criarCompra } from "@/lib/compra.functions";
 import { STATUS_PEDIDO, brlCentavos } from "@/lib/mercadopago";
 import { Tag } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,17 @@ export function PedidoRetorno({ id }: { id: string }) {
       return data;
     },
     refetchInterval: (q) => (q.state.data?.status === "pendente" || !q.state.data) && Date.now() - inicio < POLL_MAX_MS ? POLL_MS : false,
+  });
+  const conferir = useServerFn(conferirPedido);
+  // Also asks the server to check Mercado Pago directly every 5 s (up to 2 min), in case the notification is late.
+  useQuery({
+    queryKey: ["pedido-conferir", id],
+    queryFn: async () => {
+      const r = await conferir({ data: { pedido_id: id } }).catch(() => null);
+      if (r && r.status !== "pendente") qc.invalidateQueries({ queryKey: ["pedido", id] });
+      return r?.status ?? null;
+    },
+    refetchInterval: (q) => (q.state.data == null || q.state.data === "pendente") && Date.now() - inicio < POLL_MAX_MS ? 5000 : false,
   });
   const aprovado = p?.status === "aprovado";
   useEffect(() => {
