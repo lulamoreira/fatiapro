@@ -21,6 +21,8 @@ import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialo
 import { FecharAnaliseDialog } from "@/components/fatia/FecharAnaliseDialog";
 import { Check } from "lucide-react";
 import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
+import { FraseAnimo } from "@/components/fatia/FraseAnimo";
+import { podeMostrarAnimo } from "@/lib/frases-animo";
 import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
 import { Approval, type Proposta } from "@/components/fatia/Approval";
@@ -261,6 +263,12 @@ function AnalisePage() {
           onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
         />
       )}
+
+      <FraseAnimo
+        key={`${id}-${mostrarTrabalhando}`}
+        ativa={mostrarTrabalhando && podeMostrarAnimo(estado, (!!prop && !respondida) || !!resultado || !!erroEv || !!ultimo("cancelamento"))}
+        inicioMs={Date.parse(job.criado_em)}
+      />
 
       <section aria-label="Linha do tempo" className="rounded-3xl border bg-card p-6">
         <h2 className="text-sm font-semibold">Linha do tempo</h2>
