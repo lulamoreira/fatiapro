@@ -11,6 +11,7 @@ import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
 import { AdminPonte } from "@/components/admin/AdminPonte";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 import { AdminFinanceiro } from "@/components/admin/AdminFinanceiro";
+import { AdminPacotes } from "@/components/admin/AdminPacotes";
 import { useServerFn } from "@tanstack/react-start";
 import { adminAlertaGasto } from "@/lib/admin-cobranca.functions";
 import { formatUSD } from "@/lib/fatia";
@@ -40,7 +41,7 @@ function AdminPage() {
     },
     staleTime: 0,
   });
-  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte" | "feedback" | "financeiro">("usuarios");
+  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte" | "feedback" | "financeiro" | "pacotes">("usuarios");
 
   if (isLoading) return <PageSkeleton />;
   if (!isAdmin)
@@ -62,9 +63,9 @@ function AdminPage() {
         label="Seção"
         value={aba}
         onChange={setAba}
-        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }, { id: "feedback", label: "Feedback" }, { id: "financeiro", label: "Financeiro" }]}
+        options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }, { id: "feedback", label: "Feedback" }, { id: "financeiro", label: "Financeiro" }, { id: "pacotes", label: "Pacotes" }]}
       />
-      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : aba === "ponte" ? <AdminPonte /> : aba === "feedback" ? <AdminFeedback /> : <AdminFinanceiro />}
+      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : aba === "ponte" ? <AdminPonte /> : aba === "feedback" ? <AdminFeedback /> : aba === "pacotes" ? <AdminPacotes /> : <AdminFinanceiro />}
     </div>
   );
 }

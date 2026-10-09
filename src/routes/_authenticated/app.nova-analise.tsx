@@ -371,7 +371,7 @@ function NovaAnalise() {
         <div className="rounded-2xl bg-gradient-to-br from-primary/12 to-primary/4 p-4" aria-live="polite">
           <p className="text-xs font-semibold text-muted-foreground">Uso</p>
           <p className="text-sm font-bold">{uso?.texto ?? "…"}</p>
-          {uso?.verPlanos && <Link to="/app/plano" className="text-xs font-semibold text-primary-ink underline">Ver planos</Link>}
+          {uso?.verPlanos && <Link to="/app/plano" hash="comprar" className="text-xs font-semibold text-primary-ink underline">Ver planos</Link>}
         </div>
       ) : <CostCard roteiro={f.roteiro} motor={f.motor} premium={premium} />}
       {ponteVelha && <p className="rounded-2xl bg-primary/10 p-3 text-xs text-primary-ink" role="status">Atualizando a ponte… a análise fica disponível em instantes</p>}

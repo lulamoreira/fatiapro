@@ -28,6 +28,7 @@ import { Route as ApiPublicBridgeHeartbeatRouteImport } from './routes/api/publi
 import { Route as ApiPublicBridgeIaRouteImport } from './routes/api/public/bridge/ia'
 import { Route as ApiPublicBridgePairRouteImport } from './routes/api/public/bridge/pair'
 import { Route as ApiPublicBridgeVersaoRouteImport } from './routes/api/public/bridge/versao'
+import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
 import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/public/bridge/commands.$id'
 import { Route as ApiPublicBridgeCommandsNextRouteImport } from './routes/api/public/bridge/commands.next'
 import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
@@ -137,6 +138,12 @@ const ApiPublicBridgeVersaoRoute = ApiPublicBridgeVersaoRouteImport.update({
   path: '/api/public/bridge/versao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMercadopagoWebhookRoute =
+  ApiPublicMercadopagoWebhookRouteImport.update({
+    id: '/api/public/mercadopago/webhook',
+    path: '/api/public/mercadopago/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBridgeCommandsIdRoute =
   ApiPublicBridgeCommandsIdRouteImport.update({
     id: '/api/public/bridge/commands/$id',
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -224,6 +232,7 @@ export interface FileRoutesByTo {
   '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -253,6 +262,7 @@ export interface FileRoutesById {
   '/api/public/bridge/ia': typeof ApiPublicBridgeIaRoute
   '/api/public/bridge/pair': typeof ApiPublicBridgePairRoute
   '/api/public/bridge/versao': typeof ApiPublicBridgeVersaoRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
+    | '/api/public/mercadopago/webhook'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -308,6 +319,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
+    | '/api/public/mercadopago/webhook'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -336,6 +348,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge/ia'
     | '/api/public/bridge/pair'
     | '/api/public/bridge/versao'
+    | '/api/public/mercadopago/webhook'
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
@@ -353,6 +366,7 @@ export interface RootRouteChildren {
   ApiPublicBridgeIaRoute: typeof ApiPublicBridgeIaRoute
   ApiPublicBridgePairRoute: typeof ApiPublicBridgePairRoute
   ApiPublicBridgeVersaoRoute: typeof ApiPublicBridgeVersaoRoute
+  ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
   ApiPublicBridgeCommandsIdRoute: typeof ApiPublicBridgeCommandsIdRoute
   ApiPublicBridgeCommandsNextRoute: typeof ApiPublicBridgeCommandsNextRoute
   ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
@@ -497,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeVersaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercadopago/webhook': {
+      id: '/api/public/mercadopago/webhook'
+      path: '/api/public/mercadopago/webhook'
+      fullPath: '/api/public/mercadopago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge/commands/$id': {
       id: '/api/public/bridge/commands/$id'
       path: '/api/public/bridge/commands/$id'
@@ -599,6 +620,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBridgeIaRoute: ApiPublicBridgeIaRoute,
   ApiPublicBridgePairRoute: ApiPublicBridgePairRoute,
   ApiPublicBridgeVersaoRoute: ApiPublicBridgeVersaoRoute,
+  ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
   ApiPublicBridgeCommandsIdRoute: ApiPublicBridgeCommandsIdRoute,
   ApiPublicBridgeCommandsNextRoute: ApiPublicBridgeCommandsNextRoute,
   ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,

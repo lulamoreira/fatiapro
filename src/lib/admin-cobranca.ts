@@ -96,7 +96,7 @@ export function resumoFinanceiro(i: { chamadas: readonly ChamadaRow[]; jobs: rea
   };
 }
 
-export const CONFIG_CHAVES = ["alerta_gasto_usd_dia", "limite_diario_gratis", "uso_justo_por_dia", "cambio_brl", "custo_teto_job_usd"] as const;
+export const CONFIG_CHAVES = ["alerta_gasto_usd_dia", "limite_diario_gratis", "uso_justo_por_dia", "cambio_brl", "custo_teto_job_usd", "taxa_pix_pct", "taxa_cartao_pct"] as const;
 export type ConfigChave = (typeof CONFIG_CHAVES)[number];
 export const CONFIG_LABEL: Record<ConfigChave, string> = {
   alerta_gasto_usd_dia: "Alerta de gasto por dia (US$)",
@@ -104,4 +104,6 @@ export const CONFIG_LABEL: Record<ConfigChave, string> = {
   uso_justo_por_dia: "Uso justo por dia",
   cambio_brl: "Câmbio R$/US$",
   custo_teto_job_usd: "Teto de custo por análise (US$)",
+  taxa_pix_pct: "Taxa do Mercado Pago no Pix (%)",
+  taxa_cartao_pct: "Taxa do Mercado Pago no cartão (%)",
 };

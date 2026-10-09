@@ -5,28 +5,27 @@ import { Gift, Sparkles, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlano } from "@/hooks/use-plano";
 import { DIAS_TESTE, ORIGEM_LOTE, descricaoMovimento } from "@/lib/plano";
-import { PageHeader, Tag } from "@/components/fatia/Chip";
+import { PageHeader } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { MinhasCompras, PacotesCompra, PedidoRetorno } from "@/components/fatia/Compras";
 
 export const Route = createFileRoute("/_authenticated/app/plano")({
   head: () => ({ meta: [{ title: "Plano e créditos — FatiaPro" }, { name: "description", content: "Seu saldo de créditos, teste grátis, extrato e pacotes." }] }),
+  validateSearch: (s: Record<string, unknown>): { pedido?: string } =>
+    typeof s["pedido"] === "string" && /^[0-9a-f-]{36}$/i.test(s["pedido"]) ? { pedido: s["pedido"] } : {},
   component: PlanoPage,
 });
 
 const POR_PAGINA = 20;
-const PACOTES = [
-  { creditos: 10, preco: "R$ 19,90", destaque: false },
-  { creditos: 50, preco: "R$ 79,90", destaque: true },
-  { creditos: 200, preco: "R$ 249,90", destaque: false },
-];
 const data = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 const dataCurta = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
 function PlanoPage() {
   const { data: p, isLoading } = usePlano();
+  const { pedido } = Route.useSearch();
   const [pagina, setPagina] = useState(0);
   const { data: lotes } = useQuery({
     queryKey: ["creditos-lotes"],
@@ -57,6 +56,7 @@ function PlanoPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader titulo="Plano e créditos" subtitulo="Seu saldo, o teste grátis e o extrato." />
+      {pedido && <PedidoRetorno id={pedido} />}
 
       <section aria-label="Situação atual" className="space-y-4 rounded-3xl border bg-card p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -129,20 +129,8 @@ function PlanoPage() {
         )}
       </section>
 
-      <section aria-labelledby="comprar-t" className="space-y-3">
-        <h2 id="comprar-t" className="text-lg font-semibold">Comprar créditos</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {PACOTES.map((k) => (
-            <div key={k.creditos} className={cn("relative space-y-2 rounded-2xl border bg-card p-5", k.destaque && "border-2 border-primary")}>
-              {k.destaque && <Tag tone="primary" className="absolute -top-3 left-4">Mais escolhido</Tag>}
-              <p className="text-2xl font-bold">{k.creditos} créditos</p>
-              <p className="text-lg font-semibold">{k.preco}</p>
-              <p className="text-xs text-muted-foreground">Validade de 12 meses</p>
-              <Button variant="outline" className="w-full" disabled>Em breve</Button>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PacotesCompra />
+      <MinhasCompras />
     </div>
   );
 }

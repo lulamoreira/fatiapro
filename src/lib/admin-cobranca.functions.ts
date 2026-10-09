@@ -10,6 +10,7 @@ import {
   CONFIG_CHAVES, inicioDiaSP, inicioPeriodo, resumoFeedback, resumoFinanceiro,
   type ChamadaRow, type FeedbackRow, type JobFinRow, type MovRow,
 } from "./admin-cobranca";
+import { resumoReceita } from "./mercadopago";
 
 const POR_PAGINA = 20;
 const Uuid = z.string().uuid();
@@ -179,11 +180,12 @@ export const adminFinanceiro = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin: sb } = await guard(context.userId);
     const ini = inicioPeriodo(data.periodo)!.toISOString();
-    const [chamadas, jobs, movimentos, config] = await Promise.all([
+    const [chamadas, jobs, movimentos, config, pedidos] = await Promise.all([
       todas<ChamadaRow>((de, ate) => sb.from("ia_chamadas").select("job_id, user_id, modelo, custo_usd").gte("criado_em", ini).order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)),
       todas<JobFinRow>((de, ate) => sb.from("jobs").select("id, user_id, fonte, roteiro, premium").gte("criado_em", ini).order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)),
       todas<MovRow>((de, ate) => sb.from("creditos_movimentos").select("tipo, quantidade").in("tipo", ["reserva", "estorno"]).gte("criado_em", ini).order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)),
       sb.from("config_app").select("chave, valor").in("chave", [...CONFIG_CHAVES]),
+      todas<{ valor_centavos: number; metodo: string | null }>((de, ate) => sb.from("pedidos").select("valor_centavos, metodo").eq("status", "aprovado").gte("pago_em", ini).order("pago_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)),
     ]);
     const cfg = Object.fromEntries((config.data ?? []).map((c) => [c.chave, Number(c.valor)]));
     const cambio = cfg["cambio_brl"] && cfg["cambio_brl"] > 0 ? cfg["cambio_brl"] : 5.5;
@@ -198,7 +200,8 @@ export const adminFinanceiro = createServerFn({ method: "POST" })
       const { data: u } = await sb.auth.admin.getUserById(id);
       return { id, email: u.user?.email ?? id, analises: e.jobs.size, custo_usd: e.custo };
     }));
-    return { ...r, cambio, top: topLinhas, config: cfg };
+    const receita = resumoReceita(pedidos, cfg["taxa_pix_pct"] ?? 1, cfg["taxa_cartao_pct"] ?? 5, r.total_brl);
+    return { ...r, cambio, top: topLinhas, config: cfg, receita };
   });
 
 /** Today's AI spend vs. alert threshold — shown on every admin tab. */

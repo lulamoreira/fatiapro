@@ -525,6 +525,66 @@ export type Database = {
         }
         Relationships: []
       }
+      mp_eventos: {
+        Row: {
+          criado_em: string
+          id: string
+          payment_id: string | null
+          status: string | null
+          valido: boolean
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          payment_id?: string | null
+          status?: string | null
+          valido?: boolean
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          payment_id?: string | null
+          status?: string | null
+          valido?: boolean
+        }
+        Relationships: []
+      }
+      pacotes: {
+        Row: {
+          ativo: boolean
+          creditos: number
+          criado_em: string
+          destaque: boolean
+          id: string
+          nome: string
+          ordem: number
+          preco_centavos: number
+          validade_meses: number
+        }
+        Insert: {
+          ativo?: boolean
+          creditos: number
+          criado_em?: string
+          destaque?: boolean
+          id?: string
+          nome: string
+          ordem?: number
+          preco_centavos: number
+          validade_meses?: number
+        }
+        Update: {
+          ativo?: boolean
+          creditos?: number
+          criado_em?: string
+          destaque?: boolean
+          id?: string
+          nome?: string
+          ordem?: number
+          preco_centavos?: number
+          validade_meses?: number
+        }
+        Relationships: []
+      }
       pair_attempts: {
         Row: {
           criado_em: string
@@ -616,6 +676,69 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos: {
+        Row: {
+          atualizado_em: string
+          creditos: number
+          criado_em: string
+          id: string
+          lote_id: string | null
+          metodo: string | null
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          pacote_id: string
+          pago_em: string | null
+          status: string
+          user_id: string
+          valor_centavos: number
+        }
+        Insert: {
+          atualizado_em?: string
+          creditos: number
+          criado_em?: string
+          id?: string
+          lote_id?: string | null
+          metodo?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          pacote_id: string
+          pago_em?: string | null
+          status?: string
+          user_id: string
+          valor_centavos: number
+        }
+        Update: {
+          atualizado_em?: string
+          creditos?: number
+          criado_em?: string
+          id?: string
+          lote_id?: string | null
+          metodo?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          pacote_id?: string
+          pago_em?: string | null
+          status?: string
+          user_id?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "creditos_lotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_pacote_id_fkey"
+            columns: ["pacote_id"]
+            isOneToOne: false
+            referencedRelation: "pacotes"
             referencedColumns: ["id"]
           },
         ]
@@ -829,6 +952,10 @@ export type Database = {
           expira_em: string
         }[]
       }
+      creditar_pedido: {
+        Args: { p_metodo: string; p_payment_id: string; p_pedido: string }
+        Returns: string
+      }
       criar_analise: {
         Args: {
           p_arquivo_path: string
@@ -844,6 +971,10 @@ export type Database = {
         Returns: Json
       }
       estornar_credito: { Args: { p_job: string }; Returns: undefined }
+      estornar_pedido: {
+        Args: { p_motivo: string; p_pedido: string }
+        Returns: undefined
+      }
       impressoras_escolhidas_valido: { Args: { v: Json }; Returns: boolean }
       inicio_dia_sp: { Args: { p?: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
