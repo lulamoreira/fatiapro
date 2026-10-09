@@ -86,6 +86,31 @@ describe("criarCompra", () => {
   });
 });
 
+describe("montarPreferencia — dados do pagador e do item", () => {
+  const pacote = { id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990 };
+  const agora = new Date("2026-01-01T00:00:00Z");
+
+  it("nome com duas ou mais palavras → first_name e last_name separados no primeiro espaço", () => {
+    const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana Maria Souza");
+    expect(pref.payer).toEqual({ email: "a@b.c", first_name: "Ana", last_name: "Maria Souza" });
+  });
+  it("nome de uma palavra → só first_name, sem last_name", () => {
+    const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana");
+    expect(pref.payer).toEqual({ email: "a@b.c", first_name: "Ana" });
+  });
+  it("nome null e email null → preferência sem a chave payer", () => {
+    const pref = montarPreferencia(pacote, "p1", null, agora, null);
+    expect(pref).not.toHaveProperty("payer");
+  });
+  it("item com category_id e description de créditos; preferência com binary_mode e sem notification_url", () => {
+    const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana");
+    expect(pref.items[0]!.category_id).toBe("virtual_goods");
+    expect(pref.items[0]!.description).toBe("50 créditos FatiaPro para otimização de fatiamento 3D");
+    expect(pref.binary_mode).toBe(true);
+    expect(pref).not.toHaveProperty("notification_url");
+  });
+});
+
 describe("resumoReceita", () => {
   it("taxa 1% no pix e 5% no cartão", () => {
     const r = resumoReceita([{ valor_centavos: 10000, metodo: "pix" }, { valor_centavos: 10000, metodo: "credit_card" }], 1, 5, 20);

@@ -30,10 +30,14 @@ export const criarCompra = createServerFn({ method: "POST" })
     if (error || !pedido) throw new Error("Não foi possível iniciar a compra.");
 
     const email = (context.claims as { email?: string }).email ?? null;
+    // Name is only used to improve the Mercado Pago payment data; a failed
+    // read must never block the purchase.
+    const { data: perfil } = await sb.from("profiles").select("nome").eq("id", context.userId).maybeSingle();
+    const nome = typeof perfil?.nome === "string" ? perfil.nome : null;
     const r = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(montarPreferencia(pacote, pedido.id, email, new Date())),
+      body: JSON.stringify(montarPreferencia(pacote, pedido.id, email, new Date(), nome)),
     });
     if (!r.ok) {
       console.error("mercadopago: criar preferência falhou", r.status);
