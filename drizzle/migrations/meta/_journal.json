@@ -183,6 +183,13 @@
       "when": 1791572702727,
       "tag": "0025_recuperar_nome_peca",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791574098955,
+      "tag": "0026_vendas_suspensas_audit",
+      "breakpoints": true
     }
   ]
 }
