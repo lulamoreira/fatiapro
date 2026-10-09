@@ -236,6 +236,6 @@ export const adminAuditoria = createServerFn({ method: "POST" })
     return {
       total: count ?? 0,
       porPagina: POR_PAGINA,
-      linhas: (rows ?? []).map((r) => ({ id: r.id, acao: r.acao, criado_em: r.criado_em, detalhe: { versao: String((r.detalhe as Record<string, unknown> | null)?.versao ?? ""), plataforma: String((r.detalhe as Record<string, unknown> | null)?.plataforma ?? "") }, admin_email: emails.get(r.admin_id) ?? "", alvo_email: emails.get(r.alvo_user_id) ?? "" })),
+      linhas: (rows ?? []).map((r) => ({ id: r.id, acao: r.acao, criado_em: r.criado_em, detalhe: { versao: String((r.detalhe as Record<string, unknown> | null)?.["versao"] ?? ""), plataforma: String((r.detalhe as Record<string, unknown> | null)?.["plataforma"] ?? "") }, admin_email: emails.get(r.admin_id) ?? "", alvo_email: emails.get(r.alvo_user_id) ?? "" })),
     };
   });
