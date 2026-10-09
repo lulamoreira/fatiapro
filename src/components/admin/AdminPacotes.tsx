@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminVendas } from "@/components/admin/AdminVendas";
 
 type Pacote = { id: string | null; nome: string; creditos: number; preco_centavos: number; validade_meses: number; destaque: boolean; ativo: boolean; ordem: number };
 const NOVO: Pacote = { id: null, nome: "", creditos: 10, preco_centavos: 1990, validade_meses: 12, destaque: false, ativo: true, ordem: 10 };
@@ -21,6 +22,7 @@ export function AdminPacotes() {
   const q = useQuery({ queryKey: ["admin", "pacotes"], queryFn: () => fn() });
   return (
     <div className="space-y-6">
+      <AdminVendas />
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Pacotes</h2>
         {!q.data ? <Skeleton className="h-32" /> : (

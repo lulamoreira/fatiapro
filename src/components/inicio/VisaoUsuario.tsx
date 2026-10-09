@@ -62,8 +62,8 @@ export function VisaoUsuario() {
         <Kpi rotulo="Computador" link={{ to: "/app/configuracoes" }} pequeno
           valor={<span className="flex items-center gap-2 truncate"><Dot on={!!on} />{dev?.nome ?? "Nenhum"}</span>}
           contexto={dev ? `${on ? "Conectado" : "Desconectado"}${dev.versao_ponte ? ` · ponte ${dev.versao_ponte}` : ""}` : "Conecte seu computador"} />
-        <Kpi rotulo="Saldo" link={{ to: "/app/plano" }} valor={p ? `${formatInt(p.saldo)} ${p.saldo === 1 ? "crédito" : "créditos"}` : "…"}
-          contexto={p?.proximo_vencimento ? `${p.proximo_vencimento.quantidade} ${p.proximo_vencimento.quantidade === 1 ? "vence" : "vencem"} em ${dataCurta(p.proximo_vencimento.expira_em)}` : undefined} />
+        <Kpi rotulo="Saldo" link={vendasPausadas ? { to: "/app/plano", hash: "comprar" } : { to: "/app/plano" }} valor={p ? `${formatInt(p.saldo)} ${p.saldo === 1 ? "crédito" : "créditos"}` : "…"}
+          contexto={vendasPausadas ? "Vendas pausadas" : p?.proximo_vencimento ? `${p.proximo_vencimento.quantidade} ${p.proximo_vencimento.quantidade === 1 ? "vence" : "vencem"} em ${dataCurta(p.proximo_vencimento.expira_em)}` : undefined} />
         {teste ? (
           <Kpi rotulo="Teste grátis" link={{ to: "/app/plano" }} tom="sucesso" valor={`Dia ${teste.dia_atual} de ${DIAS_TESTE}`} contexto={`termina ${new Date(teste.fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`} />
         ) : cortesia ? (
