@@ -27,3 +27,4 @@
 - Terms UI uses TERMOS_VERSAO; signup allowlists that version and timestamps consent server-side; update both on version bumps; why: invalid metadata is not consent.
 - Admin consent reset is an audited own-account RPC; why: other users' consent must stay intact.
 - Quotes: number/total only via SQL `criar_orcamento`; PDF rebuilt client-side from saved rows via pure `conteudoPdf` (tested: no cost/margin/minimum); images pass `reduzirImagem` first; why: client sees only final price, jsPDF breaks on big images.
+- Início KPIs come only from SQL `kpis_usuario` (invoker, RLS) and `kpis_admin` (definer, checks is_admin, test supabase/tests/kpis.sql); list filters live in the URL, parsed by pure readers in `src/lib/inicio.ts`; why: lists truncate at 1000 rows and cards must open the matching filtered list.

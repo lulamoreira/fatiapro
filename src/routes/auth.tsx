@@ -38,10 +38,10 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app/nova-analise" });
+      if (data.session) navigate({ to: "/app" });
     });
     const { data } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/app/nova-analise" });
+      if (session) navigate({ to: "/app" });
     });
     return () => data.subscription.unsubscribe();
   }, [navigate]);

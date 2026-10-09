@@ -2,7 +2,8 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { z } from "zod";
+import { filtroHistorico, lerHistoricoSearch } from "@/lib/inicio";
+import { FiltrosAtivos } from "@/components/fatia/FiltrosAtivos";
 import { devicesQuery, historicoQuery, resumoMesQuery, PAGE_SIZE } from "@/lib/queries";
 import { ESTADOS, fatiadorLabel, formatDuracao, formatUSD, isConectado, motorLabel, roteiroLabel, type Estado } from "@/lib/fatia";
 import { Tag } from "@/components/fatia/Chip";
@@ -18,7 +19,7 @@ import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
 import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialog";
 
 export const Route = createFileRoute("/_authenticated/app/historico")({
-  validateSearch: z.object({ pagina: z.number().int().min(0).catch(0).default(0) }),
+  validateSearch: lerHistoricoSearch,
   head: () => ({ meta: [{ title: "Histórico — FatiaPro" }, { name: "description", content: "Suas análises de fatiamento e gastos do mês." }] }),
   component: HistoricoPage,
 });
@@ -37,7 +38,10 @@ function custo(motor: string, c: unknown): string {
 
 function HistoricoPage() {
   const rotuloFat = useFatiadorLabel();
-  const { pagina } = Route.useSearch();
+  const search = Route.useSearch();
+  const pagina = search.pagina ?? 0;
+  const { estado, roteiro, periodo } = search;
+  const filtros = filtroHistorico({ estado, roteiro, periodo });
   const navigate = useNavigate();
   const { data: devices = [] } = useQuery(devicesQuery);
   useDevicesLive();
@@ -47,7 +51,7 @@ function HistoricoPage() {
     const d = devices.find((x) => x.id === deviceId);
     toast.success(avisoAcao(isConectado(d?.ultimo_contato, Date.now())));
   }
-  const { data, isLoading } = useQuery({ ...historicoQuery(pagina), placeholderData: keepPreviousData });
+  const { data, isLoading } = useQuery({ ...historicoQuery(pagina, filtros), placeholderData: keepPreviousData });
   const { data: resumo } = useQuery(resumoMesQuery);
   const isAdmin = useIsAdmin();
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
@@ -55,6 +59,7 @@ function HistoricoPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1>
+      <FiltrosAtivos valores={[estado, roteiro, periodo]} onLimpar={() => navigate({ to: "/app/historico", search: {} })} />
       {isAdmin && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">Gasto na API este mês</p>
@@ -68,6 +73,8 @@ function HistoricoPage() {
 
       {isLoading ? (
         <Skeleton className="h-64 rounded-2xl" />
+      ) : !data?.rows.length && (estado || roteiro || periodo) ? (
+        <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">Nenhuma análise com esse filtro.</div>
       ) : !data?.rows.length ? (
         <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">
           Nenhuma análise ainda. <Link to="/app/nova-analise" className="font-semibold text-primary-ink">Fazer a primeira</Link>
@@ -150,8 +157,8 @@ function HistoricoPage() {
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Página {pagina + 1} de {totalPaginas} · {data?.total ?? 0} análises</span>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={pagina === 0} onClick={() => navigate({ to: "/app/historico", search: { pagina: pagina - 1 } })}>Anterior</Button>
-          <Button variant="outline" size="sm" disabled={pagina + 1 >= totalPaginas} onClick={() => navigate({ to: "/app/historico", search: { pagina: pagina + 1 } })}>Próxima</Button>
+          <Button variant="outline" size="sm" disabled={pagina === 0} onClick={() => navigate({ to: "/app/historico", search: { ...search, pagina: pagina - 1 } })}>Anterior</Button>
+          <Button variant="outline" size="sm" disabled={pagina + 1 >= totalPaginas} onClick={() => navigate({ to: "/app/historico", search: { ...search, pagina: pagina + 1 } })}>Próxima</Button>
         </div>
       </div>
     </div>

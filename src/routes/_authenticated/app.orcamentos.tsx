@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { lerOrcSearch } from "@/lib/inicio";
+import { FiltrosAtivos } from "@/components/fatia/FiltrosAtivos";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/app/orcamentos")({
   head: () => ({ meta: [{ title: "Orçamentos — FatiaPro" }, { name: "description", content: "Seus orçamentos em PDF, com status e taxa de aprovação." }, { property: "og:title", content: "Orçamentos — FatiaPro" }, { property: "og:description", content: "Seus orçamentos em PDF, com status e taxa de aprovação." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  validateSearch: lerOrcSearch,
   component: OrcamentosPage,
 });
 
@@ -24,16 +27,20 @@ const STATUS = [{ v: "enviado", r: "Enviado" }, { v: "aprovado", r: "Aprovado" }
 function OrcamentosPage() {
   const qc = useQueryClient();
   const { data: negocio } = useNegocio();
+  const { status: filtroStatus } = Route.useSearch();
+  const navigate = useNavigate();
   const [pagina, setPagina] = useState(0);
   const [novo, setNovo] = useState(false);
   const [aviso, setAviso] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["orcamentos", pagina],
+    queryKey: ["orcamentos", pagina, filtroStatus ?? null],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const de = pagina * POR_PAGINA;
-      const { data: d, count, error } = await supabase.from("orcamentos").select("*", { count: "exact" })
+      let q = supabase.from("orcamentos").select("*", { count: "exact" });
+      if (filtroStatus) q = q.eq("status", filtroStatus);
+      const { data: d, count, error } = await q
         .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, de + POR_PAGINA - 1);
       if (error) throw error;
       return { linhas: d ?? [], total: count ?? 0 };
@@ -89,6 +96,7 @@ function OrcamentosPage() {
         ))}
       </section>
 
+      <FiltrosAtivos valores={[filtroStatus]} onLimpar={() => { setPagina(0); navigate({ to: "/app/orcamentos", search: {} }); }} />
       {isLoading ? <Skeleton className="h-48 rounded-3xl" /> : !data?.linhas.length ? (
         <div className="rounded-3xl border border-dashed p-10 text-center">
           <FileText className="mx-auto size-10 text-muted-foreground" aria-hidden />

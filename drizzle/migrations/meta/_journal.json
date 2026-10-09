@@ -169,6 +169,13 @@
       "when": 1791556444555,
       "tag": "0023_orcamentos_total_bigint_aditivo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791570390014,
+      "tag": "0024_kpis_inicio",
+      "breakpoints": true
     }
   ]
 }

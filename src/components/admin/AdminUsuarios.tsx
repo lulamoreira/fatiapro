@@ -25,11 +25,11 @@ export function Avatar({ nome, email }: { nome: string | null; email: string }) 
   return <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-g-blue text-sm font-bold text-primary-foreground">{iniciais(nome, email)}</span>;
 }
 
-export function AdminUsuarios() {
+export function AdminUsuarios({ filtroInicial = "todos", onFiltro }: { filtroInicial?: FiltroAdmin | undefined; onFiltro?: (f: FiltroAdmin) => void } = {}) {
   const fn = useServerFn(adminPainel);
   const [pagina, setPagina] = useState(1);
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<FiltroAdmin>("todos");
+  const [filtro, setFiltro] = useState<FiltroAdmin>(filtroInicial ?? "todos");
   const [aberto, setAberto] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["admin", "painel", pagina, busca, filtro],
@@ -55,7 +55,7 @@ export function AdminUsuarios() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input aria-label="Buscar por nome ou e-mail" placeholder="Buscar por nome ou e-mail" className="pl-9" value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} />
         </div>
-        <Segmented label="Filtro" options={FILTROS} value={filtro} onChange={(f) => { setFiltro(f); setPagina(1); }} />
+        <Segmented label="Filtro" options={FILTROS} value={filtro} onChange={(f) => { setFiltro(f); setPagina(1); onFiltro?.(f); }} />
       </div>
 
       {q.isError && <p role="alert" className="text-sm text-destructive-ink">{(q.error as Error).message}</p>}
