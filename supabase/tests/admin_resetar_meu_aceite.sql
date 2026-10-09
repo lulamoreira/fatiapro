@@ -6,13 +6,6 @@
 -- 5. Execution grants.
 BEGIN;
 
--- Setup: Helper to mock auth.uid()
-CREATE OR REPLACE FUNCTION mock_auth_uid(uid uuid) RETURNS void AS $$
-BEGIN
-  PERFORM set_config('request.jwt.claims', json_build_object('sub', uid)::text, true);
-END;
-$$ LANGUAGE plpgsql;
-
 DO $$
 DECLARE
   admin_id uuid := gen_random_uuid();
@@ -26,7 +19,7 @@ BEGIN
   INSERT INTO public.app_admins (user_id) VALUES (admin_id);
 
   -- 2. Test: Anonymous refusal
-  PERFORM mock_auth_uid(NULL);
+  PERFORM set_config('request.jwt.claims', NULL, true);
   ok := false;
   BEGIN
     PERFORM admin_resetar_meu_aceite();
@@ -36,7 +29,7 @@ BEGIN
   IF NOT ok THEN RAISE EXCEPTION 'Anon deveria ser recusado com 42501'; END IF;
 
   -- 3. Test: Non-admin refusal
-  PERFORM mock_auth_uid(user_id);
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', user_id)::text, true);
   ok := false;
   BEGIN
     PERFORM admin_resetar_meu_aceite();
@@ -46,7 +39,7 @@ BEGIN
   IF NOT ok THEN RAISE EXCEPTION 'Non-admin deveria ser recusado com 42501'; END IF;
 
   -- 4. Test: Admin own reset and audit
-  PERFORM mock_auth_uid(admin_id);
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', admin_id)::text, true);
   PERFORM admin_resetar_meu_aceite();
 
   IF EXISTS (SELECT 1 FROM public.profiles WHERE id = admin_id AND (termos_versao IS NOT NULL OR termos_aceitos_em IS NOT NULL)) THEN
