@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Chip } from "@/components/fatia/Chip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TextoAceite } from "@/components/fatia/AceiteTermos";
+import { LinksLegais } from "@/components/fatia/PaginaLegal";
+import { TERMOS_VERSAO } from "@/lib/termos";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -28,6 +32,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [aceito, setAceito] = useState(false);
   const [loading, setLoading] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -50,10 +55,11 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
       } else if (modo === "criar") {
+        if (!aceito) throw new Error("Para criar a conta, aceite os Termos de uso e a Política de privacidade.");
         const { error } = await supabase.auth.signUp({
           email,
           password: senha,
-          options: { emailRedirectTo: window.location.origin + "/auth", data: { nome } },
+          options: { emailRedirectTo: window.location.origin + "/auth", data: { nome, termos_versao: TERMOS_VERSAO } },
         });
         if (error) throw error;
         setAviso("Conta criada! Confira seu e-mail para confirmar o cadastro.");
@@ -103,8 +109,14 @@ function AuthPage() {
               <Input id="senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={6} autoComplete={modo === "criar" ? "new-password" : "current-password"} />
             </div>
           )}
+          {modo === "criar" && (
+            <label className="flex items-start gap-3 text-sm">
+              <Checkbox checked={aceito} onCheckedChange={(v) => setAceito(v === true)} className="mt-0.5" aria-required />
+              <span><TextoAceite /></span>
+            </label>
+          )}
           {aviso && <p className="rounded-xl bg-success/15 p-3 text-sm text-success">{aviso}</p>}
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          <Button type="submit" className="w-full" size="lg" disabled={loading || (modo === "criar" && !aceito)}>
             {loading ? "Aguarde…" : modo === "entrar" ? "Entrar" : modo === "criar" ? "Criar conta" : "Enviar link"}
           </Button>
         </form>
@@ -114,6 +126,7 @@ function AuthPage() {
         <Button variant="outline" size="lg" className="w-full" onClick={google}>
           Continuar com Google
         </Button>
+        <LinksLegais className="mt-6 flex justify-center gap-4 text-xs text-muted-foreground" />
       </div>
     </main>
   );

@@ -9,6 +9,8 @@ import { Dot } from "@/components/fatia/Chip";
 import { AppSkeleton, PageSkeleton } from "@/components/fatia/AppSkeleton";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { AceiteTermosModal } from "@/components/fatia/AceiteTermos";
+import { LinksLegais } from "@/components/fatia/PaginaLegal";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -64,6 +66,7 @@ function AppLayout() {
   }
   return (
     <div className="min-h-screen md:flex">
+      <AceiteTermosModal />
       {/* Desktop glass sidebar */}
       <aside className="glass sticky top-5 m-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col rounded-[22px] p-3 md:flex" aria-label="Menu">
         <div className="px-3 pb-5 pt-3"><Logo /></div>
@@ -97,6 +100,7 @@ function AppLayout() {
           <button onClick={sair} className="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-muted-foreground hover:bg-sidebar-accent/60">
             <LogOut className="size-4" aria-hidden />Sair
           </button>
+          <LinksLegais className="flex gap-3 px-3 text-xs text-muted-foreground" />
         </div>
       </aside>
 
@@ -117,6 +121,7 @@ function AppLayout() {
           <p className="mt-10 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground md:hidden">
             <ShieldCheck className="size-4 text-success" aria-hidden />Nada é enviado para a impressora
           </p>
+          <LinksLegais className="mt-2 flex justify-center gap-4 text-xs text-muted-foreground md:hidden" />
         </main>
       </div>
 

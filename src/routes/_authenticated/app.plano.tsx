@@ -131,6 +131,7 @@ function PlanoPage() {
       </section>
 
       <PacotesCompra />
+      <p className="-mt-3 text-center text-xs text-muted-foreground">Ao comprar, você concorda com os <Link to="/termos" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-ink underline">Termos de uso</Link>.</p>
       <CupomForm />
       <MinhasCompras />
     </div>
