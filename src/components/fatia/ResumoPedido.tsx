@@ -1,7 +1,7 @@
 import { resumoPedido } from "@/lib/resumo-pedido";
 
 /** Roteiro + date line and small chips with what the user chose. */
-export function ResumoPedidoLinha({ opcoes, roteiro, data, extra }: { opcoes: unknown; roteiro: string; data?: string; extra?: string }) {
+export function ResumoPedidoLinha({ opcoes, roteiro, data, extra }: { opcoes: unknown; roteiro: string; data?: string | undefined; extra?: string | undefined }) {
   const r = resumoPedido(opcoes, roteiro);
   return (
     <div className="mt-1 space-y-1">
