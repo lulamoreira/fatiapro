@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gift, Sparkles, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlano } from "@/hooks/use-plano";
+import { useRecarregarAoVoltar } from "@/hooks/use-recarregar-ao-voltar";
 import { DIAS_TESTE, ORIGEM_LOTE, descricaoMovimento } from "@/lib/plano";
 import { PageHeader } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function PlanoPage() {
   const { data: p, isLoading } = usePlano();
   const { pedido } = Route.useSearch();
   const [pagina, setPagina] = useState(0);
+  useRecarregarAoVoltar(pedido);
   const { data: lotes } = useQuery({
     queryKey: ["creditos-lotes"],
     queryFn: async () => {
