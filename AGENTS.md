@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
+- Open-piece notice availability, device-specific save shortcuts and timeline version parsing use pure helpers in `src/lib/peca-aberta.ts`, rendered by `PecaAberta` components; why: keep these presentation rules testable without changing analysis creation or bridge behavior.
 - Branding regression tests parse TSX with the TypeScript AST and scope the subscription exception to the admin-only block; why: catch user-facing literals without flagging technical identifiers or exempting public headings.
 - Nova análise resolves available motor defaults with the pure `escolherMotor` helper and renders choices through Radix radio cards; why: keep history fallback testable and keyboard/ARIA behavior consistent without changing server permissions.
 - Material labels and output filename material segments share `materialTexto` (via `nomeFilamento` for filenames); why: keep brand deduplication consistent across current and saved analyses/models without rewriting stored data.

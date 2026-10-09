@@ -11,6 +11,7 @@ import { usePlano } from "@/hooks/use-plano";
 import { erroAnalise, linhaUso, motoresVisiveis, ponteDesatualizada, roteiroComCredito, usaTeste, DIAS_TESTE, type ErroAnalise } from "@/lib/plano";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
 import { Questionario } from "@/components/fatia/Questionario";
+import { PecaAbertaAviso } from "@/components/fatia/PecaAberta";
 import { Switch } from "@/components/ui/switch";
 import { Wallet } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
@@ -333,7 +334,7 @@ function NovaAnalise() {
         {erros.device && <p className="text-xs font-medium text-destructive-ink" role="alert">{erros.device}</p>}
       </div>
       <dl className="space-y-2 text-sm">
-        {([["Roteiro", roteiroInfo], ["Máquina", maquina], ["Fatiador:", fatLabel ?? "—"], ["Material", material]] as [string, ReactNode][]).map(([k, v]) => (
+        {([["Peça", f.usarAberta ? `Peça aberta no ${fatLabel ?? "fatiador"}` : arquivo?.name ?? pecaBib?.nome ?? "—"], ["Roteiro", roteiroInfo], ["Máquina", maquina], ["Fatiador:", fatLabel ?? "—"], ["Material", material]] as [string, ReactNode][]).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 text-right font-medium">{v}</dd></div>
         ))}
       </dl>
@@ -474,6 +475,7 @@ function NovaAnalise() {
               </Button>
               <BibliotecaPicker selected={!!pecaBib} onPick={(p) => { setPecaBib(p); setArquivo(null); set("usarAberta", false); }} />
             </div>
+            <PecaAbertaAviso usarAberta={f.usarAberta} fatiador={fatLabel} sistema={device?.sistema} />
             {erros.peca && <Erro>{erros.peca}</Erro>}
           </Secao>
 
