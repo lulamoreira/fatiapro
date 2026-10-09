@@ -51,7 +51,11 @@ export function AceiteTermosModal() {
           <Checkbox checked={ok} onCheckedChange={(v) => setOk(v === true)} className="mt-0.5" />
           <span><TextoAceite /></span>
         </label>
-        <Button onClick={aceitar} disabled={!ok || salvando}>{salvando ? "Salvando…" : "Continuar"}</Button>
+        {/* O botão fica dentro de um <div> para não ser alcançado pelo seletor
+            [&>button]:hidden, que só serve para esconder o X do Dialog. */}
+        <div className="flex justify-end">
+          <Button onClick={aceitar} disabled={!ok || salvando}>{salvando ? "Salvando…" : "Continuar"}</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
