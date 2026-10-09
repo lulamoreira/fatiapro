@@ -132,5 +132,5 @@ export function resumoReceita(pedidos: { valor_centavos: number; metodo: string 
   }
   const liquida = bruta - taxa;
   const margem = liquida - custoIaBrl;
-  return { bruta, taxa, liquida, custo_ia: custoIaBrl, margem, margem_pct: liquida > 0 ? (margem / liquida) * 100 : null, pedidos: pedidos.length };
+  return { bruta, taxa, liquida, custo_ia: custoIaBrl, margem, margem_pct: bruta > 0 ? (margem / bruta) * 100 : null, pedidos: pedidos.length };
 }
