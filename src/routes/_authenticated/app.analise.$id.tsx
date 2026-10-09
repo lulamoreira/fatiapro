@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
-  head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }] }),
+  head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AnalisePage,
 });
 

@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app/nova-analise")({
   validateSearch: z.object({ repetir: z.string().uuid().optional().catch(undefined), modelo: z.string().uuid().optional().catch(undefined), peca: z.string().uuid().optional().catch(undefined) }),
-  head: () => ({ meta: [{ title: "Nova análise — FatiaPro" }, { name: "description", content: "Peça uma nova análise de fatiamento ao seu computador." }] }),
+  head: () => ({ meta: [{ title: "Nova análise — FatiaPro" }, { name: "description", content: "Peça uma nova análise de fatiamento ao seu computador." }, { property: "og:title", content: "Nova análise — FatiaPro" }, { property: "og:description", content: "Peça uma nova análise de fatiamento ao seu computador." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: NovaAnalise,
 });
 
