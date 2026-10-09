@@ -6,7 +6,7 @@ import { Download, FileText, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNegocio } from "@/hooks/use-negocio";
 import { baixarOrcamentoPdf } from "@/lib/orcamento-pdf";
-import { brl, dataBR, numeroOrc } from "@/lib/orcamento";
+import { brl, dataBR, numeroOrc, totalDe } from "@/lib/orcamento";
 import { OrcamentoDialog } from "@/components/fatia/OrcamentoDialog";
 import { NegocioPendente } from "@/components/fatia/NegocioPendente";
 import { Button } from "@/components/ui/button";
