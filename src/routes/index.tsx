@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { LinksLegais } from "@/components/fatia/PaginaLegal";
 import { Cpu, ShieldCheck, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -56,6 +57,10 @@ function Landing() {
           ))}
         </div>
       </section>
+      <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t px-6 py-6 text-sm text-muted-foreground">
+        <span>© FatiaPro</span>
+        <LinksLegais />
+      </footer>
     </main>
   );
 }
