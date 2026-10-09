@@ -10,14 +10,14 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
-- Motivational phrases use a shuffled-bag helper in `src/lib/frases-animo.ts` and an isolated timed component below WorkingCard; why: test delay, rotation and event interruption without altering analysis or bridge behavior.
-- Open-piece notice availability, device-specific save shortcuts and timeline version parsing use pure helpers in `src/lib/peca-aberta.ts`, rendered by `PecaAberta` components; why: keep these presentation rules testable without changing analysis creation or bridge behavior.
+- Motivational phrases use a shuffled-bag helper in `src/lib/frases-animo.ts` and an isolated timed component below WorkingCard; why: testable timing.
+- Open-piece notice availability, device-specific save shortcuts and timeline version parsing use pure helpers in `src/lib/peca-aberta.ts`, rendered by `PecaAberta` components; why: testable presentation rules.
 - Branding tests parse TSX via the TS AST, exempting only the admin subscription block; why: catch user-facing literals, not identifiers.
 - Nova análise resolves available motor defaults with the pure `escolherMotor` helper and renders choices through Radix radio cards; why: keep history fallback testable and keyboard/ARIA behavior consistent without changing server permissions.
 - Material labels and output filename material segments share `materialTexto` (via `nomeFilamento` for filenames); why: keep brand deduplication consistent across current and saved analyses/models without rewriting stored data.
 - The bridge (ponte) talks only to `/api/public/bridge/*` server routes, authenticated by a device token whose sha256 is stored in `devices.token_hash`; why: the browser must never see tokens and service-role access stays server-side (`src/lib/bridge.server.ts`, loaded via dynamic import).
 - Browser code uses the RLS client directly; column-level GRANTs restrict what users may write (devices: nome/limite/revogado; jobs: estado→cancelado); why: enforce spec permissions in the database, not the UI.
-- Every list query uses `count: 'exact'`, `.range()` and order `criado_em desc, id desc`; why: never rely on the 1000-row default.
+- Lists use `count: 'exact'`, `.range()`, order `criado_em desc, id desc`; why: avoid the 1000-row default.
 - `devices.relatorio` shape is parsed defensively by `parseRelatorio` in `src/lib/fatia.ts` (fatiadores[{id,nome,versao,impressoras,filamentos,adicionado_manual}], motores{assinatura,api}); slicers come only from this report and are named via `fatiadorLabel`/`nomeFatiador` (known 4 ids are only a name fallback); why: it comes from an external program and users can add any Bambu/Orca-family slicer.
 - AI is called only by the server route /api/public/bridge/ia with ANTHROPIC_API_KEY read from process.env; the browser never calls AI and the app has no print action; why: keep the provider key server-only.
 - Jobs are created only through `criarAnalise` → SQL `criar_analise` (service_role-only EXECUTE, one transaction, advisory lock per user); credit functions are service_role-only; regression script in supabase/tests/creditos.sql; why: no credit rule may depend on the browser.
