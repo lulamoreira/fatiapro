@@ -37,10 +37,10 @@ export function PacotesCompra() {
     <section id="comprar" aria-labelledby="comprar-t" className="scroll-mt-24 space-y-3">
       <h2 id="comprar-t" className="text-lg font-semibold">Comprar créditos</h2>
       {isLoading ? <Skeleton className="h-40 rounded-2xl" /> : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-3">
           {(pacotes ?? []).map((k) => (
             <div key={k.id} className={cn("relative space-y-2 rounded-2xl border bg-card p-5", k.destaque && "border-2 border-primary")}>
-              {k.destaque && <Tag tone="primary" className="absolute -top-3 left-4">Mais escolhido</Tag>}
+              {k.destaque && <span className="absolute -top-3 left-4 inline-flex items-center rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow-sm ring-2 ring-card">Mais escolhido</span>}
               <p className="text-2xl font-bold">{k.nome}</p>
               <p className="text-lg font-semibold">{brlCentavos(k.preco_centavos)}</p>
               <p className="text-xs text-muted-foreground">Validade de {k.validade_meses} meses</p>
