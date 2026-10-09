@@ -46,12 +46,12 @@ function OrcamentosPage() {
       const agora = new Date();
       const iniMes = new Date(agora.getFullYear(), agora.getMonth(), 1).getTime();
       for (let de = 0; ; de += 1000) {
-        const { data: d, count, error } = await supabase.from("orcamentos").select("status, total_centavos, criado_em", { count: "exact" })
+        const { data: d, count, error } = await supabase.from("orcamentos").select("status, total_centavos, total_bigint, criado_em", { count: "exact" })
           .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, de + 999);
         if (error) throw error;
         for (const o of d) {
           c[o.status as "enviado"]++;
-          if (o.status === "aprovado" && Date.parse(o.criado_em) >= iniMes) c.mes += o.total_centavos;
+          if (o.status === "aprovado" && Date.parse(o.criado_em) >= iniMes) c.mes += totalDe(o);
         }
         if (de + 1000 >= (count ?? 0)) break;
       }
@@ -102,7 +102,7 @@ function OrcamentosPage() {
                 <p className="font-semibold">{numeroOrc(o.numero)} · {o.cliente_nome}</p>
                 <p className="truncate text-xs text-muted-foreground">{dataBR(new Date(o.criado_em))} · {o.descricao}{o.job_id && <> · <Link to="/app/analise/$id" params={{ id: o.job_id }} className="text-primary-ink hover:underline">ver análise</Link></>}</p>
               </div>
-              <span className="font-bold tabular">{brl(o.total_centavos)}</span>
+              <span className="font-bold tabular">{brl(totalDe(o))}</span>
               <Select value={o.status} onValueChange={(v) => status.mutate({ id: o.id, status: v })}>
                 <SelectTrigger className="w-32" aria-label={`Status de ${numeroOrc(o.numero)}`}><SelectValue /></SelectTrigger>
                 <SelectContent>{STATUS.map((s) => <SelectItem key={s.v} value={s.v}>{s.r}</SelectItem>)}</SelectContent>

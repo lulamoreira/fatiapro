@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conteudoPdf, faixaDesconto, lerPrecos, nomeArquivoOrc, numeroOrc, totalCentavos } from "./orcamento";
+import { conteudoPdf, faixaDesconto, lerPrecos, nomeArquivoOrc, nomeSemExtensao, numeroOrc, totalCentavos, totalDe } from "./orcamento";
 
 describe("orçamento", () => {
   const descontos = [{ a_partir_de: 5, preco_unitario: 9 }, { a_partir_de: 10, preco_unitario: 8 }, { a_partir_de: 20, preco_unitario: 7 }];
@@ -29,5 +29,15 @@ describe("orçamento", () => {
   it("(e) número formatado ORC-0001", () => {
     expect(numeroOrc(1)).toBe("ORC-0001");
     expect(nomeArquivoOrc(12, "José Conceição")).toBe("ORC-0012-jose-conceicao.pdf");
+  });
+  it("(f) remove só a extensão de modelo 3D", () => {
+    expect(nomeSemExtensao("chaveiro-teste.stl")).toBe("chaveiro-teste");
+    expect(nomeSemExtensao("Suporte.v2.3MF")).toBe("Suporte.v2");
+    expect(nomeSemExtensao("peca.STEP")).toBe("peca");
+    expect(nomeSemExtensao("estlo")).toBe("estlo");
+  });
+  it("(g) total grande usa a coluna bigint", () => {
+    expect(totalDe({ total_centavos: 2147483647, total_bigint: 10000000000000 })).toBe(10000000000000);
+    expect(totalDe({ total_centavos: 2000, total_bigint: null })).toBe(2000);
   });
 });
