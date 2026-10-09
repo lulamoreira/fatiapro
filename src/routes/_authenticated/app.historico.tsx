@@ -1,4 +1,5 @@
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useFatiadorLabel } from "@/hooks/use-fatiador-label";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -62,7 +63,7 @@ function HistoricoPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1>
+      <div className="flex items-center gap-3"><h1 className="text-[30px] font-bold tracking-[-0.02em]">Histórico</h1><BotaoAjuda tela="historico" /></div>
       <FiltrosAtivos valores={[estado, roteiro, periodo]} onLimpar={() => navigate({ to: "/app/historico", search: {} })} />
       {isAdmin && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5">

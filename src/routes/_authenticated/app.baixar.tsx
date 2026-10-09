@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Download, FolderOpen, ShieldAlert, KeyRound, Hash, CheckCircle2, Laptop } from "lucide-react";
+import { Download, FolderOpen, KeyRound, Hash, CheckCircle2, Laptop } from "lucide-react";
 import { usePonteVersoes, ultimaPublicada } from "@/hooks/use-ponte-versoes";
 import { baixarPonte } from "@/lib/ponte.functions";
 import { detectarSistema, PLATAFORMA_LABEL, type Plataforma } from "@/lib/ponte";
@@ -26,7 +27,6 @@ export const Route = createFileRoute("/_authenticated/app/baixar")({
 
 const PASSOS_MAC = [
   { icon: FolderOpen, txt: "Abra o arquivo baixado (pasta Downloads)." },
-  { icon: ShieldAlert, txt: "Se aparecer \"não pode ser aberto porque é de um desenvolvedor não identificado\": Ajustes do Sistema → Privacidade e Segurança → role até o fim → \"Abrir mesmo assim\", e abra o arquivo de novo." },
   { icon: KeyRound, txt: "Siga o instalador e digite a senha do Mac quando pedir." },
   { icon: Hash, txt: "Aparece uma janela pedindo um código: volte aqui em Configurações → \"Conectar computador\" e digite o código de 6 dígitos." },
   { icon: CheckCircle2, txt: "Se o Mac pedir permissão para a \"FatiaPro Ponte\", autorize." },
@@ -51,7 +51,7 @@ function BaixarPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader titulo="Baixar a ponte" subtitulo="O programa que liga seu computador ao FatiaPro." />
+      <PageHeader titulo="Baixar a ponte" subtitulo="O programa que liga seu computador ao FatiaPro." acao={<BotaoAjuda tela="baixar" />} />
       <section className="rounded-3xl border bg-card p-6 text-center md:p-10">
         <IconTile tone="blue" className="mx-auto size-14 rounded-2xl [&_svg]:size-7"><Laptop /></IconTile>
         {isLoading ? <Skeleton className="mx-auto mt-6 h-12 w-56" /> : v ? (

@@ -7,6 +7,8 @@ export type IconeCategoria = "rocket" | "laptop" | "smartphone" | "wand" | "wall
 
 export interface CategoriaAjuda { id: string; titulo: string; icone: IconeCategoria }
 
+export type RotaAjuda = "/app/baixar" | "/app/configuracoes" | "/app/nova-analise" | "/app/plano" | "/app/orcamentos" | "/termos" | "/privacidade";
+
 export interface ArtigoAjuda {
   slug: string;
   categoria: string;
@@ -16,7 +18,7 @@ export interface ArtigoAjuda {
   imagem?: { src: string; alt: string; legenda: string };
   dica?: string;
   relacionados?: string[];
-  botao?: { texto: string; para: string };
+  botao?: { texto: string; para: RotaAjuda };
 }
 
 const img = (arquivo: string, alt: string, legenda: string) => ({ src: `/ajuda/${arquivo}`, alt, legenda });

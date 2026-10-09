@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Gift, Sparkles, Wallet } from "lucide-react";
@@ -58,7 +59,7 @@ function PlanoPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <PageHeader titulo="Plano e créditos" subtitulo="Seu saldo, o teste grátis e o extrato." />
+      <PageHeader titulo="Plano e créditos" subtitulo="Seu saldo, o teste grátis e o extrato." acao={<BotaoAjuda tela="plano" />} />
       {pedido && <PedidoRetorno id={pedido} />}
 
       <section aria-label="Situação atual" className="space-y-4 rounded-3xl border bg-card p-6">
