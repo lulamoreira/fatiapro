@@ -31,6 +31,8 @@ import { Route as ApiPublicBridgeVersaoRouteImport } from './routes/api/public/b
 import { Route as ApiPublicBridgeCommandsIdRouteImport } from './routes/api/public/bridge/commands.$id'
 import { Route as ApiPublicBridgeCommandsNextRouteImport } from './routes/api/public/bridge/commands.next'
 import { Route as ApiPublicBridgeJobsNextRouteImport } from './routes/api/public/bridge/jobs.next'
+import { Route as ApiPublicPontePublicarConcluirRouteImport } from './routes/api/public/ponte/publicar/concluir'
+import { Route as ApiPublicPontePublicarIniciarRouteImport } from './routes/api/public/ponte/publicar/iniciar'
 import { Route as ApiPublicBridgeJobsIdEventsRouteImport } from './routes/api/public/bridge/jobs.$id.events'
 import { Route as ApiPublicBridgeJobsIdUploadUrlRouteImport } from './routes/api/public/bridge/jobs.$id.upload-url'
 
@@ -152,6 +154,18 @@ const ApiPublicBridgeJobsNextRoute = ApiPublicBridgeJobsNextRouteImport.update({
   path: '/api/public/bridge/jobs/next',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPontePublicarConcluirRoute =
+  ApiPublicPontePublicarConcluirRouteImport.update({
+    id: '/api/public/ponte/publicar/concluir',
+    path: '/api/public/ponte/publicar/concluir',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPontePublicarIniciarRoute =
+  ApiPublicPontePublicarIniciarRouteImport.update({
+    id: '/api/public/ponte/publicar/iniciar',
+    path: '/api/public/ponte/publicar/iniciar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBridgeJobsIdEventsRoute =
   ApiPublicBridgeJobsIdEventsRouteImport.update({
     id: '/api/public/bridge/jobs/$id/events',
@@ -187,6 +201,8 @@ export interface FileRoutesByFullPath {
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/ponte/publicar/concluir': typeof ApiPublicPontePublicarConcluirRoute
+  '/api/public/ponte/publicar/iniciar': typeof ApiPublicPontePublicarIniciarRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
   '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
@@ -211,6 +227,8 @@ export interface FileRoutesByTo {
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/ponte/publicar/concluir': typeof ApiPublicPontePublicarConcluirRoute
+  '/api/public/ponte/publicar/iniciar': typeof ApiPublicPontePublicarIniciarRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
   '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
@@ -238,6 +256,8 @@ export interface FileRoutesById {
   '/api/public/bridge/commands/$id': typeof ApiPublicBridgeCommandsIdRoute
   '/api/public/bridge/commands/next': typeof ApiPublicBridgeCommandsNextRoute
   '/api/public/bridge/jobs/next': typeof ApiPublicBridgeJobsNextRoute
+  '/api/public/ponte/publicar/concluir': typeof ApiPublicPontePublicarConcluirRoute
+  '/api/public/ponte/publicar/iniciar': typeof ApiPublicPontePublicarIniciarRoute
   '/api/public/bridge/jobs/$id/events': typeof ApiPublicBridgeJobsIdEventsRoute
   '/api/public/bridge/jobs/$id/upload-url': typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
@@ -265,6 +285,8 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
+    | '/api/public/ponte/publicar/concluir'
+    | '/api/public/ponte/publicar/iniciar'
     | '/api/public/bridge/jobs/$id/events'
     | '/api/public/bridge/jobs/$id/upload-url'
   fileRoutesByTo: FileRoutesByTo
@@ -289,6 +311,8 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
+    | '/api/public/ponte/publicar/concluir'
+    | '/api/public/ponte/publicar/iniciar'
     | '/api/public/bridge/jobs/$id/events'
     | '/api/public/bridge/jobs/$id/upload-url'
   id:
@@ -315,6 +339,8 @@ export interface FileRouteTypes {
     | '/api/public/bridge/commands/$id'
     | '/api/public/bridge/commands/next'
     | '/api/public/bridge/jobs/next'
+    | '/api/public/ponte/publicar/concluir'
+    | '/api/public/ponte/publicar/iniciar'
     | '/api/public/bridge/jobs/$id/events'
     | '/api/public/bridge/jobs/$id/upload-url'
   fileRoutesById: FileRoutesById
@@ -330,6 +356,8 @@ export interface RootRouteChildren {
   ApiPublicBridgeCommandsIdRoute: typeof ApiPublicBridgeCommandsIdRoute
   ApiPublicBridgeCommandsNextRoute: typeof ApiPublicBridgeCommandsNextRoute
   ApiPublicBridgeJobsNextRoute: typeof ApiPublicBridgeJobsNextRoute
+  ApiPublicPontePublicarConcluirRoute: typeof ApiPublicPontePublicarConcluirRoute
+  ApiPublicPontePublicarIniciarRoute: typeof ApiPublicPontePublicarIniciarRoute
   ApiPublicBridgeJobsIdEventsRoute: typeof ApiPublicBridgeJobsIdEventsRoute
   ApiPublicBridgeJobsIdUploadUrlRoute: typeof ApiPublicBridgeJobsIdUploadUrlRoute
 }
@@ -490,6 +518,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeJobsNextRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ponte/publicar/concluir': {
+      id: '/api/public/ponte/publicar/concluir'
+      path: '/api/public/ponte/publicar/concluir'
+      fullPath: '/api/public/ponte/publicar/concluir'
+      preLoaderRoute: typeof ApiPublicPontePublicarConcluirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ponte/publicar/iniciar': {
+      id: '/api/public/ponte/publicar/iniciar'
+      path: '/api/public/ponte/publicar/iniciar'
+      fullPath: '/api/public/ponte/publicar/iniciar'
+      preLoaderRoute: typeof ApiPublicPontePublicarIniciarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge/jobs/$id/events': {
       id: '/api/public/bridge/jobs/$id/events'
       path: '/api/public/bridge/jobs/$id/events'
@@ -560,6 +602,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBridgeCommandsIdRoute: ApiPublicBridgeCommandsIdRoute,
   ApiPublicBridgeCommandsNextRoute: ApiPublicBridgeCommandsNextRoute,
   ApiPublicBridgeJobsNextRoute: ApiPublicBridgeJobsNextRoute,
+  ApiPublicPontePublicarConcluirRoute: ApiPublicPontePublicarConcluirRoute,
+  ApiPublicPontePublicarIniciarRoute: ApiPublicPontePublicarIniciarRoute,
   ApiPublicBridgeJobsIdEventsRoute: ApiPublicBridgeJobsIdEventsRoute,
   ApiPublicBridgeJobsIdUploadUrlRoute: ApiPublicBridgeJobsIdUploadUrlRoute,
 }

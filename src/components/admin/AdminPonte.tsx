@@ -119,6 +119,7 @@ export function AdminPonte() {
                 <span className="w-20 font-semibold tabular">{v.versao}</span>
                 <span className="w-20 text-sm text-muted-foreground">{formatBytes(Number(v.tamanho_bytes))}</span>
                 <span className="flex-1 text-sm text-muted-foreground">{new Date(v.criado_em).toLocaleDateString("pt-BR")}</span>
+                {v.publicada_por_assinatura && <Tag tone="primary">Publicada pela assinatura</Tag>}
                 <Tag tone={v.publicada ? "success" : "warning"}>{v.publicada ? "Publicada" : "Rascunho"}</Tag>
                 <Button size="sm" variant="secondary" onClick={() => setConfirmar(v)}>{v.publicada ? "Despublicar" : "Publicar"}</Button>
               </li>
