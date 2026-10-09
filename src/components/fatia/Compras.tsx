@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, PartyPopper, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, PartyPopper, PauseCircle, ShieldCheck, XCircle } from "lucide-react";
+import { useStatusVendas } from "@/hooks/use-status-vendas";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { conferirPedido, criarCompra } from "@/lib/compra.functions";
@@ -19,6 +20,7 @@ const POLL_MAX_MS = 120_000;
 /** Package cards. Price shown comes from the DB; the server re-reads it on purchase. */
 export function PacotesCompra() {
   const comprar = useServerFn(criarCompra);
+  const { data: vendas } = useStatusVendas();
   const { data: pacotes, isLoading } = useQuery({
     queryKey: ["pacotes"],
     queryFn: async () => {
@@ -34,19 +36,53 @@ export function PacotesCompra() {
     onError: (e) => toast.error((e as Error).message || "Não foi possível iniciar a compra."),
   });
   return (
+    <PacotesGrade
+      pacotes={isLoading ? undefined : pacotes ?? []}
+      suspensas={vendas?.suspensas === true}
+      mensagem={vendas?.mensagem ?? null}
+      ocupado={m.isPending}
+      comprandoId={m.isPending ? m.variables ?? null : null}
+      onComprar={(id) => m.mutate(id)}
+    />
+  );
+}
+
+export interface PacoteVitrine { id: string; nome: string; creditos: number; preco_centavos: number; validade_meses: number; destaque: boolean }
+export interface PacotesGradeProps {
+  pacotes: PacoteVitrine[] | undefined;
+  suspensas: boolean;
+  mensagem: string | null;
+  ocupado: boolean;
+  comprandoId: string | null;
+  onComprar: (id: string) => void;
+}
+
+/** Presentational grid; when sales are paused the cards stay visible but disabled. */
+export function PacotesGrade({ pacotes, suspensas, mensagem, ocupado, comprandoId, onComprar }: PacotesGradeProps) {
+  return (
     <section id="comprar" aria-labelledby="comprar-t" className="scroll-mt-24 space-y-3">
       <h2 id="comprar-t" className="text-lg font-semibold">Comprar créditos</h2>
-      {isLoading ? <Skeleton className="h-40 rounded-2xl" /> : (
+      {suspensas && (
+        <div role="status" className="flex items-start gap-3 rounded-2xl border border-warning/50 bg-warning/12 p-4 text-sm">
+          <PauseCircle className="mt-0.5 size-5 shrink-0" aria-hidden />
+          <div><p className="font-semibold">Vendas pausadas</p><p className="whitespace-pre-line text-muted-foreground">{mensagem}</p></div>
+        </div>
+      )}
+      {!pacotes ? <Skeleton className="h-40 rounded-2xl" /> : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-3">
-          {(pacotes ?? []).map((k) => (
-            <div key={k.id} className={cn("relative space-y-2 rounded-2xl border bg-card p-5", k.destaque && "border-2 border-primary")}>
+          {pacotes.map((k) => (
+            <div key={k.id} aria-disabled={suspensas || undefined} className={cn("relative space-y-2 rounded-2xl border bg-card p-5", k.destaque && "border-2 border-primary", suspensas && "pointer-events-none select-none opacity-55")}>
               {k.destaque && <span className="absolute -top-3 left-4 inline-flex items-center rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow-sm ring-2 ring-card">Mais escolhido</span>}
               <p className="text-2xl font-bold">{k.nome}</p>
               <p className="text-lg font-semibold">{brlCentavos(k.preco_centavos)}</p>
               <p className="text-xs text-muted-foreground">Validade de {k.validade_meses} meses</p>
-              <Button variant={k.destaque ? "default" : "outline"} className="w-full" disabled={m.isPending} onClick={() => m.mutate(k.id)}>
-                {m.isPending && m.variables === k.id ? "Abrindo o Mercado Pago…" : "Comprar"}
-              </Button>
+              {suspensas ? (
+                <Button variant="outline" className="w-full" disabled>Indisponível no momento</Button>
+              ) : (
+                <Button variant={k.destaque ? "default" : "outline"} className="w-full" disabled={ocupado} onClick={() => onComprar(k.id)}>
+                  {comprandoId === k.id ? "Abrindo o Mercado Pago…" : "Comprar"}
+                </Button>
+              )}
             </div>
           ))}
         </div>

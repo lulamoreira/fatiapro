@@ -6,6 +6,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { CompraInput, ConferirErro, conferirPedidoLogica, montarPreferencia, urlCheckout } from "./mercadopago";
+import { exigirVendasAtivas } from "./vendas";
 
 const MAX_PENDENTES_HORA = 5;
 
@@ -16,6 +17,9 @@ export const criarCompra = createServerFn({ method: "POST" })
     const { supabaseAdmin: sb } = await import("@/integrations/supabase/client.server");
     const { tokenMP } = await import("./mercadopago.server");
     const token = tokenMP();
+    // Suspensão de vendas: recusa antes de criar pedido ou preferência.
+    const { data: cfgVendas } = await sb.from("config_app").select("chave, valor").eq("chave", "vendas_suspensas");
+    exigirVendasAtivas(cfgVendas);
     const { data: pacote } = await sb.from("pacotes").select("id, nome, creditos, preco_centavos").eq("id", data.pacote_id).eq("ativo", true).maybeSingle();
     if (!pacote) throw new Error("Pacote indisponível.");
 

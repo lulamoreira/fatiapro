@@ -1,0 +1,2 @@
+ALTER TABLE public.admin_audit DROP CONSTRAINT IF EXISTS admin_audit_acao_check;
+ALTER TABLE public.admin_audit ADD CONSTRAINT admin_audit_acao_check CHECK (acao IN ('bloquear','desbloquear','tornar_admin','remover_admin','dar_creditos','ajustar_creditos','remover_creditos','dar_cortesia','encerrar_cortesia','reiniciar_teste','config_cobranca','ponte_publicada_por_assinatura','pacote_criado','pacote_editado','cupom_criado','cupom_editado','cupom_desativado','resetou_proprio_aceite_termos','vendas_config'));
