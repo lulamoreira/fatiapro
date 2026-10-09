@@ -3,6 +3,7 @@
  * the questionnaire and the analysis header. No I/O; unit-tested in plano.test.ts.
  * The database (criar_analise) is the source of truth; these only describe it.
  */
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import type { Motor, Roteiro } from "./fatia";
 import { compararVersao } from "./ponte";
 
@@ -138,7 +139,7 @@ export function descricaoMovimento(tipo: string, nomePeca: string | null | undef
   if (tipo === "entrada" && motivo?.startsWith("cupom ")) return `Cupom ${motivo.slice(6)}`;
   switch (tipo) {
     case "entrada": return "Entrada";
-    case "reserva": return `Análise "${nomePeca ?? "Peça aberta no fatiador"}"`;
+    case "reserva": return `Análise "${nomePecaExibicao(nomePeca)}"`;
     case "estorno": return "Devolvido — falha na análise";
     case "vencimento": return "Vencimento";
     default: return "Ajuste";

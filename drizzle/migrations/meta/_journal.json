@@ -176,6 +176,13 @@
       "when": 1791570390014,
       "tag": "0024_kpis_inicio",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791572702727,
+      "tag": "0025_recuperar_nome_peca",
+      "breakpoints": true
     }
   ]
 }

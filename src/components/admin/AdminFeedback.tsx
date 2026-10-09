@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -41,7 +42,7 @@ export function AdminFeedback() {
             {d.linhas.length === 0 ? <li className="p-6 text-center text-sm text-muted-foreground">Nenhuma resposta no período.</li> : d.linhas.map((l) => (
               <li key={l.id} className="space-y-1 border-b px-4 py-3 text-sm last:border-b-0">
                 <p className="flex flex-wrap gap-x-2 text-xs text-muted-foreground"><span>{new Date(l.criado_em).toLocaleDateString("pt-BR")}</span><span>· {l.email}</span><span>· {roteiroLabel(l.jobs?.roteiro)}</span></p>
-                <Link to="/app/analise/$id" params={{ id: l.job_id }} className="font-semibold text-primary-ink hover:underline">{l.jobs?.nome_peca ?? "Peça aberta no fatiador"}</Link>
+                <Link to="/app/analise/$id" params={{ id: l.job_id }} className="font-semibold text-primary-ink hover:underline">{nomePecaExibicao(l.jobs?.nome_peca)}</Link>
                 <p className="text-xs">{RESP[l.fez_sentido]} · {RESP[l.imprimiu]}{l.problemas.length ? ` (${l.problemas.map((p) => PROB[p] ?? p).join(", ")})` : ""} · poupou {l.tempo_poupado ? TEMPO[l.tempo_poupado] : "—"}</p>
                 {l.comentario && <p className="rounded-lg bg-muted p-2 text-sm">{l.comentario}</p>}
               </li>

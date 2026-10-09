@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,7 +63,7 @@ export function Questionario({ jobId, onOpenChange, onEnviado }: QuestionarioPro
         <DialogHeader>
           <DialogTitle>Como foi a sua última otimização?</DialogTitle>
           <DialogDescription>
-            {job ? `${job.nome_peca ?? "Peça aberta no fatiador"} · ${new Date(job.criado_em).toLocaleDateString("pt-BR")}` : "\u00a0"}
+            {job ? `${nomePecaExibicao(job.nome_peca)} · ${new Date(job.criado_em).toLocaleDateString("pt-BR")}` : "\u00a0"}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">

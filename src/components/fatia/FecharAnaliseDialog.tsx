@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { nomePecaExibicao } from "@/lib/nome-peca";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Box, Check, CheckCircle2 } from "lucide-react";
@@ -157,7 +158,7 @@ export function FecharAnaliseDialog({ job }: { job: Tables<"jobs"> }) {
               <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
                 <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-card"><Box className="size-6 text-primary-ink" aria-hidden /></span>
                 <div className="min-w-0 text-sm">
-                  <p className="break-words font-semibold">{job.nome_peca ?? "Peça aberta no fatiador"}</p>
+                  <p className="break-words font-semibold">{nomePecaExibicao(job.nome_peca)}</p>
                   <p className="text-muted-foreground">Original{info.tOrig == null ? " (não disponível)" : ""} e otimizado{info.tOtim == null ? " (não disponível)" : ""}</p>
                   {nomes.otimizado && <p className="break-all text-xs text-muted-foreground">Otimizado: {nomes.otimizado}</p>}
                 </div>
