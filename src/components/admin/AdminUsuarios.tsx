@@ -25,11 +25,11 @@ export function Avatar({ nome, email }: { nome: string | null; email: string }) 
   return <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-g-blue text-sm font-bold text-primary-foreground">{iniciais(nome, email)}</span>;
 }
 
-export function AdminUsuarios({ filtroInicial = "todos", onFiltro }: { filtroInicial?: FiltroAdmin; onFiltro?: (f: FiltroAdmin) => void } = {}) {
+export function AdminUsuarios({ filtroInicial = "todos", onFiltro }: { filtroInicial?: FiltroAdmin | undefined; onFiltro?: (f: FiltroAdmin) => void } = {}) {
   const fn = useServerFn(adminPainel);
   const [pagina, setPagina] = useState(1);
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<FiltroAdmin>(filtroInicial);
+  const [filtro, setFiltro] = useState<FiltroAdmin>(filtroInicial ?? "todos");
   const [aberto, setAberto] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["admin", "painel", pagina, busca, filtro],

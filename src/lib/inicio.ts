@@ -21,7 +21,7 @@ export type PeriodoAdmin = (typeof PERIODOS_ADMIN)[number];
 const um = <T extends string>(lista: readonly T[], v: unknown): T | undefined =>
   typeof v === "string" && (lista as readonly string[]).includes(v) ? (v as T) : undefined;
 
-export interface HistoricoSearch { pagina?: number; estado?: EstadoFiltro; roteiro?: RoteiroFiltro; periodo?: PeriodoFiltro }
+export interface HistoricoSearch { pagina?: number | undefined; estado?: EstadoFiltro | undefined; roteiro?: RoteiroFiltro | undefined; periodo?: PeriodoFiltro | undefined }
 export function lerHistoricoSearch(s: Record<string, unknown>): HistoricoSearch {
   const p = Number(s["pagina"]);
   const out: HistoricoSearch = {};

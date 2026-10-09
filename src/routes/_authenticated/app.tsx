@@ -80,7 +80,6 @@ function AppLayout() {
               to={n.to}
               activeOptions={{ exact: n.to === "/app" }}
               className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-all duration-200 hover:bg-sidebar-accent/60"
-              activeOptions={{ exact: n.to === "/app" }}
             activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
             >
               <n.icon className="size-[18px]" aria-hidden />
@@ -91,7 +90,6 @@ function AppLayout() {
             <Link
               to="/app/admin"
               className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-all duration-200 hover:bg-sidebar-accent/60"
-              activeOptions={{ exact: n.to === "/app" }}
             activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
             >
               <Shield className="size-[18px]" aria-hidden />Admin
