@@ -99,6 +99,13 @@
       "when": 1791513963168,
       "tag": "0013_audit_acao_ponte_assinatura",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791514588797,
+      "tag": "0014_cobranca_fase_b_mercado_pago",
+      "breakpoints": true
     }
   ]
 }
