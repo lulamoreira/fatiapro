@@ -1,0 +1,1 @@
+ALTER TABLE public.mp_eventos ADD COLUMN origem text CHECK (origem IN ('webhook','ipn'));

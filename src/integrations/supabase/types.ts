@@ -632,6 +632,7 @@ export type Database = {
           criado_em: string
           id: string
           motivo: string | null
+          origem: string | null
           payment_id: string | null
           status: string | null
           valido: boolean
@@ -640,6 +641,7 @@ export type Database = {
           criado_em?: string
           id?: string
           motivo?: string | null
+          origem?: string | null
           payment_id?: string | null
           status?: string | null
           valido?: boolean
@@ -648,6 +650,7 @@ export type Database = {
           criado_em?: string
           id?: string
           motivo?: string | null
+          origem?: string | null
           payment_id?: string | null
           status?: string | null
           valido?: boolean

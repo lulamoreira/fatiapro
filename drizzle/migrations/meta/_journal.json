@@ -120,6 +120,13 @@
       "when": 1791546930554,
       "tag": "0016_cupons_creditos",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791547443084,
+      "tag": "0017_mp_eventos_origem",
+      "breakpoints": true
     }
   ]
 }
