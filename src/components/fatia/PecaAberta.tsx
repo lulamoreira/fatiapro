@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export interface PecaAbertaAvisoProps extends ComponentProps<"div"> {
   usarAberta: boolean;
   fatiador?: string | null;
-  sistema?: string | null;
+  sistema?: string | null | undefined;
 }
 
 export function PecaAbertaAviso({ usarAberta, fatiador, sistema, className, ...props }: PecaAbertaAvisoProps) {
