@@ -78,8 +78,10 @@ function AppLayout() {
             <Link
               key={n.to}
               to={n.to}
+              activeOptions={{ exact: n.to === "/app" }}
               className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-all duration-200 hover:bg-sidebar-accent/60"
-              activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
+              activeOptions={{ exact: n.to === "/app" }}
+            activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
             >
               <n.icon className="size-[18px]" aria-hidden />
               {n.label}
@@ -89,7 +91,8 @@ function AppLayout() {
             <Link
               to="/app/admin"
               className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-all duration-200 hover:bg-sidebar-accent/60"
-              activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
+              activeOptions={{ exact: n.to === "/app" }}
+            activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
             >
               <Shield className="size-[18px]" aria-hidden />Admin
             </Link>
@@ -136,6 +139,7 @@ function AppLayout() {
             key={n.to}
             to={n.to}
             className="flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-medium text-muted-foreground"
+            activeOptions={{ exact: n.to === "/app" }}
             activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
           >
             <n.icon className="size-5" aria-hidden />
