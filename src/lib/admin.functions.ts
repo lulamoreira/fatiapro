@@ -224,7 +224,7 @@ export const adminAuditoria = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await guard(context.userId);
     const ini = (data.pagina - 1) * POR_PAGINA;
     const { data: rows, count, error } = await supabaseAdmin.from("admin_audit")
-      .select("id,admin_id,acao,alvo_user_id,criado_em", { count: "exact" })
+      .select("id,admin_id,acao,alvo_user_id,criado_em,detalhe", { count: "exact" })
       .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(ini, ini + POR_PAGINA - 1);
     if (error) throw new Error("Falha ao ler o histórico");
     const ids = [...new Set((rows ?? []).flatMap((r) => [r.admin_id, r.alvo_user_id]))];
@@ -236,6 +236,6 @@ export const adminAuditoria = createServerFn({ method: "POST" })
     return {
       total: count ?? 0,
       porPagina: POR_PAGINA,
-      linhas: (rows ?? []).map((r) => ({ id: r.id, acao: r.acao, criado_em: r.criado_em, admin_email: emails.get(r.admin_id) ?? "", alvo_email: emails.get(r.alvo_user_id) ?? "" })),
+      linhas: (rows ?? []).map((r) => ({ id: r.id, acao: r.acao, criado_em: r.criado_em, detalhe: { versao: String((r.detalhe as Record<string, unknown> | null)?.["versao"] ?? ""), plataforma: String((r.detalhe as Record<string, unknown> | null)?.["plataforma"] ?? "") }, admin_email: emails.get(r.admin_id) ?? "", alvo_email: emails.get(r.alvo_user_id) ?? "" })),
     };
   });

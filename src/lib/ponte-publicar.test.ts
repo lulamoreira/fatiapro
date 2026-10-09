@@ -75,4 +75,14 @@ describe("publicação assinada da ponte", () => {
     expect(r.body).toEqual({ ok: true, versao: "1.3.0", publicada: false });
     expect(d.auditar).toHaveBeenCalledWith({ versao: "1.3.0", plataforma: "macos", sha256: sha });
   });
+  it("falha na auditoria depois do insert → 200 com auditoria:false", async () => {
+    const d = deps();
+    d.auditar.mockRejectedValueOnce(new Error("check violation"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await concluirPublicacao({ ...pedido(), publicar: false }, d);
+    spy.mockRestore();
+    expect(d.inserir).toHaveBeenCalled();
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ ok: true, versao: "1.3.0", publicada: false, auditoria: false });
+  });
 });
