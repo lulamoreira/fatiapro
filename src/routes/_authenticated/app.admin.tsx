@@ -13,6 +13,7 @@ import { AdminFeedback } from "@/components/admin/AdminFeedback";
 import { AdminFinanceiro } from "@/components/admin/AdminFinanceiro";
 import { AdminPacotes } from "@/components/admin/AdminPacotes";
 import { AdminCupons } from "@/components/admin/AdminCupons";
+import { TestarAceiteTermos } from "@/components/admin/TestarAceiteTermos";
 import { useServerFn } from "@tanstack/react-start";
 import { adminAlertaGasto } from "@/lib/admin-cobranca.functions";
 import { formatUSD } from "@/lib/fatia";
@@ -59,6 +60,7 @@ function AdminPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader titulo="Admin · Usuários" subtitulo="Só administradores veem esta área." acao={<Tag tone="primary">Administrador</Tag>} />
+      <TestarAceiteTermos />
       <AlertaGasto />
       <Segmented
         label="Seção"
