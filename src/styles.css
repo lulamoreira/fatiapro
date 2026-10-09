@@ -312,3 +312,7 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-destaque-peca { animation: none; }
 }
+
+/* iPhone safe areas for toasts when opened from the home screen */
+[data-sonner-toaster][data-y-position="top"] { margin-top: env(safe-area-inset-top); }
+[data-sonner-toaster][data-y-position="bottom"] { margin-bottom: env(safe-area-inset-bottom); }

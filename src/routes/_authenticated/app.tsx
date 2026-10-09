@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { AceiteTermosModal } from "@/components/fatia/AceiteTermos";
 import { LinksLegais } from "@/components/fatia/PaginaLegal";
+import { DicaInstalar } from "@/components/fatia/DicaInstalar";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -66,7 +67,7 @@ function AppLayout() {
     navigate({ to: "/auth" });
   }
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] md:flex">
       <AceiteTermosModal />
       {/* Desktop glass sidebar */}
       <aside className="glass sticky top-5 m-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col rounded-[22px] p-3 md:flex" aria-label="Menu">
@@ -105,8 +106,9 @@ function AppLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pt-[env(safe-area-inset-top)] md:pt-0">
         {/* Mobile top bar: logo + computer status dot */}
+        <DicaInstalar />
         <header className="flex items-center justify-between px-4 pt-4 md:hidden">
           <Logo className="text-lg" />
           <div className="flex items-center gap-1">
@@ -117,7 +119,7 @@ function AppLayout() {
             <button onClick={sair} aria-label="Sair" className="flex size-11 items-center justify-center rounded-full text-muted-foreground"><LogOut className="size-4" /></button>
           </div>
         </header>
-        <main className="flex-1 overflow-x-hidden px-4 pb-48 pt-5 md:px-8 md:pb-10 md:pt-8">
+        <main className="flex-1 overflow-x-hidden px-4 pb-[calc(12rem+env(safe-area-inset-bottom))] pt-5 md:px-8 md:pb-10 md:pt-8">
           {isLoading ? <PageSkeleton /> : <Outlet />}
           <p className="mt-10 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground md:hidden">
             <ShieldCheck className="size-4 text-success" aria-hidden />Nada é enviado para a impressora
@@ -127,7 +129,7 @@ function AppLayout() {
       </div>
 
       {/* Mobile glass bottom nav */}
-      <nav className="glass fixed inset-x-3 bottom-3 z-30 flex justify-between rounded-[22px] p-1.5 md:hidden" aria-label="Menu principal">
+      <nav className="glass fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] right-[calc(0.75rem+env(safe-area-inset-right))] z-30 flex justify-between rounded-[22px] p-1.5 md:hidden" aria-label="Menu principal">
         {NAV.map((n) => (
           <Link
             key={n.to}
