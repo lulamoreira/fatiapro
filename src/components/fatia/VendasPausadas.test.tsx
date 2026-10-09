@@ -36,7 +36,7 @@ describe("vendas pausadas na tela", () => {
   });
   it("cupom continua resgatável com vendas suspensas", async () => {
     render(<QueryClientProvider client={new QueryClient()}><CupomForm /></QueryClientProvider>);
-    fireEvent.change(screen.getByLabelText("Tenho um cupom"), { target: { value: "PROMO" } });
+    fireEvent.change(screen.getByPlaceholderText("CÓDIGO"), { target: { value: "PROMO" } });
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
     expect(resgatar).toHaveBeenCalledWith({ data: { codigo: "PROMO" } });
     expect(await screen.findByText(/Cupom aplicado: \+5 créditos/)).toBeInTheDocument();
