@@ -9,7 +9,7 @@ const ICONES: Record<IconeCategoria, LucideIcon> = {
   rocket: Rocket, laptop: Laptop, smartphone: Smartphone, wand: Wand2, wallet: Wallet, file: FileText, history: History, lifebuoy: LifeBuoy, shield: ShieldCheck,
 };
 
-export interface CentralAjudaProps { artigoInicial?: string }
+export interface CentralAjudaProps { artigoInicial?: string | undefined }
 
 /** Help center body: search, category cards and articles (shared by /app/ajuda and /ajuda). */
 export function CentralAjuda({ artigoInicial }: CentralAjudaProps) {

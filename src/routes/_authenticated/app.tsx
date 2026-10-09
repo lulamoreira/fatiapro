@@ -30,7 +30,11 @@ const NAV = [
 ] as const;
 
 /** Desktop sidebar: same items with "Ajuda" just above Configurações (not in the full mobile bar). */
-const NAV_LATERAL = [...NAV.slice(0, -1), { to: "/app/ajuda", label: "Ajuda", curto: "Ajuda", icon: CircleHelp }, NAV[NAV.length - 1]] as const;
+const NAV_LATERAL = [
+  ...NAV.filter((n) => n.to !== "/app/configuracoes"),
+  { to: "/app/ajuda", label: "Ajuda", curto: "Ajuda", icon: CircleHelp },
+  ...NAV.filter((n) => n.to === "/app/configuracoes"),
+] as const;
 
 export const Logo = ({ className }: { className?: string }) => (
   <span className={cn("text-xl font-bold tracking-[-0.02em]", className)}>Fatia<span className="text-brand">Pro</span></span>
