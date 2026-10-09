@@ -197,6 +197,108 @@ export type Database = {
           },
         ]
       }
+      cupom_tentativas: {
+        Row: {
+          criado_em: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cupom_usos: {
+        Row: {
+          criado_em: string
+          cupom_id: string
+          id: string
+          lote_id: string | null
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          cupom_id: string
+          id?: string
+          lote_id?: string | null
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          cupom_id?: string
+          id?: string
+          lote_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cupom_usos_cupom_id_fkey"
+            columns: ["cupom_id"]
+            isOneToOne: false
+            referencedRelation: "cupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupom_usos_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "creditos_lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cupons: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          creditos: number
+          criado_em: string
+          criado_por: string | null
+          fim: string | null
+          id: string
+          inicio: string
+          limite_total: number | null
+          so_primeira_compra: boolean
+          usos: number
+          validade_dias: number
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          creditos: number
+          criado_em?: string
+          criado_por?: string | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          limite_total?: number | null
+          so_primeira_compra?: boolean
+          usos?: number
+          validade_dias?: number
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          creditos?: number
+          criado_em?: string
+          criado_por?: string | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          limite_total?: number | null
+          so_primeira_compra?: boolean
+          usos?: number
+          validade_dias?: number
+        }
+        Relationships: []
+      }
       device_commands: {
         Row: {
           atualizado_em: string
@@ -991,6 +1093,10 @@ export type Database = {
       reservar_credito: {
         Args: { p_job: string; p_qtd: number; p_user: string }
         Returns: undefined
+      }
+      resgatar_cupom: {
+        Args: { p_codigo: string; p_user: string }
+        Returns: Json
       }
       saldo_creditos: { Args: { p_user: string }; Returns: number }
       vencer_lotes: { Args: { p_user: string }; Returns: undefined }
