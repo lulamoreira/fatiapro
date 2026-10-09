@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { lerAdminSearch, type AbaAdmin } from "@/lib/inicio";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Segmented, Tag, EmptyState } from "@/components/fatia/Chip";
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/app/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: lerAdminSearch,
   component: AdminPage,
 });
 
@@ -43,7 +44,10 @@ function AdminPage() {
     },
     staleTime: 0,
   });
-  const [aba, setAba] = useState<"usuarios" | "historico" | "ponte" | "feedback" | "financeiro" | "pacotes" | "cupons">("usuarios");
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const aba: AbaAdmin = search.aba ?? "usuarios";
+  const setAba = (a: AbaAdmin) => navigate({ to: "/app/admin", search: { aba: a }, replace: true });
 
   if (isLoading) return <PageSkeleton />;
   if (!isAdmin)
@@ -68,7 +72,7 @@ function AdminPage() {
         onChange={setAba}
         options={[{ id: "usuarios", label: "Usuários" }, { id: "historico", label: "Histórico de ações" }, { id: "ponte", label: "Versões da ponte" }, { id: "feedback", label: "Feedback" }, { id: "financeiro", label: "Financeiro" }, { id: "pacotes", label: "Pacotes" }, { id: "cupons", label: "Cupons" }]}
       />
-      {aba === "usuarios" ? <AdminUsuarios /> : aba === "historico" ? <AdminAuditoria /> : aba === "ponte" ? <AdminPonte /> : aba === "feedback" ? <AdminFeedback /> : aba === "pacotes" ? <AdminPacotes /> : aba === "cupons" ? <AdminCupons /> : <AdminFinanceiro />}
+      {aba === "usuarios" ? <AdminUsuarios key={search.filtro ?? "todos"} filtroInicial={search.filtro} onFiltro={(f) => navigate({ to: "/app/admin", search: { aba: "usuarios", filtro: f }, replace: true })} /> : aba === "historico" ? <AdminAuditoria /> : aba === "ponte" ? <AdminPonte /> : aba === "feedback" ? <AdminFeedback /> : aba === "pacotes" ? <AdminPacotes /> : aba === "cupons" ? <AdminCupons /> : <AdminFinanceiro />}
     </div>
   );
 }
