@@ -20,7 +20,6 @@ export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string 
     ...(email ? { payer: { email } } : {}),
     back_urls: { success: volta, failure: volta, pending: volta },
     auto_return: "approved",
-    notification_url: `${SITE}/api/public/mercadopago/webhook`,
     statement_descriptor: "FATIAPRO",
     expires: true,
     expiration_date_to: new Date(agora.getTime() + 2 * 3600_000).toISOString(),
@@ -112,7 +111,16 @@ export async function processarPagamento(paymentId: string, deps: PagamentoDeps,
 
 export interface WebhookDeps extends PagamentoDeps {
   secret: string;
-  registrarEvento(e: { payment_id: string | null; status: string | null; valido: boolean; motivo: MotivoAssinatura }): Promise<void>;
+  registrarEvento(e: { payment_id: string | null; status: string | null; valido: boolean; motivo: MotivoAssinatura; origem: OrigemAviso }): Promise<void>;
+}
+
+export type OrigemAviso = "webhook" | "ipn" | null;
+
+/** ?data.id=&type= → webhook; ?id=&topic= → ipn (old format). */
+export function origemAviso(u: URL): OrigemAviso {
+  if (u.searchParams.has("data.id") || u.searchParams.has("type")) return "webhook";
+  if (u.searchParams.has("topic") || u.searchParams.has("id")) return "ipn";
+  return null;
 }
 
 export interface WebhookReq { url: string; headers: { get(n: string): string | null }; corpo: unknown }
@@ -125,12 +133,13 @@ export async function processarWebhook(req: WebhookReq, deps: WebhookDeps): Prom
   const tipo = u.searchParams.get("type") ?? u.searchParams.get("topic") ?? (typeof corpo["type"] === "string" ? corpo["type"] : null);
   const motivo = await verificarAssinatura(req.headers.get("x-signature"), req.headers.get("x-request-id"), dataId, deps.secret);
   const valido = motivo === "ok";
+  const origem = origemAviso(u);
   if (tipo !== "payment" || !dataId || !/^\d{1,30}$/.test(dataId)) {
-    await deps.registrarEvento({ payment_id: dataId?.slice(0, 64) ?? null, status: tipo?.slice(0, 40) ?? null, valido, motivo }).catch(() => {});
+    await deps.registrarEvento({ payment_id: dataId?.slice(0, 64) ?? null, status: tipo?.slice(0, 40) ?? null, valido, motivo, origem }).catch(() => {});
     return { status: 200, body: { ok: true, ignorado: true } };
   }
   const pg = await deps.buscarPagamento(dataId);
-  await deps.registrarEvento({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido, motivo }).catch(() => {});
+  await deps.registrarEvento({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido, motivo, origem }).catch(() => {});
   const r = await processarPagamento(dataId, deps, pg);
   return { status: 200, body: { ok: true, resultado: r } };
 }

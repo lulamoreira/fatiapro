@@ -124,7 +124,7 @@ function Eventos() {
       {!q.data ? <Skeleton className="h-20" /> : !q.data.linhas.length ? <p className="text-sm text-muted-foreground">Nenhuma notificação recebida.</p> : (
         <ul className="divide-y text-sm">{q.data.linhas.map((e) => (
           <li key={e.id} className="flex justify-between gap-2 py-2">
-            <span className="text-muted-foreground">{dataHora(e.criado_em)} · pagamento {e.payment_id ?? "—"} · {e.status ?? "—"}</span>
+            <span className="text-muted-foreground">{dataHora(e.criado_em)} · {e.origem === "ipn" ? "IPN" : e.origem === "webhook" ? "Webhook" : "—"} · pagamento {e.payment_id ?? "—"} · {e.status ?? "—"}</span>
             <Tag tone={e.valido ? "success" : "muted"}>{e.motivo ? MOTIVO_ASSINATURA[e.motivo] ?? e.motivo : e.valido ? "Assinatura válida" : "Assinatura inválida"}</Tag>
           </li>
         ))}</ul>

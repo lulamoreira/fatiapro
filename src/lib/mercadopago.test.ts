@@ -35,7 +35,7 @@ describe("processarWebhook", () => {
     const r = await processarWebhook(req(assinar("123", "r1", "100"), "outro"), d);
     expect(r.status).toBe(200);
     expect(d.creditar).toHaveBeenCalledTimes(1);
-    expect(d.registrarEvento).toHaveBeenCalledWith(expect.objectContaining({ valido: false, motivo: "v1_diferente" }));
+    expect(d.registrarEvento).toHaveBeenCalledWith(expect.objectContaining({ valido: false, motivo: "v1_diferente", origem: "webhook" }));
   });
   it("assinatura inválida + pagamento que a API não encontra → não credita", async () => {
     const d = deps({});
@@ -48,6 +48,7 @@ describe("processarWebhook", () => {
     const d = deps({});
     await processarWebhook({ url: "https://x/w?id=123&topic=payment", headers: new Headers(), corpo: null }, d);
     expect(d.creditar).toHaveBeenCalledTimes(1);
+    expect(d.registrarEvento).toHaveBeenCalledWith(expect.objectContaining({ origem: "ipn" }));
     const d2 = deps({});
     const r = await processarWebhook({ url: "https://x/w?id=55&topic=merchant_order", headers: new Headers(), corpo: null }, d2);
     expect(r.status).toBe(200);
@@ -81,6 +82,7 @@ describe("criarCompra", () => {
     const pref = montarPreferencia({ id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990 }, "p1", "a@b.c", new Date("2026-01-01T00:00:00Z"));
     expect(pref.items[0]!.unit_price).toBe(79.9);
     expect(pref.expiration_date_to).toBe("2026-01-01T02:00:00.000Z");
+    expect(pref).not.toHaveProperty("notification_url");
   });
 });
 
