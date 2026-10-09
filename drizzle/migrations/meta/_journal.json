@@ -85,6 +85,13 @@
       "when": 1791502937705,
       "tag": "0011_impressoras_escolhidas",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791513269482,
+      "tag": "0012_ponte_publicada_por_assinatura",
+      "breakpoints": true
     }
   ]
 }
