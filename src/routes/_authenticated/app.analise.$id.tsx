@@ -9,6 +9,7 @@ import { criarAnalise } from "@/lib/analise.functions";
 import { erroAnalise, etiquetaFonte, type ErroAnalise } from "@/lib/plano";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
 import { Questionario } from "@/components/fatia/Questionario";
+import { PecaAbertaEvento } from "@/components/fatia/PecaAberta";
 import { MessageSquareHeart } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { jobEventsQuery, jobQuery } from "@/lib/queries";
@@ -28,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
-  head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }] }),
+  head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AnalisePage,
 });
 
@@ -274,7 +275,7 @@ function AnalisePage() {
               <li key={e.id} className="relative">
                 <span className="absolute -left-[1.4rem] top-1.5 size-2.5 rounded-full bg-primary" aria-hidden />
                 <p className="flex items-center gap-2 text-sm">
-                  {!terminal && i === progresso.length - 1 && <Loader2 className="size-3.5 shrink-0 animate-spin text-primary-ink" aria-label="em andamento" />}{String((e.conteudo as { texto?: unknown })?.texto ?? "")}</p>
+                  {!terminal && i === progresso.length - 1 && <Loader2 className="size-3.5 shrink-0 animate-spin text-primary-ink" aria-label="em andamento" />}<PecaAbertaEvento texto={String((e.conteudo as { texto?: unknown })?.texto ?? "")} /></p>
                 <p className="text-xs text-muted-foreground">{new Date(e.criado_em).toLocaleTimeString("pt-BR")}</p>
               </li>
             ))}
