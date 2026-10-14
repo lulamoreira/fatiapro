@@ -29,6 +29,19 @@ const IMPACTO: Record<string, { label: string; tone: Tone }> = {
   visivel: { label: "Visível", tone: "destructive" },
 };
 
+/** `gramas` of each item is the TOTAL weight with that change; the delta is relative to the starting weight. */
+export function deltaGramas(item: Pick<PropostaItem, "gramas">, partidaGramas: number): number {
+  return (item.gramas ?? partidaGramas) - partidaGramas;
+}
+
+export function totaisMarcados(proposta: Proposta, marcados: ReadonlySet<string>): { seg: number; gr: number } {
+  const g0 = proposta.partida?.gramas ?? 0;
+  let seg = proposta.partida?.segundos ?? 0;
+  let gr = g0;
+  for (const i of proposta.itens ?? []) if (marcados.has(i.id)) { seg += i.segundos_delta ?? 0; gr += deltaGramas(i, g0); }
+  return { seg, gr };
+}
+
 export interface ApprovalProps {
   proposta: Proposta;
   disabled: boolean;
@@ -57,12 +70,7 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
   }
 
   // Derived values — no effect needed.
-  const { seg, gr } = useMemo(() => {
-    let s = proposta.partida?.segundos ?? 0;
-    let g = proposta.partida?.gramas ?? 0;
-    for (const i of itens) if (marcados.has(i.id)) { s += i.segundos_delta ?? 0; g += i.gramas ?? 0; }
-    return { seg: s, gr: g };
-  }, [itens, marcados, proposta.partida]);
+  const { seg, gr } = useMemo(() => totaisMarcados(proposta, marcados), [proposta, marcados]);
   // Nothing worth changing was pre-selected by the analysis.
   const nadaPreMarcado = !itens.some((i) => i.pre_marcado && !i.rejeitado_motivo);
   const economia = (proposta.partida?.segundos ?? 0) - seg;
@@ -99,7 +107,10 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
                   <span className={cn("text-sm font-semibold tabular", i.segundos_delta < 0 ? "text-success" : i.segundos_delta > 0 ? "text-destructive" : "text-muted-foreground")}>
                     {i.segundos_delta > 0 ? "+" : ""}{formatDuracao(i.segundos_delta)}
                   </span>
-                  <span className="text-sm text-muted-foreground tabular">{formatGramas(i.gramas)}</span>
+                  <span className="text-sm text-muted-foreground tabular">
+                    {formatGramas(i.gramas)}
+                    {Math.abs(deltaGramas(i, proposta.partida?.gramas ?? 0)) >= 0.05 && ` (${deltaGramas(i, proposta.partida?.gramas ?? 0) > 0 ? "+" : ""}${formatGramas(deltaGramas(i, proposta.partida?.gramas ?? 0))})`}
+                  </span>
                   {imp && <Tag tone={imp.tone}>{imp.label}</Tag>}
                 </div>
                 {i.motivo && <p className="mt-1 text-sm text-muted-foreground">{i.motivo}</p>}

@@ -85,7 +85,7 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
 
       {(fase === "analisando" || fase === "outra") && (
         <p className="mt-4 rounded-xl bg-card/60 p-3 text-xs text-muted-foreground">
-          Uma análise completa costuma levar de 10 a 20 minutos, porque o fatiador testa cada mudança de verdade.
+          Uma análise costuma levar de 1 a 5 minutos (peças muito grandes ou detalhadas podem levar mais), porque o fatiador testa cada mudança de verdade.
           Pode sair desta tela: a análise continua no seu computador e fica salva no Histórico.
         </p>
       )}
