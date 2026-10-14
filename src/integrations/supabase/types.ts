@@ -800,6 +800,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pagamentos_duplicados: {
+        Row: {
+          criado_em: string
+          id: string
+          payment_id: string
+          pedido_id: string
+          reembolsado_em: string | null
+          valor_centavos: number
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          payment_id: string
+          pedido_id: string
+          reembolsado_em?: string | null
+          valor_centavos: number
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          payment_id?: string
+          pedido_id?: string
+          reembolsado_em?: string | null
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_duplicados_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pair_attempts: {
         Row: {
           criado_em: string
@@ -909,6 +944,7 @@ export type Database = {
           pacote_id: string
           pago_em: string | null
           status: string
+          status_detail: string | null
           user_id: string
           valor_centavos: number
         }
@@ -925,6 +961,7 @@ export type Database = {
           pacote_id: string
           pago_em?: string | null
           status?: string
+          status_detail?: string | null
           user_id: string
           valor_centavos: number
         }
@@ -941,6 +978,7 @@ export type Database = {
           pacote_id?: string
           pago_em?: string | null
           status?: string
+          status_detail?: string | null
           user_id?: string
           valor_centavos?: number
         }

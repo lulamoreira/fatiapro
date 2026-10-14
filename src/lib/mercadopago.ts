@@ -10,9 +10,9 @@ export const SITE = "https://fatiapro.lovable.app";
 /** Browser input for criarCompra: only the package id. Any extra field (price!) is dropped. */
 export const CompraInput = z.object({ pacote_id: z.string().uuid() }).strip();
 
-export interface PacoteRow { id: string; nome: string; creditos: number; preco_centavos: number }
+export interface PacoteRow { id: string; nome: string; creditos: number; preco_centavos: number; validade_meses: number }
 
-/** Splits at the first space: first_name = first word, last_name = the rest; each capped at 60 chars. */
+/** Splits at the first space: name = first word, surname = the rest; each capped at 60 chars. */
 export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string | null, agora: Date, nome: string | null = null) {
   const volta = `${SITE}/app/plano?pedido=${pedidoId}`;
   const payer: Record<string, string> = {};
@@ -22,15 +22,15 @@ export function montarPreferencia(p: PacoteRow, pedidoId: string, email: string 
     const espaco = texto.indexOf(" ");
     const first = espaco === -1 ? texto : texto.slice(0, espaco);
     const last = espaco === -1 ? "" : texto.slice(espaco + 1).trim();
-    payer["first_name"] = first.slice(0, 60);
-    if (last) payer["last_name"] = last.slice(0, 60);
+    payer["name"] = first.slice(0, 60);
+    if (last) payer["surname"] = last.slice(0, 60);
   }
   return {
     items: [{
       id: p.id,
       title: `FatiaPro — ${p.nome}`,
-      description: `${p.creditos} créditos FatiaPro para otimização de fatiamento 3D`,
-      category_id: "virtual_goods",
+      description: `Créditos para otimizar impressões 3D no FatiaPro (${p.creditos} créditos, validade ${p.validade_meses} meses)`,
+      category_id: "services",
       quantity: 1,
       unit_price: p.preco_centavos / 100,
       currency_id: "BRL",
@@ -85,8 +85,8 @@ export async function assinaturaValida(xSignature: string | null, xRequestId: st
 }
 
 /* ---------------- Payment processing ---------------- */
-export interface Pagamento { id: string | number; status: string; transaction_amount: number; currency_id: string; external_reference: string | null; payment_type_id: string | null }
-export interface PedidoRow { id: string; status: string; valor_centavos: number }
+export interface Pagamento { id: string | number; status: string; transaction_amount: number; currency_id: string; external_reference: string | null; payment_type_id: string | null; status_detail?: string | null }
+export interface PedidoRow { id: string; status: string; valor_centavos: number; mp_payment_id?: string | null }
 
 export interface PagamentoDeps {
   buscarPagamento(id: string): Promise<Pagamento | null>;
@@ -94,10 +94,12 @@ export interface PagamentoDeps {
   creditar(pedidoId: string, paymentId: string, metodo: string | null): Promise<void>;
   estornar(pedidoId: string, motivo: string): Promise<void>;
   /** Changes status only while the order is still 'pendente'. */
-  marcarSePendente(pedidoId: string, status: "recusado" | "cancelado", paymentId: string): Promise<void>;
+  marcarSePendente(pedidoId: string, status: "recusado" | "cancelado", paymentId: string, detalhe: string | null): Promise<void>;
+  /** A second approved payment for an order already approved with another payment. */
+  registrarDuplicado(pedidoId: string, paymentId: string, valorCentavos: number): Promise<void>;
 }
 
-export type ResultadoPagamento = "creditado" | "valor_divergente" | "recusado" | "estornado" | "ignorado";
+export type ResultadoPagamento = "creditado" | "valor_divergente" | "recusado" | "estornado" | "duplicado" | "ignorado";
 
 /**
  * Queries the payment on the Mercado Pago API (our token) and acts only on that answer.
@@ -109,20 +111,29 @@ export async function processarPagamento(paymentId: string, deps: PagamentoDeps,
   const pedido = await deps.buscarPedido(p.external_reference);
   if (!pedido) return "ignorado";
   const pid = String(p.id);
+  const outroPagamento = !!pedido.mp_payment_id && pedido.mp_payment_id !== pid;
+  const detalhe = typeof p.status_detail === "string" ? p.status_detail.slice(0, 80) : null;
+  if (p.status === "approved" && pedido.status === "aprovado" && outroPagamento) {
+    // Paid twice: never credit again; admin refunds it from the Pedidos tab.
+    await deps.registrarDuplicado(pedido.id, pid, Math.round(Number(p.transaction_amount) * 100));
+    return "duplicado";
+  }
   if (p.status === "approved") {
     if (Math.round(Number(p.transaction_amount) * 100) !== pedido.valor_centavos || p.currency_id !== "BRL") {
       console.error("mercadopago: valor divergente", { pedido: pedido.id, payment: pid });
-      await deps.marcarSePendente(pedido.id, "recusado", pid);
+      await deps.marcarSePendente(pedido.id, "recusado", pid, detalhe);
       return "valor_divergente";
     }
     await deps.creditar(pedido.id, pid, p.payment_type_id);
     return "creditado";
   }
   if (p.status === "rejected" || p.status === "cancelled") {
-    await deps.marcarSePendente(pedido.id, p.status === "rejected" ? "recusado" : "cancelado", pid);
+    await deps.marcarSePendente(pedido.id, p.status === "rejected" ? "recusado" : "cancelado", pid, detalhe);
     return "recusado";
   }
   if (p.status === "refunded" || p.status === "charged_back") {
+    // A refunded duplicate payment must not take back the credits of the real one.
+    if (outroPagamento) return "ignorado";
     await deps.estornar(pedido.id, p.status === "refunded" ? "pagamento devolvido" : "contestação do pagamento");
     return "estornado";
   }
@@ -132,7 +143,13 @@ export async function processarPagamento(paymentId: string, deps: PagamentoDeps,
 export interface WebhookDeps extends PagamentoDeps {
   secret: string;
   registrarEvento(e: { payment_id: string | null; status: string | null; valido: boolean; motivo: MotivoAssinatura; origem: OrigemAviso }): Promise<void>;
+  /** config_app.mp_exigir_assinatura */
+  exigirAssinatura(): Promise<boolean>;
+  /** True when a row with the same (payment_id, motivo) was saved in the last 10 minutes. */
+  eventoRecente(paymentId: string | null, motivo: MotivoAssinatura): Promise<boolean>;
 }
+
+export const DEDUPE_EVENTOS_MS = 10 * 60_000;
 
 export type OrigemAviso = "webhook" | "ipn" | null;
 
@@ -145,7 +162,11 @@ export function origemAviso(u: URL): OrigemAviso {
 
 export interface WebhookReq { url: string; headers: { get(n: string): string | null }; corpo: unknown }
 
-/** Signature is checked and logged but does not block: credit depends only on the API answer. Always 200. */
+/**
+ * Signature is always checked and logged. With mp_exigir_assinatura on, an invalid one gets 401
+ * and the API is NOT queried; otherwise credit depends only on the API answer.
+ * At most one mp_eventos row per (payment_id, motivo) every 10 minutes.
+ */
 export async function processarWebhook(req: WebhookReq, deps: WebhookDeps): Promise<{ status: number; body: Record<string, unknown> }> {
   const u = new URL(req.url);
   const dataId = u.searchParams.get("data.id") ?? u.searchParams.get("id");
@@ -154,12 +175,19 @@ export async function processarWebhook(req: WebhookReq, deps: WebhookDeps): Prom
   const motivo = await verificarAssinatura(req.headers.get("x-signature"), req.headers.get("x-request-id"), dataId, deps.secret);
   const valido = motivo === "ok";
   const origem = origemAviso(u);
+  const registrar = async (e: Parameters<WebhookDeps["registrarEvento"]>[0]) => {
+    try { if (!(await deps.eventoRecente(e.payment_id, e.motivo))) await deps.registrarEvento(e); } catch { /* log only */ }
+  };
+  if (!valido && (await deps.exigirAssinatura().catch(() => false))) {
+    await registrar({ payment_id: dataId?.slice(0, 64) ?? null, status: "assinatura_recusada", valido, motivo, origem });
+    return { status: 401, body: { erro: "assinatura_invalida" } };
+  }
   if (tipo !== "payment" || !dataId || !/^\d{1,30}$/.test(dataId)) {
-    await deps.registrarEvento({ payment_id: dataId?.slice(0, 64) ?? null, status: tipo?.slice(0, 40) ?? null, valido, motivo, origem }).catch(() => {});
+    await registrar({ payment_id: dataId?.slice(0, 64) ?? null, status: tipo?.slice(0, 40) ?? null, valido, motivo, origem });
     return { status: 200, body: { ok: true, ignorado: true } };
   }
   const pg = await deps.buscarPagamento(dataId);
-  await deps.registrarEvento({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido, motivo, origem }).catch(() => {});
+  await registrar({ payment_id: dataId, status: pg?.status ?? "nao_encontrado", valido, motivo, origem });
   const r = await processarPagamento(dataId, deps, pg);
   return { status: 200, body: { ok: true, resultado: r } };
 }
@@ -187,6 +215,52 @@ export async function conferirPedidoLogica(pedidoId: string, userId: string, dep
   }
   return { status: await deps.statusPedido(pedidoId), conferido: true };
 }
+
+/* ---------------- Reembolso (admin) ---------------- */
+export interface ReembolsoDeps {
+  /** POST /v1/payments/{id}/refunds with X-Idempotency-Key. */
+  reembolsarMP(paymentId: string, chave: string): Promise<{ ok: true } | { ok: false; mensagem: string }>;
+  estornar(pedidoId: string, motivo: string): Promise<void>;
+}
+export class ReembolsoErro extends Error {}
+export const chaveReembolso = (pedidoId: string) => `refund-${pedidoId}`;
+export const chaveReembolsoDuplicado = (paymentId: string) => `refund-dup-${paymentId}`;
+
+/** Refunds an approved order on Mercado Pago, then removes what is left of its credits (once). */
+export async function reembolsarPedidoLogica(p: { id: string; status: string; mp_payment_id: string | null }, deps: ReembolsoDeps): Promise<void> {
+  if (p.status !== "aprovado" || !p.mp_payment_id) throw new ReembolsoErro("Só pedidos aprovados podem ser reembolsados.");
+  const r = await deps.reembolsarMP(p.mp_payment_id, chaveReembolso(p.id));
+  if (!r.ok) throw new ReembolsoErro(r.mensagem);
+  await deps.estornar(p.id, "reembolso pelo admin");
+}
+
+/** Refunds a duplicate payment only (credits are untouched). */
+export async function reembolsarDuplicadoLogica(d: { payment_id: string; reembolsado_em: string | null }, deps: Pick<ReembolsoDeps, "reembolsarMP">): Promise<void> {
+  if (d.reembolsado_em) throw new ReembolsoErro("Este pagamento já foi reembolsado.");
+  const r = await deps.reembolsarMP(d.payment_id, chaveReembolsoDuplicado(d.payment_id));
+  if (!r.ok) throw new ReembolsoErro(r.mensagem);
+}
+
+/** Friendly text for the Mercado Pago refusal message. */
+export function mensagemErroReembolso(status: number, corpo: unknown): string {
+  const m = corpo && typeof corpo === "object" && typeof (corpo as { message?: unknown }).message === "string" ? (corpo as { message: string }).message : "";
+  return `O Mercado Pago recusou o reembolso (${status})${m ? `: ${m.slice(0, 200)}` : ""}.`;
+}
+
+/* ---------------- Recusa ---------------- */
+export const MOTIVO_RECUSA: Record<string, string> = {
+  cc_rejected_insufficient_amount: "Saldo ou limite insuficiente",
+  cc_rejected_bad_filled_security_code: "Código de segurança incorreto",
+  cc_rejected_bad_filled_date: "Validade incorreta",
+  cc_rejected_bad_filled_other: "Confira os dados do cartão",
+  cc_rejected_call_for_authorize: "Seu banco pediu autorização — ligue para o banco e tente de novo",
+  cc_rejected_high_risk: "Pagamento recusado por segurança — tente outro meio (Pix)",
+  cc_rejected_blacklist: "Pagamento recusado por segurança — tente outro meio (Pix)",
+  cc_rejected_duplicated_payment: "Pagamento duplicado — confira seu extrato",
+  cc_rejected_max_attempts: "Muitas tentativas — use outro cartão ou Pix",
+};
+export const RECUSA_PADRAO = "Pagamento não aprovado — tente outro meio de pagamento";
+export const mensagemRecusa = (detalhe: string | null | undefined) => (detalhe && MOTIVO_RECUSA[detalhe]) || RECUSA_PADRAO;
 
 /* ---------------- Presentation helpers ---------------- */
 export const STATUS_PEDIDO: Record<string, string> = {

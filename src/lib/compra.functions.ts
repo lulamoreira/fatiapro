@@ -20,7 +20,7 @@ export const criarCompra = createServerFn({ method: "POST" })
     // Suspensão de vendas: recusa antes de criar pedido ou preferência.
     const { data: cfgVendas } = await sb.from("config_app").select("chave, valor").eq("chave", "vendas_suspensas");
     exigirVendasAtivas(cfgVendas);
-    const { data: pacote } = await sb.from("pacotes").select("id, nome, creditos, preco_centavos").eq("id", data.pacote_id).eq("ativo", true).maybeSingle();
+    const { data: pacote } = await sb.from("pacotes").select("id, nome, creditos, preco_centavos, validade_meses").eq("id", data.pacote_id).eq("ativo", true).maybeSingle();
     if (!pacote) throw new Error("Pacote indisponível.");
 
     const umaHora = new Date(Date.now() - 3600_000).toISOString();

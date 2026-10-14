@@ -61,7 +61,7 @@ export const adminPedidos = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin: sb } = await guard(context.userId);
     const de = (data.pagina - 1) * POR_PAGINA;
-    let q = sb.from("pedidos").select("id, user_id, creditos, valor_centavos, status, metodo, mp_payment_id, criado_em, pago_em, pacotes(nome)", { count: "exact" });
+    let q = sb.from("pedidos").select("id, user_id, creditos, valor_centavos, status, status_detail, metodo, mp_payment_id, criado_em, pago_em, pacotes(nome), creditos_lotes(restante)", { count: "exact" });
     if (data.status) q = q.eq("status", data.status);
     const { data: linhas, count, error } = await q.order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, de + POR_PAGINA - 1);
     if (error) throw new Error("Falha ao ler os pedidos");
@@ -82,5 +82,79 @@ export const adminMpEventos = createServerFn({ method: "POST" })
     const { data: linhas, count, error } = await sb.from("mp_eventos").select("*", { count: "exact" })
       .order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, de + POR_PAGINA - 1);
     if (error) throw new Error("Falha ao ler os eventos");
-    return { linhas: linhas ?? [], total: count ?? 0, por_pagina: POR_PAGINA };
+    const { data: ultimo } = await sb.from("mp_eventos").select("criado_em").eq("valido", true).order("criado_em", { ascending: false }).limit(1).maybeSingle();
+    return { linhas: linhas ?? [], total: count ?? 0, por_pagina: POR_PAGINA, ultimo_valido: ultimo?.criado_em ?? null };
+  });
+
+/* ---------- Reembolso (direito de arrependimento) ---------- */
+export const adminReembolsar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ pedido_id: z.string().uuid() }).strip().parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin: sb, auditar } = await guard(context.userId);
+    const { reembolsarPedidoLogica, ReembolsoErro } = await import("./mercadopago");
+    const { depsReembolso } = await import("./mercadopago.server");
+    const { data: p } = await sb.from("pedidos").select("id, user_id, status, mp_payment_id, valor_centavos, creditos").eq("id", data.pedido_id).maybeSingle();
+    if (!p) throw new Error("Pedido não encontrado.");
+    try {
+      await reembolsarPedidoLogica(p, depsReembolso());
+    } catch (e) {
+      if (e instanceof ReembolsoErro) throw new Error(e.message);
+      console.error("adminReembolsar:", (e as Error).message);
+      throw new Error("Não foi possível reembolsar agora.");
+    }
+    await auditar(context.userId, "pedido_reembolsado", p.user_id, { pedido_id: p.id, payment_id: p.mp_payment_id, valor_centavos: p.valor_centavos, creditos: p.creditos });
+    return { ok: true as const };
+  });
+
+export const adminDuplicados = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin: sb } = await guard(context.userId);
+    const { data, error } = await sb.from("pagamentos_duplicados").select("id, pedido_id, payment_id, valor_centavos, criado_em", { count: "exact" })
+      .is("reembolsado_em", null).order("criado_em", { ascending: false }).order("id", { ascending: false }).range(0, 99);
+    if (error) throw new Error("Falha ao ler pagamentos duplicados");
+    return data ?? [];
+  });
+
+export const adminReembolsarDuplicado = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).strip().parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin: sb, auditar } = await guard(context.userId);
+    const { reembolsarDuplicadoLogica, ReembolsoErro } = await import("./mercadopago");
+    const { depsReembolso } = await import("./mercadopago.server");
+    const { data: d } = await sb.from("pagamentos_duplicados").select("id, pedido_id, payment_id, valor_centavos, reembolsado_em, pedidos(user_id)").eq("id", data.id).maybeSingle();
+    if (!d) throw new Error("Pagamento não encontrado.");
+    try {
+      await reembolsarDuplicadoLogica(d, depsReembolso());
+    } catch (e) {
+      if (e instanceof ReembolsoErro) throw new Error(e.message);
+      console.error("adminReembolsarDuplicado:", (e as Error).message);
+      throw new Error("Não foi possível reembolsar agora.");
+    }
+    await sb.from("pagamentos_duplicados").update({ reembolsado_em: new Date().toISOString() }).eq("id", d.id);
+    await auditar(context.userId, "pedido_reembolsado", d.pedidos?.user_id ?? context.userId, { pedido_id: d.pedido_id, payment_id: d.payment_id, valor_centavos: d.valor_centavos, duplicado: true });
+    return { ok: true as const };
+  });
+
+/* ---------- Assinatura obrigatória do webhook ---------- */
+export const adminMpConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin: sb } = await guard(context.userId);
+    const { data } = await sb.from("config_app").select("valor").eq("chave", "mp_exigir_assinatura").maybeSingle();
+    return { exigir_assinatura: data?.valor === true };
+  });
+
+export const adminSalvarMpConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ exigir_assinatura: z.boolean() }).strip().parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin: sb, auditar } = await guard(context.userId);
+    const { data: antes } = await sb.from("config_app").select("valor").eq("chave", "mp_exigir_assinatura").maybeSingle();
+    const { error } = await sb.from("config_app").upsert({ chave: "mp_exigir_assinatura", valor: data.exigir_assinatura as never }, { onConflict: "chave" });
+    if (error) throw new Error("Não foi possível salvar");
+    await auditar(context.userId, "config_cobranca", context.userId, { antes: { mp_exigir_assinatura: antes?.valor ?? false }, depois: { mp_exigir_assinatura: data.exigir_assinatura } });
+    return { ok: true as const };
   });
