@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createHmac } from "node:crypto";
-import { ConferirErro, conferirPedidoLogica, type ConferirDeps, CompraInput, assinaturaValida, montarPreferencia, processarWebhook, resumoReceita, type WebhookDeps } from "./mercadopago";
+import { ReembolsoErro, mensagemRecusa, reembolsarDuplicadoLogica, reembolsarPedidoLogica, ConferirErro, conferirPedidoLogica, type ConferirDeps, CompraInput, assinaturaValida, montarPreferencia, processarWebhook, resumoReceita, type WebhookDeps } from "./mercadopago";
 
 const SECRET = "segredo-teste";
 const PED = "11111111-1111-4111-8111-111111111111";
@@ -21,6 +21,7 @@ function deps(pg: Partial<{ status: string; transaction_amount: number; currency
     buscarPagamento: vi.fn(async () => ({ id: 123, status: "approved", transaction_amount: 19.9, currency_id: "BRL", external_reference: PED, payment_type_id: "pix", ...pg })),
     buscarPedido: vi.fn(async () => ({ id: PED, status: "pendente", valor_centavos: 1990 })),
     creditar: vi.fn(async () => {}), estornar: vi.fn(async () => {}), marcarSePendente: vi.fn(async () => {}), registrarEvento: vi.fn(async () => {}),
+    registrarDuplicado: vi.fn(async () => {}), exigirAssinatura: vi.fn(async () => false), eventoRecente: vi.fn(async () => false),
   } as never;
 }
 const req = (sig: string, rid = "r1") => ({
@@ -66,7 +67,7 @@ describe("processarWebhook", () => {
     const r = await processarWebhook(req(assinar("123", "r1", "100")), d);
     expect(r.status).toBe(200);
     expect(d.creditar).not.toHaveBeenCalled();
-    expect(d.marcarSePendente).toHaveBeenCalledWith(PED, "recusado", "123");
+    expect(d.marcarSePendente).toHaveBeenCalledWith(PED, "recusado", "123", null);
   });
   it("moeda diferente de BRL → não credita", async () => {
     const d = deps({ currency_id: "USD" });
@@ -79,7 +80,7 @@ describe("criarCompra", () => {
   it("ignora qualquer preço vindo do navegador", () => {
     const entrada = CompraInput.parse({ pacote_id: PED, preco_centavos: 1, creditos: 9999, unit_price: 0.01 });
     expect(entrada).toEqual({ pacote_id: PED });
-    const pref = montarPreferencia({ id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990 }, "p1", "a@b.c", new Date("2026-01-01T00:00:00Z"));
+    const pref = montarPreferencia({ id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990, validade_meses: 12 }, "p1", "a@b.c", new Date("2026-01-01T00:00:00Z"));
     expect(pref.items[0]!.unit_price).toBe(79.9);
     expect(pref.expiration_date_to).toBe("2026-01-01T02:00:00.000Z");
     expect(pref).not.toHaveProperty("notification_url");
@@ -87,16 +88,16 @@ describe("criarCompra", () => {
 });
 
 describe("montarPreferencia — dados do pagador e do item", () => {
-  const pacote = { id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990 };
+  const pacote = { id: PED, nome: "50 créditos", creditos: 50, preco_centavos: 7990, validade_meses: 12 };
   const agora = new Date("2026-01-01T00:00:00Z");
 
-  it("nome com duas ou mais palavras → first_name e last_name separados no primeiro espaço", () => {
+  it("nome com duas ou mais palavras → name e surname separados no primeiro espaço", () => {
     const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana Maria Souza");
-    expect(pref.payer).toEqual({ email: "a@b.c", first_name: "Ana", last_name: "Maria Souza" });
+    expect(pref.payer).toEqual({ email: "a@b.c", name: "Ana", surname: "Maria Souza" });
   });
-  it("nome de uma palavra → só first_name, sem last_name", () => {
+  it("nome de uma palavra → só name, sem surname", () => {
     const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana");
-    expect(pref.payer).toEqual({ email: "a@b.c", first_name: "Ana" });
+    expect(pref.payer).toEqual({ email: "a@b.c", name: "Ana" });
   });
   it("nome null e email null → preferência sem a chave payer", () => {
     const pref = montarPreferencia(pacote, "p1", null, agora, null);
@@ -104,8 +105,8 @@ describe("montarPreferencia — dados do pagador e do item", () => {
   });
   it("item com category_id e description de créditos; preferência com binary_mode e sem notification_url", () => {
     const pref = montarPreferencia(pacote, "p1", "a@b.c", agora, "Ana");
-    expect(pref.items[0]!.category_id).toBe("virtual_goods");
-    expect(pref.items[0]!.description).toBe("50 créditos FatiaPro para otimização de fatiamento 3D");
+    expect(pref.items[0]!.category_id).toBe("services");
+    expect(pref.items[0]!.description).toBe("Créditos para otimizar impressões 3D no FatiaPro (50 créditos, validade 12 meses)");
     expect(pref.binary_mode).toBe(true);
     expect(pref).not.toHaveProperty("notification_url");
   });
@@ -130,7 +131,7 @@ describe("conferirPedido", () => {
       buscarPagamento: async () => null,
       buscarPedido: async () => ({ id: PED, status, valor_centavos: 1990 }),
       creditar: async (id) => { if (status !== "aprovado") { lotes.add(id + ":" + lotes.size); status = "aprovado"; } },
-      estornar: async () => {}, marcarSePendente: async () => {},
+      estornar: async () => {}, marcarSePendente: async () => {}, registrarDuplicado: async () => {},
       donoDoPedido: async () => dono,
       ehAdmin: async () => false,
       reservarConferencia: async () => { const ok = Date.now() - ultima >= 5000; if (ok) ultima = Date.now(); return ok; },
@@ -158,4 +159,95 @@ describe("conferirPedido", () => {
     expect(r.conferido).toBe(false);
     expect(spy).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("assinatura obrigatória (mp_exigir_assinatura)", () => {
+  it("ligada + assinatura inválida → 401 e não consulta a API", async () => {
+    const d = deps({});
+    (d.exigirAssinatura as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    const r = await processarWebhook(req("lixo"), d);
+    expect(r.status).toBe(401);
+    expect(d.buscarPagamento).not.toHaveBeenCalled();
+    expect(d.creditar).not.toHaveBeenCalled();
+  });
+  it("ligada + assinatura válida → processa normalmente", async () => {
+    const d = deps({});
+    (d.exigirAssinatura as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    const r = await processarWebhook(req(assinar("123", "r1", "100")), d);
+    expect(r.status).toBe(200);
+    expect(d.creditar).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("dedupe de mp_eventos", () => {
+  it("não grava de novo o mesmo (payment_id, motivo) dentro de 10 minutos", async () => {
+    const d = deps({});
+    const vistos = new Set<string>();
+    (d.eventoRecente as ReturnType<typeof vi.fn>).mockImplementation(async (id: string, m: string) => vistos.has(`${id}|${m}`));
+    d.registrarEvento.mockImplementation(async (e: { payment_id: string; motivo: string }) => { vistos.add(`${e.payment_id}|${e.motivo}`); });
+    await processarWebhook(req("lixo"), d);
+    await processarWebhook(req("lixo"), d);
+    await processarWebhook(req("lixo"), d);
+    expect(d.registrarEvento).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("pagamento duplicado", () => {
+  it("segundo pagamento aprovado no mesmo pedido vai para pagamentos_duplicados sem creditar", async () => {
+    const d = deps({});
+    d.buscarPagamento.mockResolvedValue({ id: 456, status: "approved", transaction_amount: 19.9, currency_id: "BRL", external_reference: PED, payment_type_id: "pix" });
+    (d.buscarPedido as ReturnType<typeof vi.fn>).mockResolvedValue({ id: PED, status: "aprovado", valor_centavos: 1990, mp_payment_id: "123" });
+    const r = await processarWebhook({ ...req(assinar("456", "r1", "100")), url: "https://x/w?data.id=456&type=payment" }, d);
+    expect(r.body["resultado"]).toBe("duplicado");
+    expect(d.creditar).not.toHaveBeenCalled();
+    expect(d.registrarDuplicado).toHaveBeenCalledWith(PED, "456", 1990);
+  });
+  it("reembolso do pagamento duplicado não estorna os créditos do pedido", async () => {
+    const d = deps({});
+    d.buscarPagamento.mockResolvedValue({ id: 456, status: "refunded", transaction_amount: 19.9, currency_id: "BRL", external_reference: PED, payment_type_id: "pix" });
+    (d.buscarPedido as ReturnType<typeof vi.fn>).mockResolvedValue({ id: PED, status: "aprovado", valor_centavos: 1990, mp_payment_id: "123" });
+    await processarWebhook({ ...req("x"), url: "https://x/w?data.id=456&type=payment" }, d);
+    expect(d.estornar).not.toHaveBeenCalled();
+  });
+});
+
+describe("reembolso pelo admin", () => {
+  it("chama a API com idempotency key refund-<pedido> e estorna uma vez", async () => {
+    const reembolsarMP = vi.fn(async () => ({ ok: true as const }));
+    const estornar = vi.fn(async () => {});
+    await reembolsarPedidoLogica({ id: PED, status: "aprovado", mp_payment_id: "123" }, { reembolsarMP, estornar });
+    expect(reembolsarMP).toHaveBeenCalledWith("123", `refund-${PED}`);
+    expect(estornar).toHaveBeenCalledTimes(1);
+    expect(estornar).toHaveBeenCalledWith(PED, "reembolso pelo admin");
+  });
+  it("Mercado Pago recusou → erro claro e não estorna", async () => {
+    const estornar = vi.fn(async () => {});
+    await expect(reembolsarPedidoLogica({ id: PED, status: "aprovado", mp_payment_id: "123" }, { reembolsarMP: async () => ({ ok: false, mensagem: "O Mercado Pago recusou o reembolso (400)." }), estornar }))
+      .rejects.toThrow("O Mercado Pago recusou o reembolso (400).");
+    expect(estornar).not.toHaveBeenCalled();
+  });
+  it("pedido não aprovado → recusa", async () => {
+    await expect(reembolsarPedidoLogica({ id: PED, status: "pendente", mp_payment_id: null }, { reembolsarMP: vi.fn(), estornar: vi.fn() })).rejects.toBeInstanceOf(ReembolsoErro);
+  });
+  it("duplicado: reembolsa sem estornar créditos", async () => {
+    const reembolsarMP = vi.fn(async () => ({ ok: true as const }));
+    await reembolsarDuplicadoLogica({ payment_id: "456", reembolsado_em: null }, { reembolsarMP });
+    expect(reembolsarMP).toHaveBeenCalledWith("456", "refund-dup-456");
+  });
+});
+
+describe("mensagem de recusa", () => {
+  it.each([
+    ["cc_rejected_insufficient_amount", "Saldo ou limite insuficiente"],
+    ["cc_rejected_bad_filled_security_code", "Código de segurança incorreto"],
+    ["cc_rejected_bad_filled_date", "Validade incorreta"],
+    ["cc_rejected_bad_filled_other", "Confira os dados do cartão"],
+    ["cc_rejected_call_for_authorize", "Seu banco pediu autorização — ligue para o banco e tente de novo"],
+    ["cc_rejected_high_risk", "Pagamento recusado por segurança — tente outro meio (Pix)"],
+    ["cc_rejected_blacklist", "Pagamento recusado por segurança — tente outro meio (Pix)"],
+    ["cc_rejected_duplicated_payment", "Pagamento duplicado — confira seu extrato"],
+    ["cc_rejected_max_attempts", "Muitas tentativas — use outro cartão ou Pix"],
+    ["qualquer_outro", "Pagamento não aprovado — tente outro meio de pagamento"],
+    [null, "Pagamento não aprovado — tente outro meio de pagamento"],
+  ])("%s", (det, msg) => expect(mensagemRecusa(det)).toBe(msg));
 });
