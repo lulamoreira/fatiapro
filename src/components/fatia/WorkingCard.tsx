@@ -35,7 +35,7 @@ function cronometro(ms: number): string {
 }
 
 export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function WorkingCard(
-  { fase, ultimaMensagem, desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
+  { fase, ultimaMensagem, feitos = [], desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
   ref,
 ) {
   const sinalS = ultimoContatoMs != null ? Math.max(0, Math.floor((now - ultimoContatoMs) / 1000)) : null;
@@ -49,6 +49,8 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
       ]
     : [];
   const atual = lista.findIndex((p) => !p.ok);
+  const recentes = feitos.slice(-4);
+  const ocultos = feitos.length - recentes.length;
 
   return (
     <section ref={ref} aria-live="polite" aria-label="Trabalhando" className="scroll-mt-6 rounded-3xl border-2 border-primary/40 bg-accent/40 p-6">
@@ -56,10 +58,37 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
         <Loader2 className="mt-1 size-7 shrink-0 animate-spin text-primary-ink" aria-hidden />
         <div className="min-w-0 flex-1">
           <h2 className="text-xl font-bold">{TITULOS[fase]}</h2>
-          {ultimaMensagem && <p className="mt-1 text-sm text-muted-foreground">{ultimaMensagem}</p>}
-          <p className="mt-2 text-xs font-medium text-muted-foreground tabular">há {cronometro(now - desdeMs)}</p>
+          <p className="mt-2 text-xs font-medium text-muted-foreground tabular">
+            há {cronometro(now - desdeMs)}
+            {fase !== "na_fila" && feitos.length > 0 && ` · ${feitos.length} ${feitos.length === 1 ? "etapa concluída" : "etapas concluídas"}`}
+          </p>
         </div>
       </div>
+
+      {fase !== "na_fila" && (recentes.length > 0 || ultimaMensagem) && (
+        <ol className="mt-4 space-y-1.5 text-sm" aria-label="Etapas">
+          {ocultos > 0 && <li className="pl-6 text-xs text-muted-foreground">+ {ocultos} etapas anteriores</li>}
+          {recentes.map((t, i) => (
+            <li key={`${i}-${t}`} className="flex items-start gap-2 text-muted-foreground">
+              <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+              <span className="min-w-0">{t}</span>
+            </li>
+          ))}
+          {ultimaMensagem && (
+            <li className="flex items-start gap-2 font-semibold text-foreground">
+              <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-primary-ink" aria-hidden />
+              <span className="min-w-0">{ultimaMensagem}</span>
+            </li>
+          )}
+        </ol>
+      )}
+
+      {(fase === "analisando" || fase === "outra") && (
+        <p className="mt-4 rounded-xl bg-card/60 p-3 text-xs text-muted-foreground">
+          Uma análise completa costuma levar de 10 a 20 minutos, porque o fatiador testa cada mudança de verdade.
+          Pode sair desta tela: a análise continua no seu computador e fica salva no Histórico.
+        </p>
+      )}
 
       {lista.length > 0 && (
         <ol className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
