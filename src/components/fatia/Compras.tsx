@@ -7,7 +7,7 @@ import { useStatusVendas } from "@/hooks/use-status-vendas";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { conferirPedido, criarCompra } from "@/lib/compra.functions";
-import { STATUS_PEDIDO, brlCentavos } from "@/lib/mercadopago";
+import { STATUS_PEDIDO, brlCentavos, mensagemRecusa } from "@/lib/mercadopago";
 import { Tag } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -99,7 +99,7 @@ export function PedidoRetorno({ id }: { id: string }) {
   const { data: p } = useQuery({
     queryKey: ["pedido", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pedidos").select("id, status, creditos").eq("id", id).maybeSingle();
+      const { data, error } = await supabase.from("pedidos").select("id, status, creditos, status_detail").eq("id", id).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -134,8 +134,8 @@ export function PedidoRetorno({ id }: { id: string }) {
   );
   return (
     <div role="status" className="flex flex-wrap items-center gap-3 rounded-2xl bg-destructive/10 p-4 text-sm font-medium text-destructive-ink">
-      <XCircle className="size-5" aria-hidden />Pagamento não aprovado —
-      <Link to="/app/plano" hash="comprar" className="underline">tentar de novo</Link>
+      <XCircle className="size-5" aria-hidden />{mensagemRecusa(p.status_detail)}
+      <Button asChild size="sm" variant="outline"><Link to="/app/plano" hash="comprar">Tentar de novo</Link></Button>
     </div>
   );
 }
