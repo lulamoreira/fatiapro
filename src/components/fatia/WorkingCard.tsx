@@ -15,6 +15,8 @@ const TITULOS: Record<Fase, string> = {
 export interface WorkingCardProps {
   fase: Fase;
   ultimaMensagem: string | null;
+  /** Progress messages already finished in this phase (oldest first). */
+  feitos?: string[];
   desdeMs: number;
   now: number;
   /** Only for fase "aplicando". */
