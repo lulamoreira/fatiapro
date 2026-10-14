@@ -188,6 +188,12 @@ function AnalisePage() {
     : undefined;
   const ultimoProg = progresso[progresso.length - 1];
   const ultimaMensagem = ultimoProg ? String((ultimoProg.conteudo as { texto?: unknown })?.texto ?? "") || null : null;
+  // Mensagens já concluídas nesta fase (mostradas como passos feitos, sem a atual).
+  const feitos = progresso
+    .filter((e) => ts(e) >= desde - 1000)
+    .map((e) => String((e.conteudo as { texto?: unknown })?.texto ?? "").trim())
+    .filter(Boolean)
+    .slice(0, -1);
   const ultimoEv = eventos[eventos.length - 1];
   const semEventosMs = now - Math.max(desde, ultimoEv ? ts(ultimoEv) : 0);
   const ultimoContatoMs = device?.ultimo_contato ? Date.parse(device.ultimo_contato) : null;
@@ -255,6 +261,7 @@ function AnalisePage() {
           ref={workingRef}
           fase={fase}
           ultimaMensagem={ultimaMensagem}
+          feitos={feitos}
           desdeMs={desde}
           now={now}
           {...(passos ? { passos } : {})}
