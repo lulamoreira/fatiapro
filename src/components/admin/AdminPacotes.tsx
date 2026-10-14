@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminVendas } from "@/components/admin/AdminVendas";
+import { Duplicados, ReembolsarPedido } from "@/components/admin/Reembolso";
 
 type Pacote = { id: string | null; nome: string; creditos: number; preco_centavos: number; validade_meses: number; destaque: boolean; ativo: boolean; ordem: number };
 const NOVO: Pacote = { id: null, nome: "", creditos: 10, preco_centavos: 1990, validade_meses: 12, destaque: false, ativo: true, ordem: 10 };
@@ -86,11 +87,12 @@ function Pedidos() {
           {FILTROS.map((f) => <option key={f ?? "todos"} value={f ?? ""}>{f ? STATUS_PEDIDO[f] : "Todos"}</option>)}
         </select>
       </div>
+      <Duplicados />
       {!q.data ? <Skeleton className="h-20" /> : !q.data.linhas.length ? <p className="text-sm text-muted-foreground">Nenhum pedido.</p> : (
         <ul className="divide-y text-sm">{q.data.linhas.map((p) => (
           <li key={p.id} className="flex flex-wrap justify-between gap-2 py-2">
             <span className="min-w-0"><span className="block truncate font-medium">{p.email}</span><span className="text-xs text-muted-foreground">{dataHora(p.criado_em)} · {p.pacotes?.nome ?? `${p.creditos} créditos`}{p.metodo ? ` · ${p.metodo}` : ""}</span></span>
-            <span className="flex flex-wrap items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "muted"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag><ConferirBotao id={p.id} /></span>
+            <span className="flex flex-wrap items-center gap-2"><span className="tabular">{brlCentavos(p.valor_centavos)}</span><Tag tone={p.status === "aprovado" ? "success" : "muted"}>{STATUS_PEDIDO[p.status] ?? p.status}</Tag><ConferirBotao id={p.id} />{p.status === "aprovado" && p.mp_payment_id && <ReembolsarPedido p={{ ...p, restante: p.creditos_lotes?.restante ?? null }} />}</span>
           </li>
         ))}</ul>
       )}
@@ -123,6 +125,7 @@ function Eventos() {
   return (
     <section className="space-y-3 rounded-2xl bg-card p-4 shadow-sm">
       <h2 className="font-semibold">Notificações do Mercado Pago</h2>
+      {q.data && <p className="text-sm font-medium">Último aviso com assinatura válida: {q.data.ultimo_valido ? dataHora(q.data.ultimo_valido) : "nenhum ainda"}</p>}
       {!q.data ? <Skeleton className="h-20" /> : !q.data.linhas.length ? <p className="text-sm text-muted-foreground">Nenhuma notificação recebida.</p> : (
         <ul className="divide-y text-sm">{q.data.linhas.map((e) => (
           <li key={e.id} className="flex justify-between gap-2 py-2">

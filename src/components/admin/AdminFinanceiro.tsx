@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "./AdminFeedback";
+import { AssinaturaObrigatoria } from "./AssinaturaObrigatoria";
 
 type P = "hoje" | "7d" | "30d";
 const PERIODOS: { id: P; label: string }[] = [{ id: "hoje", label: "Hoje" }, { id: "7d", label: "7 dias" }, { id: "30d", label: "30 dias" }];
@@ -95,6 +96,7 @@ function ConfigCobranca({ inicial }: { inicial: Record<string, number> }) {
       </div>
       {invalido && <p className="text-xs text-destructive-ink" role="alert">{CONFIG_LABEL[invalido]}: precisa ser maior que zero{invalido === "limite_diario_gratis" || invalido === "uso_justo_por_dia" ? " e inteiro" : ""}.</p>}
       <Button disabled={!!invalido || m.isPending} onClick={() => m.mutate()}>{m.isPending ? "Salvando…" : "Salvar"}</Button>
+      <AssinaturaObrigatoria />
     </section>
   );
 }
