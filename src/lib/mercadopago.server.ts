@@ -3,7 +3,7 @@
  * from process.env inside functions only — never sent to the browser, DB or logs.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import type { ConferirDeps, Pagamento, PagamentoDeps, WebhookDeps } from "./mercadopago";
+import { DEDUPE_EVENTOS_MS, mensagemErroReembolso, type ConferirDeps, type Pagamento, type PagamentoDeps, type ReembolsoDeps, type WebhookDeps } from "./mercadopago";
 
 export function tokenMP(): string {
   const t = process.env["MP_ACCESS_TOKEN"];
@@ -22,7 +22,7 @@ export function depsPagamento(): PagamentoDeps {
     buscarPagamento: buscarPagamentoMP,
     async buscarPedido(id) {
       if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
-      const { data } = await supabaseAdmin.from("pedidos").select("id, status, valor_centavos").eq("id", id).maybeSingle();
+      const { data } = await supabaseAdmin.from("pedidos").select("id, status, valor_centavos, mp_payment_id").eq("id", id).maybeSingle();
       return data;
     },
     async creditar(pedidoId, paymentId, metodo) {
@@ -33,8 +33,12 @@ export function depsPagamento(): PagamentoDeps {
       const { error } = await supabaseAdmin.rpc("estornar_pedido", { p_pedido: pedidoId, p_motivo: motivo });
       if (error) throw new Error("estornar_falhou: " + error.message);
     },
-    async marcarSePendente(pedidoId, status, paymentId) {
-      await supabaseAdmin.from("pedidos").update({ status, mp_payment_id: paymentId }).eq("id", pedidoId).eq("status", "pendente");
+    async marcarSePendente(pedidoId, status, paymentId, detalhe) {
+      await supabaseAdmin.from("pedidos").update({ status, mp_payment_id: paymentId, status_detail: detalhe }).eq("id", pedidoId).eq("status", "pendente");
+    },
+    async registrarDuplicado(pedidoId, paymentId, valorCentavos) {
+      // unique(payment_id): repeated notifications are no-ops.
+      await supabaseAdmin.from("pagamentos_duplicados").upsert({ pedido_id: pedidoId, payment_id: paymentId, valor_centavos: valorCentavos }, { onConflict: "payment_id", ignoreDuplicates: true });
     },
   };
 }
@@ -45,6 +49,17 @@ export function depsWebhook(): WebhookDeps {
     secret: process.env["MP_WEBHOOK_SECRET"] ?? "",
     async registrarEvento(e) {
       await supabaseAdmin.from("mp_eventos").insert(e);
+    },
+    async exigirAssinatura() {
+      const { data } = await supabaseAdmin.from("config_app").select("valor").eq("chave", "mp_exigir_assinatura").maybeSingle();
+      return data?.valor === true;
+    },
+    async eventoRecente(paymentId, motivo) {
+      const desde = new Date(Date.now() - DEDUPE_EVENTOS_MS).toISOString();
+      let q = supabaseAdmin.from("mp_eventos").select("id").eq("motivo", motivo).gte("criado_em", desde).limit(1);
+      q = paymentId == null ? q.is("payment_id", null) : q.eq("payment_id", paymentId);
+      const { data } = await q;
+      return !!data?.length;
     },
   };
 }
@@ -77,5 +92,22 @@ export function depsConferir(): ConferirDeps {
       const { data } = await supabaseAdmin.from("pedidos").select("status").eq("id", id).maybeSingle();
       return data?.status ?? "pendente";
     },
+  };
+}
+
+export function depsReembolso(): ReembolsoDeps {
+  return {
+    async reembolsarMP(paymentId, chave) {
+      const r = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}/refunds`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${tokenMP()}`, "Content-Type": "application/json", "X-Idempotency-Key": chave },
+        body: "{}",
+      });
+      if (r.ok) return { ok: true };
+      const corpo: unknown = await r.json().catch(() => null);
+      console.error("mercadopago: reembolso recusado", r.status);
+      return { ok: false, mensagem: mensagemErroReembolso(r.status, corpo) };
+    },
+    estornar: depsPagamento().estornar,
   };
 }
