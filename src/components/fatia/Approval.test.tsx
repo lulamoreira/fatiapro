@@ -19,4 +19,8 @@ describe("peso na aprovação", () => {
     const p = prop([item("a", 156.1), item("b", 154.7)]);
     expect(totaisMarcados(p, new Set(["a", "b"])).gr).toBeCloseTo(153.5, 5);
   });
+  it("sem mudanças marcadas mantém os 157,3 g de partida", () => {
+    const p = prop([item("a", 156.1)]);
+    expect(totaisMarcados(p, new Set()).gr).toBeCloseTo(157.3, 5);
+  });
 });

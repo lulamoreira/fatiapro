@@ -109,7 +109,7 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
                   </span>
                   <span className="text-sm text-muted-foreground tabular">
                     {formatGramas(i.gramas)}
-                    {Math.abs(deltaGramas(i, proposta.partida?.gramas ?? 0)) >= 0.05 && ` (${deltaGramas(i, proposta.partida?.gramas ?? 0) > 0 ? "+" : ""}${formatGramas(deltaGramas(i, proposta.partida?.gramas ?? 0))})`}
+                    {deltaGramas(i, proposta.partida?.gramas ?? 0) !== 0 && ` (${deltaGramas(i, proposta.partida?.gramas ?? 0) > 0 ? "+" : "−"}${formatGramas(Math.abs(deltaGramas(i, proposta.partida?.gramas ?? 0)))})`}
                   </span>
                   {imp && <Tag tone={imp.tone}>{imp.label}</Tag>}
                 </div>
