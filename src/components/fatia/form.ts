@@ -114,6 +114,7 @@ interface OpcoesSalvas {
   finalidades?: unknown;
   prioridades?: unknown;
   gramas_restantes?: unknown;
+  quantidade?: unknown;
   preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
