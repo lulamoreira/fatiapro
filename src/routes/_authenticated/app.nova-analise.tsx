@@ -85,7 +85,7 @@ const PONTE_MINIMA_PRODUCAO = "0.3.19";
 
 /** First section with a validation error, in screen order. */
 const SECAO_DO_ERRO = (k: string) =>
-  k === "roteiro" ? "sec-1" : k === "peca" ? "sec-2" : ["fatiador", "impressora", "filamento", "tempBico", "tempMesa"].includes(k) ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
+  k === "roteiro" ? "sec-1" : ["fatiador", "impressora", "filamento", "tempBico", "tempMesa"].includes(k) ? "sec-2" : k === "peca" ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
 const ORDEM = ["sec-1", "sec-2", "sec-3", "sec-3b", "sec-4", "sec-motor"];
 
 function NovaAnalise() {
@@ -460,33 +460,69 @@ function NovaAnalise() {
             )}
           </Secao>
 
-          <Secao id="sec-2" n={2} ok={s2ok} titulo={`Peça${preco ? " (opcional)" : ""}`} subtitulo=".stl, .3mf, .step ou .stp · até 100 MB">
-            {arquivo || pecaBib ? (
-              <div className="flex items-center gap-3 rounded-2xl bg-primary/7 p-3">
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm"><FileBox className="size-7 text-primary-ink" aria-hidden /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{arquivo ? arquivo.name : pecaBib!.nome}</span>
-                  <span className="block text-xs text-muted-foreground">{arquivo ? `${(arquivo.size / 1048576).toFixed(1)} MB` : "da biblioteca"}</span>
-                </span>
-                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>Trocar</Button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => fileRef.current?.click()} onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files[0]); }}
-                className={cn("flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/7 p-8 text-center transition-colors hover:border-primary", f.usarAberta && "opacity-60")}>
-                <Upload className="size-7 text-primary-ink" aria-hidden />
-                <span className="text-sm font-medium">Arraste o arquivo aqui ou clique para escolher</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept=".stl,.3mf,.step,.stp" className="hidden" onChange={(e) => escolherArquivo(e.target.files?.[0])} />
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" aria-pressed={f.usarAberta} className={cn(f.usarAberta && "border-primary text-primary-ink")} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); setPecaBib(null); }}>
-                {f.usarAberta && <CheckCircle2 className="size-4" />}Usar a peça aberta no fatiador
-              </Button>
-              <BibliotecaPicker selected={!!pecaBib} onPick={(p) => { setPecaBib(p); setArquivo(null); set("usarAberta", false); }} />
+          <Secao id="sec-2" n={2} ok={s3ok} titulo="Impressora e material" subtitulo="Só aparece o que foi encontrado no seu computador.">
+            <div className="space-y-1.5">
+              <Label>Fatiador{preco ? " (opcional)" : ""}</Label>
+              {fatOpts.length === 0 ? (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed p-4">
+                  <p className="text-sm text-muted-foreground">Conecte um computador para escolher o fatiador</p>
+                  <Button asChild size="sm" variant="outline"><Link to="/app/configuracoes">Configurações</Link></Button>
+                </div>
+              ) : (
+                <Segmented label="Fatiador" className={cn(!f.fatiador && "animate-destaque-azul")} options={fatOpts} value={f.fatiador} onChange={(v) => setF((p) => ({ ...p, fatiador: v, impressora: null, filMarca: null, filLinha: null }))} />
+              )}
+              {erros.fatiador && <Erro>{erros.fatiador}</Erro>}
             </div>
-            <PecaAbertaAviso usarAberta={f.usarAberta} fatiador={fatLabel} sistema={device?.sistema} />
-            {erros.peca && <Erro>{erros.peca}</Erro>}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="space-y-1.5">
+                <Label>Impressora</Label>
+                <Combobox label="Impressora" options={rotulosModelo} value={modeloAtual ? rotuloDe(modeloAtual) : null} onChange={escolherModelo}
+                  placeholder={f.fatiador ? (impOpc.modelos.length ? "Escolha a impressora" : "Nenhuma impressora encontrada") : "Escolha o fatiador acima"} disabled={!impOpc.modelos.length} />
+                {f.fatiador && !impOpc.filtrado && impOpc.modelos.length > 0 && device && (
+                  <Link to="/app/configuracoes" hash={`imp-${device.id}`} className="text-xs font-medium text-primary underline-offset-2 hover:underline">Escolher minhas impressoras</Link>
+                )}
+                {erros.impressora && <Erro>{erros.impressora}</Erro>}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Bico</Label>
+                {grupoModelo && !(grupoModelo.bicos.length === 1 && grupoModelo.bicos[0]!.bico === SEM_BICO) ? (
+                  <Segmented label="Bico" options={grupoModelo.bicos.map((b) => ({ id: b.perfil, label: `${b.bico} mm` }))} value={f.impressora ?? ""}
+                    onChange={(v) => { const b = grupoModelo.bicos.find((x) => x.perfil === v); if (b) setF((p) => ({ ...p, impressora: b.perfil, bico: b.bico })); }} />
+                ) : (
+                  <Segmented label="Bico" options={BICOS.map((b) => ({ id: String(b), label: `${b} mm` }))} value={String(f.bico)} onChange={(v) => set("bico", BICOS.find((b) => String(b) === v) ?? f.bico)} />
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Filamento</Label>
+                <Segmented label="Tipo de filamento" options={TIPOS_FILAMENTO.map((t) => ({ id: t, label: t }))} value={f.filTipo} onChange={(t) => setF((p) => ({ ...p, filTipo: t, filMarca: null, filLinha: null }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Marca</Label>
+                <Combobox label="Marca" value={f.filMarca} criarComo="marca" disabled={!f.fatiador || !f.filTipo}
+                  placeholder={!f.fatiador ? "Escolha o fatiador acima" : f.filTipo ? "Escolha a marca" : "Escolha o tipo primeiro"}
+                  groups={f.fatiador ? [{ options: [MARCA_GENERICA] }, { titulo: `Com perfil no ${fatNome}`, options: grupos.perfil }, { titulo: "Outras marcas", options: grupos.outras }] : []}
+                  onChange={(m) => setF((p) => ({ ...p, filMarca: m, filLinha: m === MARCA_GENERICA ? p.filTipo : null }))} />
+                {f.filMarca && grupo === "perfil" && <p className="text-xs font-medium text-success-ink">Perfil encontrado no {fatNome}.</p>}
+                {f.filMarca && grupo === "outras" && (
+                  <div className="space-y-2 rounded-xl bg-primary/10 p-3">
+                    <p className="text-xs text-primary-ink">O {fatNome} não tem perfil desta marca. Vamos usar o perfil {f.filTipo} genérico. Se quiser, informe as temperaturas do rótulo do rolo:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <TempCampo label="Bico °C" value={f.tempBico} erro={erros.tempBico} onChange={(v) => set("tempBico", v)} />
+                      <TempCampo label="Mesa °C" value={f.tempMesa} erro={erros.tempMesa} onChange={(v) => set("tempMesa", v)} />
+                    </div>
+                  </div>
+                )}
+                {f.filMarca && (
+                  <>
+                    <Label className="pt-1">Linha</Label>
+                    <Combobox label="Linha" options={linhas} value={f.filLinha} placeholder="Escolha a linha" criarComo={grupo === "outras" ? "linha" : undefined} onChange={(l) => set("filLinha", l)} />
+                  </>
+                )}
+              </div>
+            </div>
+            {erros.filamento && <Erro>{erros.filamento}</Erro>}
           </Secao>
 
           <Secao id="sec-3" n={3} ok={s3ok} titulo="Impressora e material" subtitulo="Só aparece o que foi encontrado no seu computador.">
