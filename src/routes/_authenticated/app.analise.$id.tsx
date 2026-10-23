@@ -257,6 +257,10 @@ function AnalisePage() {
         )}
       </header>
 
+      {arquivo && (
+        <ArquivoCard arquivoLocal={arquivo.arquivoLocal} pastaLocal={arquivo.pastaLocal} confirmacao={confirmacaoAcao} disabled={enviar.isPending} onAcao={acao} />
+      )}
+
       {mostrarTrabalhando && (
         <WorkingCard
           ref={workingRef}
@@ -319,10 +323,6 @@ function AnalisePage() {
           onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
         />
       ))}
-
-      {arquivo && (
-        <ArquivoCard arquivoLocal={arquivo.arquivoLocal} pastaLocal={arquivo.pastaLocal} confirmacao={confirmacaoAcao} disabled={enviar.isPending} onAcao={acao} />
-      )}
 
       {resultado && <Result c={resultado.conteudo as unknown as ResultadoConteudo} motor={job.motor} custo={job.custo_real} />}
       {resultado && estado === "concluido" && job.roteiro === "preco" && <GerarOrcamento jobId={job.id} nomePeca={job.nome_peca} conteudo={resultado.conteudo} />}
