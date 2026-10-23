@@ -257,6 +257,10 @@ function AnalisePage() {
         )}
       </header>
 
+      {arquivo && (
+        <ArquivoCard arquivoLocal={arquivo.arquivoLocal} pastaLocal={arquivo.pastaLocal} confirmacao={confirmacaoAcao} disabled={enviar.isPending} onAcao={acao} />
+      )}
+
       {mostrarTrabalhando && (
         <WorkingCard
           ref={workingRef}
