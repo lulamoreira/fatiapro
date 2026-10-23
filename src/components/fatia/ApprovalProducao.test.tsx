@@ -53,15 +53,10 @@ describe("ApprovalProducao", () => {
   });
 
   it('a linha "Para X peças" só aparece com quantidade', () => {
-    const { unmount } = render(prop([item("a", true)], 20));
+    const r = render(<ApprovalProducao proposta={prop([item("a", true)], 20)} disabled={false} onAprovar={() => {}} onPedirOutra={() => {}} onCancelar={() => {}} />);
     expect(screen.getByText(/Para 20 peças:/)).toBeInTheDocument();
-    unmount();
+    r.unmount();
     renderA(prop([item("a", true)], null));
     expect(screen.queryByText(/Para \d+ peças:/)).not.toBeInTheDocument();
   });
 });
-
-// render helper usado no teste de quantidade sem onAprovar
-function render(p: PropostaProducao) {
-  return renderA(p);
-}
