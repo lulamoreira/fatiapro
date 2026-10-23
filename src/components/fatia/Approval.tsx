@@ -23,7 +23,7 @@ export interface Proposta {
   observacao?: string;
 }
 
-const IMPACTO: Record<string, { label: string; tone: Tone }> = {
+export const IMPACTO: Record<string, { label: string; tone: Tone }> = {
   nenhum: { label: "Nenhum", tone: "success" },
   pequeno: { label: "Pequeno", tone: "warning" },
   visivel: { label: "Visível", tone: "destructive" },
