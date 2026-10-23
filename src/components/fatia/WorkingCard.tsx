@@ -14,6 +14,8 @@ const TITULOS: Record<Fase, string> = {
 
 export interface WorkingCardProps {
   fase: Fase;
+  /** Roteiro do job — "producao" troca o aviso de tempo. */
+  roteiro?: string | null;
   ultimaMensagem: string | null;
   /** Progress messages already finished in this phase (oldest first). */
   feitos?: string[];
@@ -35,7 +37,7 @@ function cronometro(ms: number): string {
 }
 
 export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function WorkingCard(
-  { fase, ultimaMensagem, feitos = [], desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
+  { fase, roteiro, ultimaMensagem, feitos = [], desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
   ref,
 ) {
   const sinalS = ultimoContatoMs != null ? Math.max(0, Math.floor((now - ultimoContatoMs) / 1000)) : null;
@@ -85,8 +87,10 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
 
       {(fase === "analisando" || fase === "outra") && (
         <p className="mt-4 rounded-xl bg-card/60 p-3 text-xs text-muted-foreground">
-          Uma análise costuma levar de 1 a 5 minutos (peças muito grandes ou detalhadas podem levar mais), porque o fatiador testa cada mudança de verdade.
-          Pode sair desta tela: a análise continua no seu computador e fica salva no Histórico.
+          {roteiro === "producao"
+            ? "A produção em lote costuma levar de 3 a 15 minutos: o fatiador arruma a mesa em cada posição da peça e fatia a placa cheia das melhores."
+            : "Uma análise costuma levar de 1 a 5 minutos (peças muito grandes ou detalhadas podem levar mais), porque o fatiador testa cada mudança de verdade."}
+          {" "}Pode sair desta tela: a análise continua no seu computador e fica salva no Histórico.
         </p>
       )}
 

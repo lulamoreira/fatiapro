@@ -29,6 +29,7 @@ import { podeMostrarAnimo } from "@/lib/frases-animo";
 import { ArquivoCard, arquivoDoResultado, avisoAcao, type AcaoArquivo } from "@/components/fatia/ArquivoCard";
 import { Tag } from "@/components/fatia/Chip";
 import { Approval, type Proposta } from "@/components/fatia/Approval";
+import { ApprovalProducao } from "@/components/fatia/ApprovalProducao";
 import { Result, type ResultadoConteudo } from "@/components/fatia/Result";
 import { GerarOrcamento } from "@/components/fatia/GerarOrcamento";
 import { Button } from "@/components/ui/button";
@@ -260,6 +261,7 @@ function AnalisePage() {
         <WorkingCard
           ref={workingRef}
           fase={fase}
+          roteiro={job.roteiro}
           ultimaMensagem={ultimaMensagem}
           feitos={feitos}
           desdeMs={desde}
@@ -298,7 +300,16 @@ function AnalisePage() {
         )}
       </section>
 
-      {mostrarAprovacao && prop && (
+      {mostrarAprovacao && prop && (job.roteiro === "producao" ? (
+        <ApprovalProducao
+          key={prop.ev.id}
+          proposta={prop.ev.conteudo as unknown as Proposta}
+          disabled={enviar.isPending}
+          onAprovar={aprovar}
+          onPedirOutra={pedirOutra}
+          onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
+        />
+      ) : (
         <Approval
           key={prop.ev.id}
           proposta={prop.ev.conteudo as unknown as Proposta}
@@ -307,7 +318,7 @@ function AnalisePage() {
           onPedirOutra={pedirOutra}
           onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
         />
-      )}
+      ))}
 
       {arquivo && (
         <ArquivoCard arquivoLocal={arquivo.arquivoLocal} pastaLocal={arquivo.pastaLocal} confirmacao={confirmacaoAcao} disabled={enviar.isPending} onAcao={acao} />
