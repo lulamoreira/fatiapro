@@ -1,5 +1,6 @@
 import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { formatDuracao, formatGramas, formatUSD } from "@/lib/fatia";
+import { formatDuracao, formatGramas } from "@/lib/fatia";
+import { CustoReal } from "./CustoReal";
 
 export interface ResultadoConteudo {
   final?: { segundos?: number; gramas?: number };
@@ -12,7 +13,6 @@ export interface ResultadoConteudo {
 }
 
 export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: string; custo: unknown }) {
-  const usd = (custo as { usd?: number } | null)?.usd;
   const prod = c.producao;
   const porPeca = prod && prod.copias > 0 && typeof c.final?.segundos === "number" ? c.final.segundos / prod.copias : null;
   return (
@@ -35,10 +35,7 @@ export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: strin
             <p className="text-sm text-muted-foreground tabular">{formatGramas(c.final.gramas)}</p>
           </div>
         )}
-        <div className="rounded-2xl border bg-card p-4">
-          <p className="text-xs font-medium text-muted-foreground">Custo real</p>
-          <p className="mt-1 font-display text-xl font-bold tabular">{motor === "assinatura" ? "uso do plano" : typeof usd === "number" ? formatUSD(usd) : "—"}</p>
-        </div>
+        <CustoReal motor={motor} custo={custo} />
       </div>
 
       {c.tabela && c.tabela.colunas?.length > 0 && (
