@@ -85,7 +85,7 @@ const PONTE_MINIMA_PRODUCAO = "0.3.19";
 
 /** First section with a validation error, in screen order. */
 const SECAO_DO_ERRO = (k: string) =>
-  k === "roteiro" ? "sec-1" : k === "peca" ? "sec-2" : ["fatiador", "impressora", "filamento", "tempBico", "tempMesa"].includes(k) ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
+  k === "roteiro" ? "sec-1" : ["fatiador", "impressora", "filamento", "tempBico", "tempMesa"].includes(k) ? "sec-2" : k === "peca" ? "sec-3" : k === "motor" || k === "device" ? "sec-motor" : "sec-3b";
 const ORDEM = ["sec-1", "sec-2", "sec-3", "sec-3b", "sec-4", "sec-motor"];
 
 function NovaAnalise() {
@@ -460,36 +460,7 @@ function NovaAnalise() {
             )}
           </Secao>
 
-          <Secao id="sec-2" n={2} ok={s2ok} titulo={`Peça${preco ? " (opcional)" : ""}`} subtitulo=".stl, .3mf, .step ou .stp · até 100 MB">
-            {arquivo || pecaBib ? (
-              <div className="flex items-center gap-3 rounded-2xl bg-primary/7 p-3">
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm"><FileBox className="size-7 text-primary-ink" aria-hidden /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{arquivo ? arquivo.name : pecaBib!.nome}</span>
-                  <span className="block text-xs text-muted-foreground">{arquivo ? `${(arquivo.size / 1048576).toFixed(1)} MB` : "da biblioteca"}</span>
-                </span>
-                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>Trocar</Button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => fileRef.current?.click()} onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files[0]); }}
-                className={cn("flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/7 p-8 text-center transition-colors hover:border-primary", f.usarAberta && "opacity-60")}>
-                <Upload className="size-7 text-primary-ink" aria-hidden />
-                <span className="text-sm font-medium">Arraste o arquivo aqui ou clique para escolher</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept=".stl,.3mf,.step,.stp" className="hidden" onChange={(e) => escolherArquivo(e.target.files?.[0])} />
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" aria-pressed={f.usarAberta} className={cn(f.usarAberta && "border-primary text-primary-ink")} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); setPecaBib(null); }}>
-                {f.usarAberta && <CheckCircle2 className="size-4" />}Usar a peça aberta no fatiador
-              </Button>
-              <BibliotecaPicker selected={!!pecaBib} onPick={(p) => { setPecaBib(p); setArquivo(null); set("usarAberta", false); }} />
-            </div>
-            <PecaAbertaAviso usarAberta={f.usarAberta} fatiador={fatLabel} sistema={device?.sistema} />
-            {erros.peca && <Erro>{erros.peca}</Erro>}
-          </Secao>
-
-          <Secao id="sec-3" n={3} ok={s3ok} titulo="Impressora e material" subtitulo="Só aparece o que foi encontrado no seu computador.">
+          <Secao id="sec-2" n={2} ok={s3ok} titulo="Impressora e material" subtitulo="Só aparece o que foi encontrado no seu computador.">
             <div className="space-y-1.5">
               <Label>Fatiador{preco ? " (opcional)" : ""}</Label>
               {fatOpts.length === 0 ? (
@@ -552,6 +523,35 @@ function NovaAnalise() {
               </div>
             </div>
             {erros.filamento && <Erro>{erros.filamento}</Erro>}
+          </Secao>
+
+          <Secao id="sec-3" n={3} ok={s2ok} titulo={`Peça${preco ? " (opcional)" : ""}`} subtitulo=".stl, .3mf, .step ou .stp · até 100 MB">
+            {arquivo || pecaBib ? (
+              <div className="flex items-center gap-3 rounded-2xl bg-primary/7 p-3">
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm"><FileBox className="size-7 text-primary-ink" aria-hidden /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{arquivo ? arquivo.name : pecaBib!.nome}</span>
+                  <span className="block text-xs text-muted-foreground">{arquivo ? `${(arquivo.size / 1048576).toFixed(1)} MB` : "da biblioteca"}</span>
+                </span>
+                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>Trocar</Button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileRef.current?.click()} onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files[0]); }}
+                className={cn("flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/7 p-8 text-center transition-colors hover:border-primary", f.usarAberta && "opacity-60")}>
+                <Upload className="size-7 text-primary-ink" aria-hidden />
+                <span className="text-sm font-medium">Arraste o arquivo aqui ou clique para escolher</span>
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept=".stl,.3mf,.step,.stp" className="hidden" onChange={(e) => escolherArquivo(e.target.files?.[0])} />
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" aria-pressed={f.usarAberta} className={cn(f.usarAberta && "border-primary text-primary-ink")} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); setPecaBib(null); }}>
+                {f.usarAberta && <CheckCircle2 className="size-4" />}Usar a peça aberta no fatiador
+              </Button>
+              <BibliotecaPicker selected={!!pecaBib} onPick={(p) => { setPecaBib(p); setArquivo(null); set("usarAberta", false); }} />
+            </div>
+            <PecaAbertaAviso usarAberta={f.usarAberta} fatiador={fatLabel} sistema={device?.sistema} />
+            {erros.peca && <Erro>{erros.peca}</Erro>}
           </Secao>
 
           {f.roteiro === "producao" && (
