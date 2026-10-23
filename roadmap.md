@@ -1,4 +1,5 @@
 # Marca FatiaProAI
+- [ ] Exibir custo do resultado em reais por padrão, com seleção de moeda e câmbio ajustável; testar conversão e controles.
 - [x] Adicionar botão Admin com confirmação; RPC restrita à própria conta e auditada; testes SQL de permissões/isolamento e quatro testes de interface passaram; diálogo conferido no navegador sem alterar o aceite real.
 - [x] Corrigir as referências legais cortadas nas seções 4 e 8; nenhuma outra seção afetada.
 - [x] Conferir o gatilho de cadastro e restringir aceite à versão 1.0; teste SQL com quatro casos e sete testes de termos/modal passaram.
