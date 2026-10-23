@@ -5,11 +5,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign } from "lucide-react";
+import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { criarAnalise } from "@/lib/analise.functions";
 import { usePlano } from "@/hooks/use-plano";
 import { erroAnalise, linhaUso, motoresVisiveis, ponteDesatualizada, roteiroComCredito, usaTeste, DIAS_TESTE, type ErroAnalise } from "@/lib/plano";
+import { compararVersao } from "@/lib/ponte";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
 import { Questionario } from "@/components/fatia/Questionario";
 import { PecaAbertaAviso } from "@/components/fatia/PecaAberta";
@@ -76,7 +77,11 @@ const ROTEIRO_CARDS = [
   { id: "reduzir_tempo", titulo: "Reduzir tempo", linha: "Sem piorar o que o cliente vê", icon: Timer, tone: "orange" },
   { id: "checklist", titulo: "Conferir antes de imprimir", linha: "Checklist com ok e atenção", icon: ListChecks, tone: "green" },
   { id: "preco", titulo: "Preço de venda", linha: "Custos e três sugestões de preço", icon: BadgeDollarSign, tone: "purple" },
+  { id: "producao", titulo: "Produção em lote", linha: "Encher a mesa com o máximo de peças", icon: LayoutGrid, tone: "blue" },
 ] as const;
+
+/** Produção em lote exige a ponte 0.3.19 (arrumação da mesa no computador). */
+const PONTE_MINIMA_PRODUCAO = "0.3.19";
 
 /** First section with a validation error, in screen order. */
 const SECAO_DO_ERRO = (k: string) =>
@@ -127,6 +132,8 @@ function NovaAnalise() {
   const premiumTravado = !!plano && usaTeste(plano);
   const premium = premiumPossivel && !premiumTravado && premiumOn;
   const ponteVelha = !!device && usaFatiaPro && ponteDesatualizada(device.versao_ponte);
+  const ponteVelhaProducao = f.roteiro === "producao" && !!device && compararVersao(device.versao_ponte, PONTE_MINIMA_PRODUCAO) < 0;
+  const ponteBloqueia = ponteVelha || ponteVelhaProducao;
   const uso = plano ? linhaUso(plano, f.roteiro, premium) : null;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
@@ -265,7 +272,7 @@ function NovaAnalise() {
       if (el && el.offsetParent !== null) el.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    if (ponteVelha) return;
+    if (ponteBloqueia) return;
     setEnviando(true);
     setErroCriar(null);
     try {
@@ -376,8 +383,9 @@ function NovaAnalise() {
         </div>
       ) : <CostCard roteiro={f.roteiro} motor={f.motor} premium={premium} />}
       {ponteVelha && <p className="rounded-2xl bg-primary/10 p-3 text-xs text-primary-ink" role="status">Atualizando a ponte… a análise fica disponível em instantes</p>}
+      {ponteVelhaProducao && <p className="rounded-2xl bg-primary/10 p-3 text-xs text-primary-ink" role="status">Atualize a ponte FatiaPro para usar Produção em lote (versão 0.3.19 ou mais nova).</p>}
       {erroCriar && <ErroAnaliseAviso erro={erroCriar} onQuestionario={() => setQuestJob(pendente)} />}
-      <Button size="lg" className="w-full" onClick={analisar} disabled={enviando || ponteVelha}>{enviando ? "Enviando…" : <>Analisar peça <ArrowRight className="size-4" /></>}</Button>
+      <Button size="lg" className="w-full" onClick={analisar} disabled={enviando || ponteBloqueia}>{enviando ? "Enviando…" : <>Analisar peça <ArrowRight className="size-4" /></>}</Button>
       <Button variant="ghost" size="sm" className="w-full" onClick={salvarModelo}><BookmarkPlus className="size-4" />Salvar como modelo</Button>
       <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="size-4 text-success" aria-hidden />Nada é enviado para a impressora</p>
     </div>
@@ -426,6 +434,7 @@ function NovaAnalise() {
                 return (
                   <button key={r.id} type="button" role="radio" aria-checked={on} onClick={() => set("roteiro", r.id)}
                     className={cn("lift relative flex items-start gap-3 rounded-2xl border-2 p-4 text-left",
+                      r.id === "producao" && "sm:col-span-2",
                       on ? "border-primary bg-primary/8 shadow-aqua" : "border-border bg-card shadow-sm")}>
                     <IconTile tone={r.tone}><r.icon /></IconTile>
                     <span className="min-w-0 pr-5"><span className="block font-semibold">{r.titulo}</span><span className="block text-xs text-muted-foreground">{r.linha}</span></span>
@@ -545,6 +554,21 @@ function NovaAnalise() {
             {erros.filamento && <Erro>{erros.filamento}</Erro>}
           </Secao>
 
+          {f.roteiro === "producao" && (
+            <Secao id="sec-3b" n="3b" ok={false} titulo="Produção" subtitulo="Quantas peças entram em cada placa.">
+              <div className="max-w-xs space-y-1.5">
+                <Label htmlFor="prod-qtd">Quantas peças você precisa? (opcional)</Label>
+                <Input id="prod-qtd" type="number" min={1} max={5000} step={1} inputMode="numeric" placeholder="Vazio = encher uma placa"
+                  value={f.prodQuantidade} onChange={(e) => set("prodQuantidade", e.target.value)} aria-invalid={!!erros.prodQuantidade} />
+                {erros.prodQuantidade && <Erro>{erros.prodQuantidade}</Erro>}
+                <p className="text-xs text-muted-foreground">Deixe vazio para encher uma placa. Com quantidade, o arquivo sai com as placas necessárias (até 30 placas; acima disso, repita as placas cheias).</p>
+              </div>
+              <p className="rounded-2xl border border-primary/30 bg-primary/8 p-4 text-sm text-primary-ink" role="note">
+                Deixe no projeto só a peça (ou o conjunto de peças) que você quer produzir, numa placa só. A FatiaPro multiplica o que está nela.
+              </p>
+            </Secao>
+          )}
+
           {(f.roteiro === "checklist" || preco) && (
             <Secao id="sec-3b" n="3b" ok={false} titulo={preco ? "Dados para o preço" : "Material no rolo"} subtitulo={preco ? "Custos para calcular as sugestões." : "Para conferir se o filamento basta."}>
               {f.roteiro === "checklist" && (
@@ -585,7 +609,7 @@ function NovaAnalise() {
               <ChevronUp className="ml-auto size-4 text-muted-foreground" aria-hidden />
             </button>
           </SheetTrigger>
-          <Button onClick={analisar} disabled={enviando || ponteVelha}>{enviando ? "Enviando…" : "Analisar peça"}</Button>
+          <Button onClick={analisar} disabled={enviando || ponteBloqueia}>{enviando ? "Enviando…" : "Analisar peça"}</Button>
         </div>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-[22px]">
           <SheetTitle className="sr-only">Resumo</SheetTitle>

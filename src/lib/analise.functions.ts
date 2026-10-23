@@ -10,13 +10,20 @@ import { parametrosCriarAnalise } from "@/lib/analise-params";
 
 const Entrada = z.object({
   device_id: z.string().uuid(),
-  roteiro: z.enum(["config_geral", "reduzir_tempo", "checklist", "preco"]),
+  roteiro: z.enum(["config_geral", "reduzir_tempo", "checklist", "preco", "producao"]),
   fatiador: z.string().regex(/^[a-z0-9_-]{2,40}$/).nullable(),
   opcoes: z.record(z.string(), z.unknown()).default({}),
   motor: z.enum(["fatiapro", "api", "assinatura"]),
   premium: z.boolean().default(false),
   arquivo_path: z.string().max(500).nullable(),
   nome_peca: z.string().max(300).nullable(),
+}).superRefine((d, ctx) => {
+  // Produção em lote: opcoes.quantidade opcional, inteiro de 1 a 5000.
+  const q = d.opcoes["quantidade"];
+  if (q == null) return;
+  if (typeof q !== "number" || !Number.isInteger(q) || q < 1 || q > 5000) {
+    ctx.addIssue({ code: "custom", message: "quantidade deve ser um inteiro de 1 a 5000", path: ["opcoes", "quantidade"] });
+  }
 });
 
 export type CriarAnaliseResultado =

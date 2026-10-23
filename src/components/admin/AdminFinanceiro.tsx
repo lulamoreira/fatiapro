@@ -15,7 +15,7 @@ import { AssinaturaObrigatoria } from "./AssinaturaObrigatoria";
 
 type P = "hoje" | "7d" | "30d";
 const PERIODOS: { id: P; label: string }[] = [{ id: "hoje", label: "Hoje" }, { id: "7d", label: "7 dias" }, { id: "30d", label: "30 dias" }];
-const ROTEIROS: [string, string][] = [["reduzir_tempo", "Reduzir tempo"], ["config_geral", "Configuração geral"], ["checklist", "Checklist"], ["preco", "Preço"]];
+const ROTEIROS: [string, string][] = [["reduzir_tempo", "Reduzir tempo"], ["config_geral", "Configuração geral"], ["checklist", "Checklist"], ["preco", "Preço"], ["producao", "Produção em lote"]];
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const usd = (v: number | null) => (v == null ? "—" : formatUSD(v));
 

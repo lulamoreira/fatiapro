@@ -6,7 +6,7 @@
  */
 export interface CriarAnaliseEntrada {
   device_id: string;
-  roteiro: "config_geral" | "reduzir_tempo" | "checklist" | "preco";
+  roteiro: "config_geral" | "reduzir_tempo" | "checklist" | "preco" | "producao";
   fatiador: string | null;
   opcoes: Record<string, unknown>;
   motor: "fatiapro" | "api" | "assinatura";

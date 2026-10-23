@@ -7,6 +7,7 @@ export const ROTEIRO_MENU: Record<string, string> = {
   reduzir_tempo: "Reduzir tempo",
   checklist: "Conferir antes de imprimir",
   preco: "Preço de venda",
+  producao: "Produção em lote",
 };
 
 export interface ResumoPedido { roteiro: string; chips: string[] }

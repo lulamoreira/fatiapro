@@ -31,6 +31,8 @@ export interface FormState {
   prioridades: string[];
   gramasRestantes: string;
   preco: PrecoCampos;
+  /** Produção em lote: quantas peças (vazio = encher uma placa). */
+  prodQuantidade: string;
   motor: Motor | null;
 }
 
@@ -50,6 +52,7 @@ export const FORM_INICIAL: FormState = {
   prioridades: [],
   gramasRestantes: "",
   preco: { precoRolo: "", pesoRolo: "1", consumoW: "", kwh: "", minAcabamento: "", rsHora: "", quantidade: "1", taxaFalha: "10", gramas: null, segundos: null },
+  prodQuantidade: "",
   motor: null,
 };
 
@@ -72,6 +75,7 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
     finalidades: f.finalidades,
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
+    ...(f.roteiro === "producao" && num(f.prodQuantidade) != null ? { quantidade: num(f.prodQuantidade) } : {}),
     ...(f.roteiro === "preco"
       ? {
           preco: {
@@ -110,6 +114,7 @@ interface OpcoesSalvas {
   finalidades?: unknown;
   prioridades?: unknown;
   gramas_restantes?: unknown;
+  quantidade?: unknown;
   preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -139,6 +144,7 @@ export function fromOpcoes(
     finalidades: strArr(o.finalidades),
     prioridades: strArr(o.prioridades).slice(0, 2),
     gramasRestantes: str(o.gramas_restantes),
+    prodQuantidade: str(o.quantidade),
     preco: {
       precoRolo: str(p.preco_rolo_brl),
       pesoRolo: str(p.peso_rolo_kg ?? 1),
@@ -154,7 +160,7 @@ export function fromOpcoes(
   };
 }
 
-export type ErroKey = "device" | "roteiro" | "fatiador" | "peca" | "impressora" | "filamento" | "motor" | "gramasRestantes" | "tempBico" | "tempMesa" | keyof PrecoCampos;
+export type ErroKey = "device" | "roteiro" | "fatiador" | "peca" | "impressora" | "filamento" | "motor" | "gramasRestantes" | "prodQuantidade" | "tempBico" | "tempMesa" | keyof PrecoCampos;
 export type Erros = Partial<Record<ErroKey, string>>;
 
 export function validar(f: FormState, temArquivo: boolean): Erros {
@@ -173,6 +179,10 @@ export function validar(f: FormState, temArquivo: boolean): Erros {
   if (fora(f.tempMesa, TEMP_MESA)) e.tempMesa = `Entre ${TEMP_MESA.min} e ${TEMP_MESA.max} °C`;
   if (!f.motor) e.motor = "Escolha o motor.";
   if (f.roteiro === "checklist" && !(Number(f.gramasRestantes) > 0)) e.gramasRestantes = "Informe as gramas restantes no rolo.";
+  if (f.roteiro === "producao" && f.prodQuantidade.trim() !== "") {
+    const q = num(f.prodQuantidade);
+    if (q == null || !Number.isInteger(q) || q < 1 || q > 5000) e.prodQuantidade = "Quantidade inteira entre 1 e 5000.";
+  }
   if (preco) {
     if (!(Number(f.preco.precoRolo.replace(",", ".")) > 0)) e.precoRolo = "Informe o preço do rolo.";
     if (!(Number(f.preco.pesoRolo.replace(",", ".")) > 0)) e.pesoRolo = "Informe o peso do rolo.";

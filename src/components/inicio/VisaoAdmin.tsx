@@ -10,7 +10,7 @@ export interface KpisAdmin {
   fila_parada: number; mp_problemas: number; pedidos_pendentes_1h: number; ponte_desatualizada: number;
   usuarios_total: number; usuarios_novos: number; usuarios_ativos: number; em_teste: number; pagantes: number; bloqueados: number;
   computadores_conectados: number; computadores_total: number; sem_computador: number;
-  analises: number; concluidas: number; erros: number; por_roteiro: Record<"config_geral" | "reduzir_tempo" | "checklist" | "preco", number>;
+  analises: number; concluidas: number; erros: number; por_roteiro: Record<"config_geral" | "reduzir_tempo" | "checklist" | "preco" | "producao", number>;
   receita_bruta: number; receita_liquida: number; pedidos_aprovados: number; custo_ia_usd: number; margem_brl: number;
   creditos_vendidos: number; creditos_consumidos: number; creditos_circulacao: number; creditos_vencendo_30d: number;
   cupons_resgatados: number; feedback_total: number; feedback_sentido: number; feedback_imprimiu: number; feedback_boa: number;
@@ -69,6 +69,7 @@ export function VisaoAdmin() {
             <Kpi pequeno rotulo="Reduzir tempo" link={linkAdmin("usuarios")} valor={n(k.por_roteiro.reduzir_tempo)} />
             <Kpi pequeno rotulo="Checklist" link={linkAdmin("usuarios")} valor={n(k.por_roteiro.checklist)} />
             <Kpi pequeno rotulo="Preço" link={linkAdmin("usuarios")} valor={n(k.por_roteiro.preco)} />
+            <Kpi pequeno rotulo="Produção em lote" link={linkAdmin("usuarios")} valor={n(k.por_roteiro.producao)} />
           </Secao>
           <Secao titulo="Dinheiro">
             <Kpi rotulo="Receita bruta" link={linkAdmin("financeiro")} valor={formatReais(Number(k.receita_bruta))} />

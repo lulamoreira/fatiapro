@@ -7,14 +7,28 @@ export interface ResultadoConteudo {
   riscos?: string[];
   itens_checklist?: { item: string; status: "ok" | "atencao"; detalhe?: string }[];
   conclusao?: string;
+  /** Só no roteiro "producao": totais do arquivo de produção. */
+  producao?: { copias: number; placas: number; gramas_total?: number };
 }
 
 export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: string; custo: unknown }) {
   const usd = (custo as { usd?: number } | null)?.usd;
+  const prod = c.producao;
+  const porPeca = prod && prod.copias > 0 && typeof c.final?.segundos === "number" ? c.final.segundos / prod.copias : null;
   return (
     <section className="space-y-5" aria-label="Resultado">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {c.final && (
+        {c.final && prod && (
+          <div className="rounded-2xl border border-success bg-success/10 p-4 sm:col-span-2">
+            <p className="text-xs font-medium text-muted-foreground">Arquivo de produção pronto</p>
+            <p className="mt-1 font-display text-3xl font-bold tabular">{prod.copias} peças em {prod.placas} {prod.placas === 1 ? "placa" : "placas"}</p>
+            <p className="text-sm text-muted-foreground tabular">
+              {formatDuracao(c.final.segundos)} e {formatGramas(c.final.gramas)} no total
+              {porPeca != null && ` · ${formatDuracao(porPeca)} por peça`}
+            </p>
+          </div>
+        )}
+        {c.final && !prod && (
           <div className="rounded-2xl border border-success bg-success/10 p-4 sm:col-span-2">
             <p className="text-xs font-medium text-muted-foreground">Resultado real</p>
             <p className="mt-1 font-display text-3xl font-bold tabular">{formatDuracao(c.final.segundos)}</p>
