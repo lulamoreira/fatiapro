@@ -1,6 +1,7 @@
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { formatDuracao, formatGramas } from "@/lib/fatia";
 import { CustoReal } from "./CustoReal";
+import { Tag } from "@/components/fatia/Chip";
 
 export interface ResultadoConteudo {
   final?: { segundos?: number; gramas?: number };
@@ -9,7 +10,7 @@ export interface ResultadoConteudo {
   itens_checklist?: { item: string; status: "ok" | "atencao"; detalhe?: string }[];
   conclusao?: string;
   /** Só no roteiro "producao": totais do arquivo de produção. */
-  producao?: { copias: number; placas: number; gramas_total?: number };
+  producao?: { copias: number; placas: number; gramas_total?: number; estimado?: boolean };
 }
 
 export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: string; custo: unknown }) {
@@ -25,6 +26,7 @@ export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: strin
             <p className="text-sm text-muted-foreground tabular">
               {formatDuracao(c.final.segundos)} e {formatGramas(c.final.gramas)} no total
               {porPeca != null && ` · ${formatDuracao(porPeca)} por peça`}
+              {prod.estimado === true && <Tag tone="muted" className="ml-1 align-middle">estimado</Tag>}
             </p>
           </div>
         )}
@@ -37,6 +39,13 @@ export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: strin
         )}
         <CustoReal motor={motor} custo={custo} />
       </div>
+
+      {prod?.estimado === true && (
+        <p role="note" className="flex items-start gap-2 rounded-2xl bg-warning/15 p-4 text-sm text-warning-ink">
+          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+          Tempo e filamento estimados: a peça é muito detalhada para fatiar a placa cheia de uma vez. O arquivo vai pronto para o fatiador, mas sem fatiar — ao abrir, clique em Fatiar para ver o tempo exato.
+        </p>
+      )}
 
       {c.tabela && c.tabela.colunas?.length > 0 && (
         <div className="overflow-x-auto rounded-2xl border bg-card">
