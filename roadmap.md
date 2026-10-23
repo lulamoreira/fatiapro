@@ -8,3 +8,4 @@
 - [x] Atualizar apenas textos visíveis, preservando assinatura administrativa e links.
 - [x] Adicionar e executar teste de textos TSX com exceções delimitadas (4 testes de marca passaram).
 - [x] Confirmar quantidade de textos alterados e resultado (8 textos; 36 testes passaram).
+- [x] Mostrar tag "estimado" e aviso no resultado da Produção em lote quando a ponte marca a placa como estimada; três testes novos e build OK.
