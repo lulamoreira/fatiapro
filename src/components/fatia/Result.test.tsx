@@ -5,7 +5,7 @@ import { Result, type ResultadoConteudo } from "./Result";
 const AVISO =
   "Tempo e filamento estimados: a peça é muito detalhada para fatiar a placa cheia de uma vez. O arquivo vai pronto para o fatiador, mas sem fatiar — ao abrir, clique em Fatiar para ver o tempo exato.";
 
-const conteudo = (producao: ResultadoConteudo["producao"]): ResultadoConteudo => ({
+const conteudo = (producao: NonNullable<ResultadoConteudo["producao"]>): ResultadoConteudo => ({
   final: { segundos: 7200, gramas: 300 },
   producao,
 });
