@@ -3,7 +3,7 @@
  * cost estimation. Pure functions — safe on client and server, unit-tested.
  */
 
-export type Roteiro = "config_geral" | "reduzir_tempo" | "checklist" | "preco";
+export type Roteiro = "config_geral" | "reduzir_tempo" | "checklist" | "preco" | "producao";
 /** Slicer id comes from the bridge report (^[a-z0-9_-]{2,40}$). */
 export type FatiadorId = string;
 export const FATIADOR_ID_RE = /^[a-z0-9_-]{2,40}$/;
@@ -23,6 +23,7 @@ export const ROTEIROS: { id: Roteiro; label: string }[] = [
   { id: "reduzir_tempo", label: "Reduzir tempo" },
   { id: "checklist", label: "Checklist antes de imprimir" },
   { id: "preco", label: "Preço de venda" },
+  { id: "producao", label: "Produção em lote" },
 ];
 
 export const FATIADORES: { id: FatiadorId; label: string }[] = [

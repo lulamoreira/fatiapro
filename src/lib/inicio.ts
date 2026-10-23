@@ -5,7 +5,7 @@
 
 export const ESTADOS_FILTRO = ["concluido", "aguardando_aprovacao", "em_andamento", "erro", "cancelado"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
-export const ROTEIROS_FILTRO = ["config_geral", "reduzir_tempo", "checklist", "preco", "otimizacao"] as const;
+export const ROTEIROS_FILTRO = ["config_geral", "reduzir_tempo", "checklist", "preco", "producao", "otimizacao"] as const;
 export type RoteiroFiltro = (typeof ROTEIROS_FILTRO)[number];
 export const PERIODOS_FILTRO = ["mes", "30d"] as const;
 export type PeriodoFiltro = (typeof PERIODOS_FILTRO)[number];
@@ -58,7 +58,7 @@ export function filtroHistorico(f: HistoricoSearch, agora = new Date()): { estad
 
 export const ROTULO_FILTRO: Record<string, string> = {
   concluido: "Concluídas", aguardando_aprovacao: "Esperando aprovação", em_andamento: "Em andamento", erro: "Com erro", cancelado: "Canceladas",
-  config_geral: "Configuração geral", reduzir_tempo: "Reduzir tempo", checklist: "Checklist", preco: "Preço de venda", otimizacao: "Otimizações",
+  config_geral: "Configuração geral", reduzir_tempo: "Reduzir tempo", checklist: "Checklist", preco: "Preço de venda", producao: "Produção em lote", otimizacao: "Otimizações",
   mes: "Este mês", "30d": "Últimos 30 dias", enviado: "Enviados", aprovado: "Aprovados", recusado: "Recusados",
 };
 

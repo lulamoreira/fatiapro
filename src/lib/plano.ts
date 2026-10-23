@@ -26,7 +26,7 @@ export interface PlanoInfo {
 export const DIAS_TESTE = 14;
 export const PONTE_MINIMA = "0.3.0";
 
-export const roteiroComCredito = (r: Roteiro | null | undefined) => r === "reduzir_tempo" || r === "config_geral";
+export const roteiroComCredito = (r: Roteiro | null | undefined) => r === "reduzir_tempo" || r === "config_geral" || r === "producao";
 export const custoCreditos = (premium: boolean) => (premium ? 2 : 1);
 
 /** Same order as criar_analise: cortesia de uso diário → créditos → teste grátis. */
