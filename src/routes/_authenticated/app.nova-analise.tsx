@@ -5,11 +5,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign } from "lucide-react";
+import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Bookmark, Check, CheckCircle2, ShieldCheck, Settings2, Timer, ListChecks, BadgeDollarSign, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { criarAnalise } from "@/lib/analise.functions";
 import { usePlano } from "@/hooks/use-plano";
 import { erroAnalise, linhaUso, motoresVisiveis, ponteDesatualizada, roteiroComCredito, usaTeste, DIAS_TESTE, type ErroAnalise } from "@/lib/plano";
+import { compararVersao } from "@/lib/ponte";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
 import { Questionario } from "@/components/fatia/Questionario";
 import { PecaAbertaAviso } from "@/components/fatia/PecaAberta";
@@ -76,7 +77,11 @@ const ROTEIRO_CARDS = [
   { id: "reduzir_tempo", titulo: "Reduzir tempo", linha: "Sem piorar o que o cliente vê", icon: Timer, tone: "orange" },
   { id: "checklist", titulo: "Conferir antes de imprimir", linha: "Checklist com ok e atenção", icon: ListChecks, tone: "green" },
   { id: "preco", titulo: "Preço de venda", linha: "Custos e três sugestões de preço", icon: BadgeDollarSign, tone: "purple" },
+  { id: "producao", titulo: "Produção em lote", linha: "Encher a mesa com o máximo de peças", icon: LayoutGrid, tone: "blue" },
 ] as const;
+
+/** Produção em lote exige a ponte 0.3.19 (arrumação da mesa no computador). */
+const PONTE_MINIMA_PRODUCAO = "0.3.19";
 
 /** First section with a validation error, in screen order. */
 const SECAO_DO_ERRO = (k: string) =>
@@ -127,6 +132,8 @@ function NovaAnalise() {
   const premiumTravado = !!plano && usaTeste(plano);
   const premium = premiumPossivel && !premiumTravado && premiumOn;
   const ponteVelha = !!device && usaFatiaPro && ponteDesatualizada(device.versao_ponte);
+  const ponteVelhaProducao = f.roteiro === "producao" && !!device && compararVersao(device.versao_ponte, PONTE_MINIMA_PRODUCAO) < 0;
+  const ponteBloqueia = ponteVelha || ponteVelhaProducao;
   const uso = plano ? linhaUso(plano, f.roteiro, premium) : null;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
 
