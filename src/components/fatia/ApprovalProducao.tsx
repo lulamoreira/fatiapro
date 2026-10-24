@@ -10,6 +10,7 @@ import { Tag } from "@/components/fatia/Chip";
 import { IMPACTO, type ApprovalProps, type PropostaItem } from "@/components/fatia/Approval";
 import { formatDuracao, formatGramas } from "@/lib/fatia";
 import { cn } from "@/lib/utils";
+import { MapaPlaca, type MapaPlacaDados } from "./MapaPlaca";
 
 export interface ProducaoInfo {
   quantidade: number | null;
@@ -29,6 +30,7 @@ export interface ItemProducao {
   altura_mm: number;
   balanco_pct: number;
   medido: boolean;
+  mapa?: MapaPlacaDados;
 }
 
 export interface PropostaItemProducao extends PropostaItem {
@@ -71,25 +73,29 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
         />
       </div>
 
+      {sel?.producao?.mapa && <MapaPlaca mapa={sel.producao.mapa} className="mx-auto" />}
+
       <div role="radiogroup" aria-label="Posição da peça" className="grid grid-cols-1 gap-3">
         {itens.map((i) => {
           const on = i.id === selecionado;
           const imp = i.impacto ? IMPACTO[i.impacto] : null;
           const pr = i.producao;
           return (
-            <button
+            <Button
               key={i.id}
               type="button"
+              variant="ghost"
               role="radio"
               aria-checked={on}
               disabled={disabled}
               onClick={() => setSelecionado(i.id)}
               className={cn(
-                "lift rounded-2xl border-2 p-4 text-left",
+                "lift block h-auto whitespace-normal rounded-2xl border-2 p-4 text-left",
                 on ? "border-primary bg-primary/8 shadow-aqua" : "border-border bg-card shadow-sm",
               )}
             >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {pr?.mapa && <MapaPlaca mapa={pr.mapa} miniatura />}
                 <span className="font-medium">{i.titulo}</span>
                 {imp && <Tag tone={imp.tone}>{imp.label}</Tag>}
                 {pr?.suporte && <Tag tone="primary">Com suporte em árvore</Tag>}
@@ -116,7 +122,7 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
               )}
               {i.motivo && <p className="mt-2 text-sm text-muted-foreground">{i.motivo}</p>}
               {i.rejeitado_motivo && <p className="mt-1 text-xs text-destructive">{i.rejeitado_motivo}</p>}
-            </button>
+            </Button>
           );
         })}
       </div>

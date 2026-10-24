@@ -2,6 +2,7 @@ import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { formatDuracao, formatGramas } from "@/lib/fatia";
 import { CustoReal } from "./CustoReal";
 import { Tag } from "@/components/fatia/Chip";
+import { MapaPlaca, type MapaPlacaDados } from "./MapaPlaca";
 
 export interface ResultadoConteudo {
   final?: { segundos?: number; gramas?: number };
@@ -10,7 +11,7 @@ export interface ResultadoConteudo {
   itens_checklist?: { item: string; status: "ok" | "atencao"; detalhe?: string }[];
   conclusao?: string;
   /** Só no roteiro "producao": totais do arquivo de produção. */
-  producao?: { copias: number; placas: number; gramas_total?: number; estimado?: boolean };
+  producao?: { copias: number; placas: number; gramas_total?: number; estimado?: boolean; mapa?: MapaPlacaDados };
 }
 
 export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: string; custo: unknown }) {
@@ -28,6 +29,7 @@ export function Result({ c, motor, custo }: { c: ResultadoConteudo; motor: strin
               {porPeca != null && ` · ${formatDuracao(porPeca)} por peça`}
               {prod.estimado === true && <Tag tone="muted" className="ml-1 align-middle">estimado</Tag>}
             </p>
+            {prod.mapa && <MapaPlaca mapa={prod.mapa} className="mx-auto mt-4" />}
           </div>
         )}
         {c.final && !prod && (
