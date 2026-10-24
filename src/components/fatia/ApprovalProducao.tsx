@@ -175,7 +175,7 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
   );
 }
 
-function Card({ t, a, b, nota, highlight }: { t: string; a: string; b: string; nota?: string; highlight?: boolean }) {
+function Card({ t, a, b, nota, highlight }: { t: string; a: string; b: string; nota?: string | undefined; highlight?: boolean }) {
   return (
     <div className={cn("rounded-2xl border p-4", highlight ? "border-primary bg-accent" : "bg-card")}>
       <p className="text-xs font-medium text-muted-foreground">{t}</p>
