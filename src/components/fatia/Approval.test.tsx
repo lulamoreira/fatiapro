@@ -24,3 +24,39 @@ describe("peso na aprovação", () => {
     expect(totaisMarcados(p, new Set()).gr).toBeCloseTo(157.3, 5);
   });
 });
+
+describe("suporte na aprovação", () => {
+  const renderA = (p: Proposta) =>
+    render(<Approval proposta={p} disabled={false} onAprovar={() => {}} onPedirOutra={() => {}} onCancelar={() => {}} />);
+
+  it("com suporte_g em partida e item mostra a tag, a nota e o delta em verde", () => {
+    const p = prop([item("a", 156.1)]);
+    p.partida.suporte_g = 13.5;
+    p.itens[0]!.suporte_g = 12;
+    renderA(p);
+    expect(screen.getByText("Suporte 12,0 g")).toBeInTheDocument();
+    expect(screen.getByText("dos quais 13,5 g de suporte")).toBeInTheDocument();
+    expect(screen.getByText("(−1,5 g)")).toBeInTheDocument();
+  });
+
+  it("suporte que aumenta mostra o delta em vermelho", () => {
+    const p = prop([item("a", 156.1)]);
+    p.partida.suporte_g = 10;
+    p.itens[0]!.suporte_g = 11.2;
+    renderA(p);
+    expect(screen.getByText("(+1,2 g)")).toBeInTheDocument();
+  });
+
+  it("sem suporte_g não mostra tag nem nota", () => {
+    renderA(prop([item("a", 156.1)]));
+    expect(screen.queryByText(/Suporte \d/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/dos quais/)).not.toBeInTheDocument();
+  });
+
+  it("item com suporte_g mas partida sem suporte_g não mostra tag", () => {
+    const p = prop([item("a", 156.1)]);
+    p.itens[0]!.suporte_g = 12;
+    renderA(p);
+    expect(screen.queryByText(/Suporte \d/)).not.toBeInTheDocument();
+  });
+});

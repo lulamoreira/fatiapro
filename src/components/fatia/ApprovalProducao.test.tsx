@@ -60,3 +60,34 @@ describe("ApprovalProducao", () => {
     expect(screen.queryByText(/Para \d+ peças:/)).not.toBeInTheDocument();
   });
 });
+
+describe("suporte na aprovação da produção", () => {
+  it("com suporte_g em partida e item mostra a tag, a nota e o delta", () => {
+    const p = prop([item("a", true, { suporte_g: 12 })]);
+    p.partida.suporte_g = 13.5;
+    render(<ApprovalProducao proposta={p} disabled={false} onAprovar={() => {}} onPedirOutra={() => {}} onCancelar={() => {}} />);
+    expect(screen.getByText("Suporte 12,0 g")).toBeInTheDocument();
+    expect(screen.getByText("dos quais 13,5 g de suporte")).toBeInTheDocument();
+    expect(screen.getByText("(−1,5 g)")).toBeInTheDocument();
+  });
+
+  it("sem suporte_g não mostra tag nem nota", () => {
+    renderA(prop([item("a", true)]));
+    expect(screen.queryByText(/Suporte \d/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/dos quais/)).not.toBeInTheDocument();
+  });
+
+  it("sem suporte_g mostra a linha de texto da ponte quando ela existe", () => {
+    const p = prop([item("a", true, { producao: prod({ suporte_texto: "Suporte medido: 8,3 g" }) })]);
+    renderA(p);
+    expect(screen.getByText("Suporte medido: 8,3 g")).toBeInTheDocument();
+  });
+
+  it("com suporte_g a linha de texto da ponte dá lugar à tag", () => {
+    const p = prop([item("a", true, { suporte_g: 12, producao: prod({ suporte_texto: "Suporte medido: 8,3 g" }) })]);
+    p.partida.suporte_g = 13.5;
+    renderA(p);
+    expect(screen.getByText("Suporte 12,0 g")).toBeInTheDocument();
+    expect(screen.queryByText("Suporte medido: 8,3 g")).not.toBeInTheDocument();
+  });
+});
