@@ -11,6 +11,7 @@ export interface PropostaItem {
   titulo: string;
   segundos_delta: number;
   gramas: number;
+  suporte_g?: number | null;
   impacto: "nenhum" | "pequeno" | "visivel" | null;
   motivo?: string;
   pre_marcado: boolean;
@@ -18,7 +19,7 @@ export interface PropostaItem {
   rejeitado_motivo: string | null;
 }
 export interface Proposta {
-  partida: { segundos: number; gramas: number };
+  partida: { segundos: number; gramas: number; suporte_g?: number | null };
   itens: PropostaItem[];
   observacao?: string;
 }
@@ -52,6 +53,7 @@ export interface ApprovalProps {
 
 export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancelar }: ApprovalProps) {
   const itens = proposta.itens ?? [];
+  const partidaSuporte = proposta.partida?.suporte_g ?? null;
   const [marcados, setMarcados] = useState<Set<string>>(
     () => new Set(itens.filter((i) => i.pre_marcado && !i.rejeitado_motivo).map((i) => i.id)),
   );
@@ -78,7 +80,12 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
   return (
     <section className="space-y-5" aria-label="Aprovação">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card t="Ponto de partida" a={formatDuracao(proposta.partida?.segundos)} b={formatGramas(proposta.partida?.gramas)} />
+        <Card
+          t="Ponto de partida"
+          a={formatDuracao(proposta.partida?.segundos)}
+          b={formatGramas(proposta.partida?.gramas)}
+          nota={proposta.partida?.suporte_g != null ? `dos quais ${formatGramas(proposta.partida.suporte_g)} de suporte` : undefined}
+        />
         <Card t="Com o que você marcou" a={formatDuracao(seg)} b={formatGramas(gr)} highlight />
         <Card t="Economia estimada" a={formatDuracao(economia)} b={formatGramas((proposta.partida?.gramas ?? 0) - gr)} />
       </div>
@@ -92,6 +99,7 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
       <ul className="divide-y rounded-2xl border bg-card">
         {itens.map((i) => {
           const imp = i.impacto ? IMPACTO[i.impacto] : null;
+          const ds = partidaSuporte != null && i.suporte_g != null ? i.suporte_g - partidaSuporte : null;
           return (
             <li key={i.id} className="flex items-start gap-3 p-4">
               <Checkbox
@@ -111,6 +119,16 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
                     {formatGramas(i.gramas)}
                     {deltaGramas(i, proposta.partida?.gramas ?? 0) !== 0 && ` (${deltaGramas(i, proposta.partida?.gramas ?? 0) > 0 ? "+" : "−"}${formatGramas(Math.abs(deltaGramas(i, proposta.partida?.gramas ?? 0)))})`}
                   </span>
+                  {ds != null && (
+                    <>
+                      <Tag tone="muted">Suporte {formatGramas(i.suporte_g)}</Tag>
+                      {ds !== 0 && (
+                        <span className={cn("text-xs font-semibold", ds < 0 ? "text-success" : "text-destructive")}>
+                          ({ds < 0 ? "−" : "+"}{formatGramas(Math.abs(ds))})
+                        </span>
+                      )}
+                    </>
+                  )}
                   {imp && <Tag tone={imp.tone}>{imp.label}</Tag>}
                 </div>
                 {i.motivo && <p className="mt-1 text-sm text-muted-foreground">{i.motivo}</p>}
@@ -154,12 +172,13 @@ export function Approval({ proposta, disabled, onAprovar, onPedirOutra, onCancel
   );
 }
 
-function Card({ t, a, b, highlight }: { t: string; a: string; b: string; highlight?: boolean }) {
+function Card({ t, a, b, nota, highlight }: { t: string; a: string; b: string; nota?: string | undefined; highlight?: boolean }) {
   return (
     <div className={cn("rounded-2xl border p-4", highlight ? "border-primary bg-accent" : "bg-card")}>
       <p className="text-xs font-medium text-muted-foreground">{t}</p>
       <p className="mt-1 font-display text-2xl font-bold tabular">{a}</p>
       <p className="text-sm text-muted-foreground tabular">{b}</p>
+      {nota && <p className="text-xs text-muted-foreground tabular">{nota}</p>}
     </div>
   );
 }
