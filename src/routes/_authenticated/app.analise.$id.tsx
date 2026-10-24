@@ -194,7 +194,7 @@ function AnalisePage() {
   const feitos = progresso
     .filter((e) => ts(e) >= inicioMs)
     .map((e) => textoProgresso(e))
-    .filter(Boolean)
+    .filter((texto): texto is string => texto !== null)
     .slice(0, -1);
   const ultimoEv = eventos[eventos.length - 1];
   const semEventosMs = now - Math.max(desde, ultimoEv ? ts(ultimoEv) : 0);
