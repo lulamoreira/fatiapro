@@ -1,7 +1,8 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { Loader2, Check, Circle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 export type Fase = "na_fila" | "analisando" | "aplicando" | "outra";
 
@@ -19,6 +20,7 @@ export interface WorkingCardProps {
   ultimaMensagem: string | null;
   /** Progress messages already finished in this phase (oldest first). */
   feitos?: string[];
+  percentual?: number | null;
   desdeMs: number;
   now: number;
   /** Only for fase "aplicando". */
@@ -37,9 +39,13 @@ function cronometro(ms: number): string {
 }
 
 export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function WorkingCard(
-  { fase, roteiro, ultimaMensagem, feitos = [], desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
+  { fase, roteiro, ultimaMensagem, feitos = [], percentual, desdeMs, now, passos, ultimoContatoMs, semEventosMs, onCancelar },
   ref,
 ) {
+  const valor = typeof percentual === "number" && Number.isFinite(percentual) ? Math.max(0, Math.min(100, percentual)) : null;
+  const [maior, setMaior] = useState<number | null>(valor);
+  if (valor != null && (maior == null || valor > maior)) setMaior(valor);
+  const mostrado = valor == null ? null : Math.max(maior ?? 0, valor);
   const sinalS = ultimoContatoMs != null ? Math.max(0, Math.floor((now - ultimoContatoMs) / 1000)) : null;
   const desconectado = sinalS == null || sinalS > 60;
   const lista = passos
@@ -66,6 +72,13 @@ export const WorkingCard = forwardRef<HTMLElement, WorkingCardProps>(function Wo
           </p>
         </div>
       </div>
+
+      {mostrado != null && (
+        <div className="mt-4 flex w-full items-center gap-3">
+          <Progress value={mostrado} aria-label="Progresso da análise" className="flex-1 [&>div]:motion-reduce:transition-none" />
+          <span className="w-12 shrink-0 text-right text-sm font-semibold tabular-nums">{Math.round(mostrado)}%</span>
+        </div>
+      )}
 
       {fase !== "na_fila" && (recentes.length > 0 || ultimaMensagem) && (
         <ol className="mt-4 space-y-1.5 text-sm" aria-label="Etapas">

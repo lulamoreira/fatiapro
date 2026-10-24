@@ -34,6 +34,7 @@ import { Result, type ResultadoConteudo } from "@/components/fatia/Result";
 import { GerarOrcamento } from "@/components/fatia/GerarOrcamento";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { progressoDaFase, textoProgresso } from "@/lib/progresso-analise";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
   head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -159,7 +160,6 @@ function AnalisePage() {
   const estado = (job.estado as Estado) ?? "na_fila";
   const est = ESTADOS[estado];
   const opc = (job.opcoes ?? {}) as { impressora?: string; filamento?: { tipo?: string; marca?: string; linha?: string } };
-  const progresso = eventos.filter((e) => e.tipo === "progresso");
   type Ev = (typeof eventos)[number];
   const ultimo = (tipo: string): { ev: Ev; idx: number } | null => {
     for (let i = eventos.length - 1; i >= 0; i--) { const ev = eventos[i]; if (ev && ev.tipo === tipo) return { ev, idx: i }; }
@@ -183,17 +183,18 @@ function AnalisePage() {
   else if (estado === "aplicando") { fase = "aplicando"; desde = Date.parse(job.atualizado_em); marcoAprovacao = desde; }
   else if (estado === "na_fila") { fase = "na_fila"; desde = Date.parse(job.criado_em); }
   else { fase = "analisando"; desde = prop ? ts(prop.ev) : Date.parse(job.atualizado_em); }
+  const { mensagens: progresso, percentual, inicioMs } = progressoDaFase(eventos, fase, job.criado_em, pendente?.at);
   const posAprovacao = marcoAprovacao != null && ue ? eventos.slice(eventos.indexOf(ue) + 1) : [];
   const passos = fase === "aplicando"
-    ? { aplicou: posAprovacao.some((e) => e.tipo === "progresso"), resultado: posAprovacao.some((e) => e.tipo === "resultado") }
+    ? { aplicou: posAprovacao.some((e) => textoProgresso(e) !== null), resultado: posAprovacao.some((e) => e.tipo === "resultado") }
     : undefined;
   const ultimoProg = progresso[progresso.length - 1];
-  const ultimaMensagem = ultimoProg ? String((ultimoProg.conteudo as { texto?: unknown })?.texto ?? "") || null : null;
+  const ultimaMensagem = ultimoProg ? textoProgresso(ultimoProg) : null;
   // Mensagens já concluídas nesta fase (mostradas como passos feitos, sem a atual).
   const feitos = progresso
-    .filter((e) => ts(e) >= desde - 1000)
-    .map((e) => String((e.conteudo as { texto?: unknown })?.texto ?? "").trim())
-    .filter(Boolean)
+    .filter((e) => ts(e) >= inicioMs)
+    .map((e) => textoProgresso(e))
+    .filter((texto): texto is string => texto !== null)
     .slice(0, -1);
   const ultimoEv = eventos[eventos.length - 1];
   const semEventosMs = now - Math.max(desde, ultimoEv ? ts(ultimoEv) : 0);
@@ -204,7 +205,7 @@ function AnalisePage() {
   const arquivo = estado === "concluido" ? arquivoDoResultado(job.resultado) : null;
   const ultimaAcao = ultimo("acao");
   const confirmacaoAcao = ultimaAcao
-    ? (() => { const p = eventos.slice(ultimaAcao.idx + 1).filter((e) => e.tipo === "progresso").pop(); return p ? String((p.conteudo as { texto?: unknown })?.texto ?? "") || null : null; })()
+    ? (() => { const p = eventos.slice(ultimaAcao.idx + 1).filter((e) => textoProgresso(e) !== null).pop(); return p ? textoProgresso(p) : null; })()
     : null;
 
   function aprovar(ids: string[]) {
@@ -263,11 +264,13 @@ function AnalisePage() {
 
       {mostrarTrabalhando && (
         <WorkingCard
+          key={`${id}-${fase}-${inicioMs}`}
           ref={workingRef}
           fase={fase}
           roteiro={job.roteiro}
           ultimaMensagem={ultimaMensagem}
           feitos={feitos}
+          percentual={percentual}
           desdeMs={desde}
           now={now}
           {...(passos ? { passos } : {})}
