@@ -27,6 +27,7 @@ export interface ItemProducao {
   copias: number;
   segundos_total: number;
   suporte: boolean;
+  suporte_texto?: string;
   altura_mm: number;
   balanco_pct: number;
   medido: boolean;
@@ -38,7 +39,7 @@ export interface PropostaItemProducao extends PropostaItem {
 }
 
 export interface PropostaProducao {
-  partida: { segundos: number; gramas: number };
+  partida: { segundos: number; gramas: number; suporte_g?: number | null };
   itens: PropostaItemProducao[];
   observacao?: string;
   producao?: ProducaoInfo;
@@ -55,11 +56,17 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
 
   const sel = itens.find((i) => i.id === selecionado) ?? null;
   const quantidade = p.producao?.quantidade ?? null;
+  const partidaSuporte = p.partida?.suporte_g ?? null;
 
   return (
     <section className="space-y-5" aria-label="Aprovação da produção em lote">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card t="Uma peça sozinha" a={formatDuracao(p.partida?.segundos)} b={formatGramas(p.partida?.gramas)} />
+        <Card
+          t="Uma peça sozinha"
+          a={formatDuracao(p.partida?.segundos)}
+          b={formatGramas(p.partida?.gramas)}
+          nota={p.partida?.suporte_g != null ? `dos quais ${formatGramas(p.partida.suporte_g)} de suporte` : undefined}
+        />
         <Card
           t="Na posição escolhida"
           a={sel?.producao ? formatDuracao(sel.producao.segundos_por_peca) : "—"}
@@ -79,6 +86,7 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
         {itens.map((i) => {
           const on = i.id === selecionado;
           const imp = i.impacto ? IMPACTO[i.impacto] : null;
+          const ds = partidaSuporte != null && i.suporte_g != null ? i.suporte_g - partidaSuporte : null;
           const pr = i.producao;
           return (
             <Button
@@ -97,6 +105,16 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 {pr?.mapa && <MapaPlaca mapa={pr.mapa} miniatura />}
                 <span className="font-medium">{i.titulo}</span>
+                {ds != null && (
+                  <>
+                    <Tag tone="muted">Suporte {formatGramas(i.suporte_g)}</Tag>
+                    {ds !== 0 && (
+                      <span className={cn("text-xs font-semibold", ds < 0 ? "text-success" : "text-destructive")}>
+                        ({ds < 0 ? "−" : "+"}{formatGramas(Math.abs(ds))})
+                      </span>
+                    )}
+                  </>
+                )}
                 {imp && <Tag tone={imp.tone}>{imp.label}</Tag>}
                 {pr?.suporte && <Tag tone="primary">Com suporte em árvore</Tag>}
                 {pr && pr.medido === false && (
@@ -120,6 +138,7 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
                   )}
                 </>
               )}
+              {pr?.suporte_texto && ds == null && <p className="mt-2 text-sm text-muted-foreground">{pr.suporte_texto}</p>}
               {i.motivo && <p className="mt-2 text-sm text-muted-foreground">{i.motivo}</p>}
               {i.rejeitado_motivo && <p className="mt-1 text-xs text-destructive">{i.rejeitado_motivo}</p>}
             </Button>
@@ -156,12 +175,13 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
   );
 }
 
-function Card({ t, a, b, highlight }: { t: string; a: string; b: string; highlight?: boolean }) {
+function Card({ t, a, b, nota, highlight }: { t: string; a: string; b: string; nota?: string; highlight?: boolean }) {
   return (
     <div className={cn("rounded-2xl border p-4", highlight ? "border-primary bg-accent" : "bg-card")}>
       <p className="text-xs font-medium text-muted-foreground">{t}</p>
       <p className="mt-1 font-display text-2xl font-bold tabular">{a}</p>
       <p className="text-sm text-muted-foreground tabular">{b}</p>
+      {nota && <p className="text-xs text-muted-foreground tabular">{nota}</p>}
     </div>
   );
 }
