@@ -1,5 +1,5 @@
 # Marca FatiaProAI
-- [ ] Ponte 0.3.22: filtrar progresso textual, barra por fase e mapas da placa na aprovação/resultado; validar testes e telas.
+- [x] Ponte 0.3.22: progresso textual filtrado, barra por fase e mapas na aprovação/resultado; 264 testes passaram. Análise real aberta; novos dados conferidos com eventos simulados, em claro/escuro e celular, sem erros. Não executada nova análise pela ponte física.
 - [x] Exibir custo do resultado em reais por padrão, com seleção de moeda e câmbio ajustável; oito testes passaram e build OK. Conferência em análise autenticada indisponível nesta sessão.
 - [x] Adicionar botão Admin com confirmação; RPC restrita à própria conta e auditada; testes SQL de permissões/isolamento e quatro testes de interface passaram; diálogo conferido no navegador sem alterar o aceite real.
 - [x] Corrigir as referências legais cortadas nas seções 4 e 8; nenhuma outra seção afetada.

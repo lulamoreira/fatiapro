@@ -90,7 +90,7 @@ export function ApprovalProducao({ proposta, disabled, onAprovar, onPedirOutra, 
               disabled={disabled}
               onClick={() => setSelecionado(i.id)}
               className={cn(
-                "lift block h-auto whitespace-normal rounded-2xl border-2 p-4 text-left",
+                "lift block h-auto whitespace-normal rounded-2xl border-2 p-4 text-left [&_svg]:h-auto [&_svg]:w-full",
                 on ? "border-primary bg-primary/8 shadow-aqua" : "border-border bg-card shadow-sm",
               )}
             >
