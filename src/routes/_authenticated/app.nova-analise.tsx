@@ -14,6 +14,7 @@ import { compararVersao } from "@/lib/ponte";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
 import { Questionario } from "@/components/fatia/Questionario";
 import { PecaAbertaAviso } from "@/components/fatia/PecaAberta";
+import { AvisoSemCores, formatoSemCores } from "@/components/fatia/AvisoSemCores";
 import { Switch } from "@/components/ui/switch";
 import { Wallet } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
@@ -544,6 +545,7 @@ function NovaAnalise() {
               </button>
             )}
             <input ref={fileRef} type="file" accept=".stl,.3mf,.step,.stp" className="hidden" onChange={(e) => escolherArquivo(e.target.files?.[0])} />
+            <AvisoSemCores formato={arquivo ? formatoSemCores(arquivo.name) : null} onTrocar={() => fileRef.current?.click()} />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" aria-pressed={f.usarAberta} className={cn(f.usarAberta && "border-primary text-primary-ink")} onClick={() => { set("usarAberta", !f.usarAberta); setArquivo(null); setPecaBib(null); }}>
                 {f.usarAberta && <CheckCircle2 className="size-4" />}Usar a peça aberta no fatiador
