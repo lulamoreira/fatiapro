@@ -44,7 +44,7 @@ describe("AvisoSemCores", () => {
   it("Trocar arquivo chama onTrocar (abre o seletor)", async () => {
     const onTrocar = vi.fn();
     render(<AvisoSemCores formato="STL" onTrocar={onTrocar} />);
-    await userEvent.click(screen.getByRole("button", { name: "Trocar arquivo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Trocar arquivo" }));
     expect(onTrocar).toHaveBeenCalledOnce();
   });
 
