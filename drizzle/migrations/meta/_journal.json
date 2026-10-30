@@ -204,6 +204,13 @@
       "when": 1792726354875,
       "tag": "0028_roteiro_producao",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793383737774,
+      "tag": "0029_miniaturas_pecas",
+      "breakpoints": true
     }
   ]
 }
