@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Box, Download, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { baixar, formatBytes, tamanhoArquivo } from "@/lib/storage";
+import { gerarMiniatura } from "@/lib/miniatura-peca";
 import { nomeDownloadOriginal, nomeDownloadOtimizado } from "@/lib/nomes";
 import { escapeLike } from "@/components/fatia/BibliotecaPicker";
 import { Tag } from "@/components/fatia/Chip";
@@ -90,8 +91,44 @@ function BibliotecaPage() {
   const total = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const invalidar = () => qc.invalidateQueries({ queryKey: ["biblioteca"] });
 
+  // Signed URLs (1h) for the thumbnails of the current page, in a single call.
+  const comMiniatura = data?.rows.filter((r) => r.miniatura_path) ?? [];
+  const { data: miniaturas } = useQuery({
+    queryKey: ["biblioteca", "miniaturas", comMiniatura.map((r) => r.id).join(",")],
+    enabled: comMiniatura.length > 0,
+    queryFn: async () => {
+      const { data: urls, error } = await supabase.storage.from("pecas").createSignedUrls(comMiniatura.map((r) => r.miniatura_path!), 3600);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of comMiniatura) {
+        const u = urls?.find((x) => x.path === r.miniatura_path);
+        if (u?.signedUrl) map[r.id] = u.signedUrl;
+      }
+      return map;
+    },
+  });
+
+  // Generate missing thumbnails in the background, at most 2 at a time, only for this page.
+  const gerandoRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!data) return;
+    for (const p of data.rows) {
+      if (p.miniatura_path || p.miniatura_tentada_em || gerandoRef.current.has(p.id)) continue;
+      if (gerandoRef.current.size >= 2) break;
+      gerandoRef.current.add(p.id);
+      void gerarMiniatura(p).finally(() => { gerandoRef.current.delete(p.id); invalidar(); });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
   const remover = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("pecas").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (p: { id: string; miniatura_path: string | null }) => {
+      const { error } = await supabase.from("pecas").delete().eq("id", p.id);
+      if (error) throw error;
+      if (p.miniatura_path) {
+        try { await supabase.storage.from("pecas").remove([p.miniatura_path]); } catch { /* a remoção da peça não pode falhar por causa da miniatura */ }
+      }
+    },
     onSuccess: () => { invalidar(); toast.success("Removida da biblioteca."); },
     onError: () => toast.error("Não foi possível remover."),
   });
@@ -132,6 +169,15 @@ function BibliotecaPage() {
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.rows.map((p) => (
             <li key={p.id} id={`peca-${p.id}`} className={cn("flex flex-col rounded-2xl border bg-card p-5", realce === p.id && "animate-destaque-peca border-2")}>
+              <div className="mb-3 flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-muted">
+                {miniaturas?.[p.id] ? (
+                  <img src={miniaturas[p.id]} alt={p.nome} loading="lazy" className="h-full w-full object-contain" />
+                ) : !p.miniatura_path && !p.miniatura_tentada_em ? (
+                  <Skeleton className="h-full w-full" />
+                ) : (
+                  <Box className="size-10 text-muted-foreground" aria-hidden />
+                )}
+              </div>
               <h2 className="break-words text-lg font-semibold">{p.nome}</h2>
               <p className="text-xs text-muted-foreground">{new Date(p.criado_em).toLocaleDateString("pt-BR")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -156,7 +202,7 @@ function BibliotecaPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Voltar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remover.mutate(p.id)}>Remover</AlertDialogAction>
+                      <AlertDialogAction onClick={() => remover.mutate({ id: p.id, miniatura_path: p.miniatura_path })}>Remover</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

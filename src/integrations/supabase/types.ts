@@ -888,6 +888,8 @@ export type Database = {
           criado_em: string
           id: string
           job_id: string | null
+          miniatura_path: string | null
+          miniatura_tentada_em: string | null
           nome: string
           nome_arquivo_original: string | null
           nome_arquivo_otimizado: string | null
@@ -901,6 +903,8 @@ export type Database = {
           criado_em?: string
           id?: string
           job_id?: string | null
+          miniatura_path?: string | null
+          miniatura_tentada_em?: string | null
           nome: string
           nome_arquivo_original?: string | null
           nome_arquivo_otimizado?: string | null
@@ -914,6 +918,8 @@ export type Database = {
           criado_em?: string
           id?: string
           job_id?: string | null
+          miniatura_path?: string | null
+          miniatura_tentada_em?: string | null
           nome?: string
           nome_arquivo_original?: string | null
           nome_arquivo_otimizado?: string | null
