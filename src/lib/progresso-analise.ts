@@ -38,13 +38,13 @@ export function testesDaFase(eventos: EventoProgresso[], fase: string): GrupoTes
   const grupos = new Map<string, true>();
   for (const evento of ordenados.slice(inicio)) {
     if (evento.tipo !== "progresso" || !registro(evento.conteudo)) continue;
-    const valor = evento.conteudo.teste;
-    if (!registro(valor) || typeof valor.id !== "string" || !valor.id.trim()) continue;
-    const anterior = testes.get(valor.id);
-    const estado = valor.estado;
+    const valor = evento.conteudo["teste"];
+    if (!registro(valor) || typeof valor["id"] !== "string" || !valor["id"].trim()) continue;
+    const anterior = testes.get(valor["id"]);
+    const estado = valor["estado"];
     const valido = estado === "fatiando" || estado === "pronto" || estado === "falhou" || estado === "escolhido";
     if (!anterior && !valido) continue;
-    const teste: TesteAoVivo = anterior ? { ...anterior } : { id: valor.id, estado: "fatiando" };
+    const teste: TesteAoVivo = anterior ? { ...anterior } : { id: valor["id"], estado: "fatiando" };
     if (valido) teste.estado = estado;
     for (const chave of ["titulo", "grupo", "erro"] as const) {
       if (typeof valor[chave] === "string" && valor[chave].trim()) teste[chave] = valor[chave].trim();
@@ -53,8 +53,8 @@ export function testesDaFase(eventos: EventoProgresso[], fase: string): GrupoTes
       const numero = valor[chave];
       if (typeof numero === "number" && Number.isFinite(numero) && numero >= 0) teste[chave] = numero;
     }
-    if (typeof valor.atual === "boolean") teste.atual = valor.atual;
-    if (typeof valor.imagem === "string" && valor.imagem.startsWith("data:image/png;base64,")) teste.imagem = valor.imagem;
+    if (typeof valor["atual"] === "boolean") teste.atual = valor["atual"];
+    if (typeof valor["imagem"] === "string" && valor["imagem"].startsWith("data:image/png;base64,")) teste.imagem = valor["imagem"];
     testes.set(teste.id, teste);
     grupos.set(teste.grupo ?? "Ajustes", true);
   }

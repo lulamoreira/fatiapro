@@ -18,7 +18,7 @@ const ESTADOS_TESTE = {
   escolhido: { texto: "Escolhido", Icone: Check, tone: "primary" },
 } as const;
 
-function Diferenca({ valor, referencia, suporte = false }: { valor?: number; referencia?: number; suporte?: boolean }) {
+function Diferenca({ valor, referencia, suporte = false }: { valor: number | undefined; referencia: number | undefined; suporte?: boolean }) {
   if (valor == null || referencia == null) return null;
   const delta = valor - referencia;
   return (
@@ -29,7 +29,7 @@ function Diferenca({ valor, referencia, suporte = false }: { valor?: number; ref
   );
 }
 
-function CartaoTeste({ teste, atual }: { teste: TesteAoVivo; atual?: TesteAoVivo }) {
+function CartaoTeste({ teste, atual }: { teste: TesteAoVivo; atual: TesteAoVivo | undefined }) {
   const { texto, Icone, tone } = ESTADOS_TESTE[teste.estado];
   const titulo = teste.titulo ?? teste.id;
   return (
