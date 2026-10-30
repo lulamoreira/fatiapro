@@ -169,6 +169,15 @@ function BibliotecaPage() {
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.rows.map((p) => (
             <li key={p.id} id={`peca-${p.id}`} className={cn("flex flex-col rounded-2xl border bg-card p-5", realce === p.id && "animate-destaque-peca border-2")}>
+              <div className="mb-3 flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-muted">
+                {miniaturas?.[p.id] ? (
+                  <img src={miniaturas[p.id]} alt={p.nome} loading="lazy" className="h-full w-full object-contain" />
+                ) : !p.miniatura_path && !p.miniatura_tentada_em ? (
+                  <Skeleton className="h-full w-full" />
+                ) : (
+                  <Box className="size-10 text-muted-foreground" aria-hidden />
+                )}
+              </div>
               <h2 className="break-words text-lg font-semibold">{p.nome}</h2>
               <p className="text-xs text-muted-foreground">{new Date(p.criado_em).toLocaleDateString("pt-BR")}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -193,7 +202,7 @@ function BibliotecaPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Voltar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remover.mutate(p.id)}>Remover</AlertDialogAction>
+                      <AlertDialogAction onClick={() => remover.mutate({ id: p.id, miniatura_path: p.miniatura_path })}>Remover</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
