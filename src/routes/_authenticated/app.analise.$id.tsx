@@ -34,7 +34,8 @@ import { Result, type ResultadoConteudo } from "@/components/fatia/Result";
 import { GerarOrcamento } from "@/components/fatia/GerarOrcamento";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { progressoDaFase, textoProgresso } from "@/lib/progresso-analise";
+import { progressoDaFase, testesDaFase, textoProgresso } from "@/lib/progresso-analise";
+import { BlocoTestesAoVivo } from "@/components/fatia/TestesAoVivo";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
   head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -201,6 +202,10 @@ function AnalisePage() {
   const ultimoContatoMs = device?.ultimo_contato ? Date.parse(device.ultimo_contato) : null;
   const conectado = isConectado(device?.ultimo_contato, now);
   const mostrarTrabalhando = !terminal && !mostrarAprovacao;
+  const testesFase = testesDaFase(eventos, fase);
+  // Applying may emit no test cards: retain the tests that led to approval/result.
+  const gruposTestes = fase === "aplicando" && testesFase.length === 0
+    ? testesDaFase(eventos, "analisando") : testesFase;
 
   const arquivo = estado === "concluido" ? arquivoDoResultado(job.resultado) : null;
   const ultimaAcao = ultimo("acao");
@@ -279,6 +284,8 @@ function AnalisePage() {
           onCancelar={() => enviar.mutate({ tipo: "cancelamento", conteudo: {} })}
         />
       )}
+
+      <BlocoTestesAoVivo grupos={gruposTestes} emAndamento={mostrarTrabalhando} />
 
       <FraseAnimo
         key={`${id}-${mostrarTrabalhando}`}
