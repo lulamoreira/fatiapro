@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BotaoAjuda } from "@/components/ajuda/BotaoAjuda";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Box, Download, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { baixar, formatBytes, tamanhoArquivo } from "@/lib/storage";
+import { gerarMiniatura } from "@/lib/miniatura-peca";
 import { nomeDownloadOriginal, nomeDownloadOtimizado } from "@/lib/nomes";
 import { escapeLike } from "@/components/fatia/BibliotecaPicker";
 import { Tag } from "@/components/fatia/Chip";
