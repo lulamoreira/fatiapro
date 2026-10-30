@@ -91,8 +91,44 @@ function BibliotecaPage() {
   const total = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const invalidar = () => qc.invalidateQueries({ queryKey: ["biblioteca"] });
 
+  // Signed URLs (1h) for the thumbnails of the current page, in a single call.
+  const comMiniatura = data?.rows.filter((r) => r.miniatura_path) ?? [];
+  const { data: miniaturas } = useQuery({
+    queryKey: ["biblioteca", "miniaturas", comMiniatura.map((r) => r.id).join(",")],
+    enabled: comMiniatura.length > 0,
+    queryFn: async () => {
+      const { data: urls, error } = await supabase.storage.from("pecas").createSignedUrls(comMiniatura.map((r) => r.miniatura_path!), 3600);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of comMiniatura) {
+        const u = urls?.find((x) => x.path === r.miniatura_path);
+        if (u?.signedUrl) map[r.id] = u.signedUrl;
+      }
+      return map;
+    },
+  });
+
+  // Generate missing thumbnails in the background, at most 2 at a time, only for this page.
+  const gerandoRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!data) return;
+    for (const p of data.rows) {
+      if (p.miniatura_path || p.miniatura_tentada_em || gerandoRef.current.has(p.id)) continue;
+      if (gerandoRef.current.size >= 2) break;
+      gerandoRef.current.add(p.id);
+      void gerarMiniatura(p).finally(() => { gerandoRef.current.delete(p.id); invalidar(); });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
   const remover = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("pecas").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (p: { id: string; miniatura_path: string | null }) => {
+      const { error } = await supabase.from("pecas").delete().eq("id", p.id);
+      if (error) throw error;
+      if (p.miniatura_path) {
+        try { await supabase.storage.from("pecas").remove([p.miniatura_path]); } catch { /* a remoção da peça não pode falhar por causa da miniatura */ }
+      }
+    },
     onSuccess: () => { invalidar(); toast.success("Removida da biblioteca."); },
     onError: () => toast.error("Não foi possível remover."),
   });
