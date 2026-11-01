@@ -40,7 +40,7 @@ import { ApiKeyWizard } from "@/components/fatia/ApiKeyWizard";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CostCard, useCustoCurto } from "@/components/fatia/CostCard";
 import { PrecoFields } from "@/components/fatia/PrecoFields";
-import { EXTENSOES, FORM_INICIAL, MAX_BYTES, fromOpcoes, toOpcoes, validar, type Erros, type FormState } from "@/components/fatia/form";
+import { EXTENSOES, FORM_INICIAL, MAX_BYTES, TORRES_UTIL, fromOpcoes, guardarTorreUtilLocal, lerTorreUtilLocal, toOpcoes, validar, type Erros, type FormState } from "@/components/fatia/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,7 +99,7 @@ function NovaAnalise() {
   const [pastaSaida, setPastaSaida] = useState<string | null>(null);
   const { data: devices = [] } = useQuery(devicesQuery);
   const { data: presets = [] } = useQuery(presetsQuery);
-  const [form, setF] = useState<FormState>(FORM_INICIAL);
+  const [form, setF] = useState<FormState>(() => ({ ...FORM_INICIAL, torreUtil: lerTorreUtilLocal() }));
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
@@ -137,6 +137,9 @@ function NovaAnalise() {
   const ponteBloqueia = ponteVelha || ponteVelhaProducao;
   const uso = plano ? linhaUso(plano, f.roteiro, premium) : null;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
+
+  // Remember the last chosen tower for the next new analysis.
+  useEffect(() => guardarTorreUtilLocal(form.torreUtil), [form.torreUtil]);
 
   // Default device: first connected, else first.
   useEffect(() => {
@@ -593,6 +596,14 @@ function NovaAnalise() {
               <Label>Prioridade (até 2)</Label>
               <div className="flex flex-wrap gap-2">{PRIORIDADES.map((x) => { const i = f.prioridades.indexOf(x); return <Chip key={x} selected={i >= 0} badge={i >= 0 ? i + 1 : undefined} onClick={() => set("prioridades", togglePrioridade(f.prioridades, x))}>{x}</Chip>; })}</div>
             </div>
+            {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo") && (
+              <div className="space-y-1.5">
+                <Label>Torre útil</Label>
+                <p className="text-xs text-muted-foreground">Em peça colorida, a sobra das trocas de cor vira uma peça para usar depois. Ela sai em faixas coloridas e usa filamento a mais.</p>
+                <div className="flex flex-wrap gap-2">{TORRES_UTIL.map((t) => <Chip key={t.id} selected={f.torreUtil === t.id} onClick={() => set("torreUtil", t.id)}>{t.label}</Chip>)}</div>
+                <p className="text-xs text-muted-foreground">{TORRES_UTIL.find((t) => t.id === f.torreUtil)?.ajuda}</p>
+              </div>
+            )}
           </Secao>
         </div>
 
