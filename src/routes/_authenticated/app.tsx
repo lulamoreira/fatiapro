@@ -12,7 +12,8 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { AceiteTermosModal } from "@/components/fatia/AceiteTermos";
 import { LinksLegais } from "@/components/fatia/PaginaLegal";
 import { DicaInstalar } from "@/components/fatia/DicaInstalar";
-import { AvisoPonteNova } from "@/components/fatia/AtualizarPonte";
+import { AvisoPonteNova, BotaoPonteSempre } from "@/components/fatia/AtualizarPonte";
+import { SeloPonte } from "@/components/fatia/SeloPonte";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -54,15 +55,19 @@ export function useStatusComputador() {
 function StatusCard() {
   const { device, conectado, fatiadores } = useStatusComputador();
   return (
-    <Link to="/app/configuracoes" className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-colors hover:bg-secondary">
-      <Dot on={conectado} />
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-semibold">{device?.nome ?? "Nenhum computador"}</span>
-        <span className="block truncate text-xs text-muted-foreground">
-          {conectado ? `Conectado${fatiadores.length ? ` · ${fatiadores.join(", ")}` : ""}` : "Desconectado"}
+    <div className="space-y-2">
+      <Link to="/app/configuracoes" className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-colors hover:bg-secondary">
+        <Dot on={conectado} />
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold">{device?.nome ?? "Nenhum computador"}</span>
+          <span className="block truncate text-xs text-muted-foreground">
+            {conectado ? `Conectado${fatiadores.length ? ` · ${fatiadores.join(", ")}` : ""}` : "Desconectado"}
+          </span>
+          {device?.versao_ponte && <span className="mt-1.5 block"><SeloPonte versao={device.versao_ponte} /></span>}
         </span>
-      </span>
-    </Link>
+      </Link>
+      {device && <BotaoPonteSempre key={device.id} device={device} />}
+    </div>
   );
 }
 

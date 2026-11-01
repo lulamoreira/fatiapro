@@ -10,7 +10,8 @@ import { Segmented } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
 import { VisaoUsuario } from "@/components/inicio/VisaoUsuario";
 import { VisaoAdmin } from "@/components/inicio/VisaoAdmin";
-import { BotaoAtualizarPonte } from "@/components/fatia/AtualizarPonte";
+import { BotaoPonteSempre } from "@/components/fatia/AtualizarPonte";
+import { SeloPonte } from "@/components/fatia/SeloPonte";
 import { useStatusComputador } from "./app";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -60,7 +61,13 @@ function InicioPage() {
         <Segmented label="Visão" value={visao} onChange={(v) => { setVisao(v); gravarVisao(v); }}
           options={[{ id: "conta", label: "Minha conta" }, { id: "negocio", label: "Negócio" }]} />
       )}
-      {device && <BotaoAtualizarPonte key={device.id} device={device} />}
+      {device && (
+        <div className="flex min-w-0 flex-wrap items-center gap-2 md:hidden">
+          <SeloPonte versao={device.versao_ponte} nome={device.nome} />
+          <BotaoPonteSempre key={`m-${device.id}`} device={device} />
+        </div>
+      )}
+      {device && <div className="hidden md:block"><BotaoPonteSempre key={device.id} device={device} /></div>}
       {mostrarNegocio ? <VisaoAdmin /> : <VisaoUsuario />}
     </div>
   );

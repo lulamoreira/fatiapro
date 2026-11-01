@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AvisoPonteNova, BotaoAtualizarPonte } from "./AtualizarPonte";
+import { AvisoPonteNova, BotaoAtualizarPonte, BotaoPonteSempre } from "./AtualizarPonte";
 
 const state = vi.hoisted(() => ({ abertas: 0, enviar: vi.fn(), toast: vi.fn(),
   cmd: null as null | { id: string; estado: string; resposta: Record<string, unknown> } }));
@@ -11,7 +11,7 @@ vi.mock("sonner", () => ({ toast: { warning: state.toast } }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@tanstack/react-query", async (original) => ({
   ...await original<typeof import("@tanstack/react-query")>(),
-  useQuery: (q: { queryKey: string[] }) => ({ data: q.queryKey[0] === "ponte-nova"
+  useQuery: (q: { queryKey: string[] }) => ({ isFetched: true, data: q.queryKey[0] === "ponte-nova"
     ? [{ versao: "0.3.52", plataforma: "macos", notas: "Correções" }] : state.abertas }),
 }));
 const device = { id: "d", sistema: "macos", versao_ponte: "0.3.51", ultimo_contato: new Date(now).toISOString() };
@@ -37,5 +37,37 @@ describe("aviso da ponte", () => {
     state.cmd = { id: "c", estado: "erro", resposta: { motivo: "analise_aberta", mensagem: "Termine sua análise primeiro" } };
     render(<BotaoAtualizarPonte device={device} />);
     expect(state.toast).toHaveBeenCalledWith("Termine sua análise primeiro");
+  });
+});
+
+describe("BotaoPonteSempre", () => {
+  it("com versão nova, avisa e o clique envia o comando sem navegar", () => {
+    const { container } = render(<BotaoPonteSempre device={device} />);
+    expect(screen.getByText("Versão 0.3.52 disponível")).toBeInTheDocument();
+    const botao = screen.getByRole("button", { name: "Atualizar ponte" });
+    expect(botao).toBeEnabled();
+    fireEvent.click(botao);
+    expect(state.enviar).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("a")).toBeNull();
+  });
+  it("sem versão nova, mostra 'Versão mais recente' depois da consulta", () => {
+    render(<BotaoPonteSempre device={{ ...device, versao_ponte: "0.3.52" }} />);
+    expect(screen.getByText("Versão mais recente")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeEnabled();
+  });
+  it("com o computador desconectado, desabilita e avisa", () => {
+    render(<BotaoPonteSempre device={{ ...device, ultimo_contato: null }} />);
+    expect(screen.getByText("Computador desconectado")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeDisabled();
+  });
+  it("com versão sem botão, desabilita e explica a atualização sozinha", () => {
+    render(<BotaoPonteSempre device={{ ...device, versao_ponte: "0.3.50" }} />);
+    expect(screen.getByText("Ela entra sozinha quando não houver análise aberta")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeDisabled();
+  });
+  it("ao concluir, mostra a mensagem recebida da ponte", () => {
+    state.cmd = { id: "c", estado: "concluido", resposta: { mensagem: "Ponte atualizada para 0.3.52" } };
+    render(<BotaoPonteSempre device={device} />);
+    expect(screen.getByText("Ponte atualizada para 0.3.52")).toBeInTheDocument();
   });
 });
