@@ -60,8 +60,8 @@ describe("toOpcoes — torre útil", () => {
     expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "preco", torreUtil: "vaso" })).toBe(false);
   });
 
-  it("valor inicial é porta_lapis", () => {
-    expect(FORM_INICIAL.torreUtil).toBe("porta_lapis");
+  it("valor inicial é ovo", () => {
+    expect(FORM_INICIAL.torreUtil).toBe("ovo");
   });
 });
 
@@ -71,10 +71,10 @@ describe("fromOpcoes — torre útil", () => {
     expect(fromOpcoes({}, { torre_util: "nenhuma" }).torreUtil).toBe("nenhuma");
   });
 
-  it("valor inválido ou ausente vira porta_lapis", () => {
-    expect(fromOpcoes({}, { torre_util: "foguete" }).torreUtil).toBe("porta_lapis");
-    expect(fromOpcoes({}, { torre_util: 42 }).torreUtil).toBe("porta_lapis");
-    expect(fromOpcoes({}, {}).torreUtil).toBe("porta_lapis");
+  it("valor inválido ou ausente vira ovo", () => {
+    expect(fromOpcoes({}, { torre_util: "foguete" }).torreUtil).toBe("ovo");
+    expect(fromOpcoes({}, { torre_util: 42 }).torreUtil).toBe("ovo");
+    expect(fromOpcoes({}, {}).torreUtil).toBe("ovo");
   });
 });
 
