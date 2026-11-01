@@ -1,6 +1,37 @@
 /** Nova-análise form state, (de)serialization to job.opcoes and validation. */
 import { MARCA_OUTRA, TEMP_BICO, TEMP_MESA, type FatiadorId, type Motor, type Roteiro } from "@/lib/fatia";
 
+/** Torre útil: a sobra das trocas de cor vira uma peça aproveitável (só config_geral/reduzir_tempo). */
+export const TORRES_UTIL = [
+  { id: "porta_lapis", label: "Porta-lápis", ajuda: "Até 11 cm de altura. Bom para peças altas." },
+  { id: "vaso", label: "Vaso torcido", ajuda: "Até 13 cm de altura. Bom para peças altas." },
+  { id: "caixa", label: "Caixa organizadora", ajuda: "Até 8 cm de altura. Boa para peças médias." },
+  { id: "porta_copo", label: "Porta-copo", ajuda: "6 mm de altura. Bom para peças baixas." },
+  { id: "nenhuma", label: "Não colocar", ajuda: "A sobra vai para a torre comum." },
+] as const;
+export type TorreUtil = (typeof TORRES_UTIL)[number]["id"];
+export const TORRE_UTIL_NOME: Record<string, string> = Object.fromEntries(TORRES_UTIL.map((t) => [t.id, t.label]));
+const TORRES_IDS = new Set<string>(TORRES_UTIL.map((t) => t.id));
+/** Accepts only the known tower ids; anything else falls back to "porta_lapis". */
+export const torreUtilValida = (v: unknown): TorreUtil => (typeof v === "string" && TORRES_IDS.has(v) ? (v as TorreUtil) : "porta_lapis");
+
+const CHAVE_TORRE = "fatiapro.torre_util";
+/** Last chosen tower, remembered locally; never throws (private mode etc.). */
+export function lerTorreUtilLocal(): TorreUtil {
+  try {
+    return torreUtilValida(globalThis.localStorage?.getItem(CHAVE_TORRE));
+  } catch {
+    return "porta_lapis";
+  }
+}
+export function guardarTorreUtilLocal(v: string): void {
+  try {
+    globalThis.localStorage?.setItem(CHAVE_TORRE, v);
+  } catch {
+    /* storage unavailable — ignore */
+  }
+}
+
 export interface PrecoCampos {
   precoRolo: string;
   pesoRolo: string;
@@ -33,6 +64,8 @@ export interface FormState {
   preco: PrecoCampos;
   /** Produção em lote: quantas peças (vazio = encher uma placa). */
   prodQuantidade: string;
+  /** Torre útil (só config_geral/reduzir_tempo). */
+  torreUtil: TorreUtil;
   motor: Motor | null;
 }
 
