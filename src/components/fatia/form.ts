@@ -8,7 +8,7 @@ export const TORRES_UTIL = [
   { id: "vaso", label: "Vaso torcido", ajuda: "Fica com a altura da peça." },
   { id: "caixa", label: "Caixa organizadora", ajuda: "Fica com a altura da peça." },
   { id: "porta_copo", label: "Porta-copo", ajuda: "6 mm de altura. Em peça mais alta, a torre continua ligada." },
-  { id: "nenhuma", label: "Não colocar", ajuda: "Fica a torre comum do fatiador." },
+  { id: "nenhuma", label: "Torre padrão do fatiador", ajuda: "Usa a torre de limpeza normal do fatiador, sem peça útil. Peça colorida nunca imprime sem limpeza." },
 ] as const;
 export type TorreUtil = (typeof TORRES_UTIL)[number]["id"];
 export const TORRE_UTIL_NOME: Record<string, string> = Object.fromEntries(TORRES_UTIL.map((t) => [t.id, t.label]));
