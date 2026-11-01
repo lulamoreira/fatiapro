@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { tamanhoArquivo } from "@/lib/storage";
 import { leitorDeUrl } from "@/lib/miniatura-3mf";
-import { coresDo3mf, tipoDoPerfil, type Cor3mf } from "@/lib/cores-3mf";
+import { coresDo3mf, lerMemoriaCores, tipoInicial, type Cor3mf } from "@/lib/cores-3mf";
 import type { FormState } from "@/components/fatia/form";
 
 /** Piece changes invalidate pending reads, including slow signed-URL requests. */
@@ -33,7 +33,12 @@ export function useCoresPeca(arquivo: File | null, path: string | null, usarAber
     void ler().then((resultado) => {
       if (cancelado) return;
       setCores(resultado);
-      if (resultado && resultado.length >= 2) setF((f) => f.filMisto === true ? { ...f, filMistoCores: resultado.map((c) => ({ slot: c.slot, tipo: tipoDoPerfil(c.perfil) })) } : f);
+      if (!resultado || resultado.length < 2) return;
+      const memoria = lerMemoriaCores();
+      const linhas = resultado.map((c) => ({ slot: c.slot, tipo: tipoInicial(c.perfil, c.cor, memoria) }));
+      const especial = linhas.some((l) => l.tipo !== "PLA");
+      // Auto "Sim" only while unanswered; an explicit "Não" is respected.
+      setF((f) => f.filMisto === true ? { ...f, filMistoCores: linhas } : f.filMisto === null && especial ? { ...f, filMisto: true, filMistoCores: linhas } : f);
     }).catch(() => { /* Reading colors is optional; leave the manual choices available. */ });
     return () => { cancelado = true; };
   }, [arquivo, path, usarAberta, qc, setF]);

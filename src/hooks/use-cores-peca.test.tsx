@@ -28,3 +28,28 @@ describe("useCoresPeca", () => {
     expect(result.current.cores).toBeNull();
   });
 });
+describe("useCoresPeca com memória", () => {
+  const cores: Cor3mf[] = [{ slot: 1, cor: "#ffffff", perfil: "Generic PLA" }, { slot: 2, cor: "#ffd700", perfil: "Generic PLA" }];
+  function montar(filMisto: boolean | null) {
+    localStorage.setItem("fatiapro.cores_filamento", JSON.stringify({ "#FFD700": "PLA Silk" }));
+    vi.mocked(coresDo3mf).mockResolvedValueOnce(cores);
+    const file = new File(["zip"], "x.3mf");
+    return renderHook(() => {
+      const [form, setF] = useState<FormState>({ ...FORM_INICIAL, filMisto });
+      useCoresPeca(file, null, false, setF);
+      return form;
+    });
+  }
+  it("marca Sim automaticamente com cor lembrada", async () => {
+    const { result } = montar(null);
+    await waitFor(() => expect(result.current.filMisto).toBe(true));
+    expect(result.current.filMistoCores).toEqual([{ slot: 1, tipo: "PLA" }, { slot: 2, tipo: "PLA Silk" }]);
+  });
+  it("respeita a resposta Não", async () => {
+    const { result } = montar(false);
+    await waitFor(() => expect(vi.mocked(coresDo3mf)).toHaveBeenCalled());
+    await act(async () => { await Promise.resolve(); });
+    expect(result.current.filMisto).toBe(false);
+    expect(result.current.filMistoCores).toEqual([]);
+  });
+});

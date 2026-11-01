@@ -18,6 +18,7 @@ import { AvisoSemCores, formatoSemCores } from "@/components/fatia/AvisoSemCores
 import { Switch } from "@/components/ui/switch";
 import { FilamentoMisto } from "@/components/fatia/FilamentoMisto";
 import { useCoresPeca } from "@/hooks/use-cores-peca";
+import { guardarMemoriaCores } from "@/lib/cores-3mf";
 import { Wallet } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
@@ -287,6 +288,7 @@ function NovaAnalise() {
       } else if (pecaBib && !f.usarAberta) {
         arquivo_path = pecaBib.path; // reuse stored file, no re-upload
       }
+      if (f.filMisto === true && coresPeca && coresPeca.length >= 2 && f.filMistoCores.length) guardarMemoriaCores(coresPeca, f.filMistoCores);
       const r = await criarAnalise({
         data: {
           device_id: f.deviceId!,
