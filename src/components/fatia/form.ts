@@ -167,12 +167,12 @@ const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is 
 export function lerFilamentoMisto(raw: unknown): Pick<FormState, "filMisto" | "filMistoTipos" | "filMistoCores"> {
   const inicial = { filMisto: null, filMistoTipos: [], filMistoCores: [] };
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return inicial;
-  const o = raw as Record<string, unknown>;
+  const o = raw as { tem?: unknown; tipos?: unknown; cores?: unknown };
   if (typeof o.tem !== "boolean") return inicial;
   if (o.tipos !== undefined && (!Array.isArray(o.tipos) || !o.tipos.every((v) => typeof v === "string"))) return inicial;
   const corValida = (v: unknown): v is { slot: number; tipo: string } => {
     if (!v || typeof v !== "object") return false;
-    const c = v as Record<string, unknown>;
+    const c = v as { slot?: unknown; tipo?: unknown };
     return typeof c.slot === "number" && Number.isInteger(c.slot) && c.slot > 0 && typeof c.tipo === "string";
   };
   if (o.cores !== undefined && (!Array.isArray(o.cores) || !o.cores.every(corValida))) return inicial;

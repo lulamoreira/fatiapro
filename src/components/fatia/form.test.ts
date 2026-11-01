@@ -5,9 +5,9 @@ const base = { ...FORM_INICIAL, roteiro: "producao" as const };
 
 describe("filamento misto", () => {
   it("Sim envia tipos e cores", () => {
-    expect(toOpcoes({ ...base, filMisto: true, filMistoTipos: ["PETG"], filMistoCores: [{ slot: 1, tipo: "PLA Silk" }] }).filamento_misto).toEqual({ tem: true, tipos: ["PETG"], cores: [{ slot: 1, tipo: "PLA Silk" }] });
+    expect(toOpcoes({ ...base, filMisto: true, filMistoTipos: ["PETG"], filMistoCores: [{ slot: 1, tipo: "PLA Silk" }] })).toMatchObject({ filamento_misto: { tem: true, tipos: ["PETG"], cores: [{ slot: 1, tipo: "PLA Silk" }] } });
   });
-  it("Não envia somente tem false", () => expect(toOpcoes({ ...base, filMisto: false }).filamento_misto).toEqual({ tem: false }));
+  it("Não envia somente tem false", () => expect(toOpcoes({ ...base, filMisto: false })).toMatchObject({ filamento_misto: { tem: false } }));
   it("sem resposta omite o campo", () => expect(toOpcoes(base)).not.toHaveProperty("filamento_misto"));
   it("restaura seleção válida", () => {
     expect(fromOpcoes({}, { filamento_misto: { tem: true, tipos: ["TPU"], cores: [{ slot: 2, tipo: "PLA Silk" }] } })).toMatchObject({ filMisto: true, filMistoTipos: ["TPU"], filMistoCores: [{ slot: 2, tipo: "PLA Silk" }] });

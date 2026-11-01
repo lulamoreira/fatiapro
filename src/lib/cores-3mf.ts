@@ -46,7 +46,7 @@ export async function coresDo3mf(ler: LerFaixa, tamanho: number): Promise<Cor3mf
     if (!dados || dados.length !== entrada.tamanhoReal) return null;
     const config: unknown = JSON.parse(new TextDecoder().decode(dados));
     if (!config || typeof config !== "object") return null;
-    const c = config as Record<string, unknown>;
+    const c = config as { filament_colour?: unknown; filament_settings_id?: unknown };
     if (!Array.isArray(c.filament_colour) || !c.filament_colour.every((v) => typeof v === "string")) return null;
     const perfis = Array.isArray(c.filament_settings_id) ? c.filament_settings_id : [];
     return c.filament_colour.map((cor: string, i: number) => ({ slot: i + 1, cor, perfil: typeof perfis[i] === "string" ? perfis[i] : "" }));

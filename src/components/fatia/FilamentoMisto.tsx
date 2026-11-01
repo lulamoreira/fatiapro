@@ -7,7 +7,7 @@ import type { FormState } from "@/components/fatia/form";
 import { cn } from "@/lib/utils";
 
 const TIPOS = ["PLA", "PLA Silk", "PETG", "TPU", "ABS/ASA", "Outro"];
-export interface FilamentoMistoProps extends ComponentProps<"div"> {
+export interface FilamentoMistoProps extends Omit<ComponentProps<"div">, "onChange"> {
   form: FormState;
   cores: Cor3mf[] | null;
   onChange: (campos: Pick<FormState, "filMisto" | "filMistoTipos" | "filMistoCores">) => void;
