@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { progressoDaFase, testesDaFase, textoProgresso } from "@/lib/progresso-analise";
 import { BlocoTestesAoVivo } from "@/components/fatia/TestesAoVivo";
+import { SeloPonte } from "@/components/fatia/SeloPonte";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
   head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -70,7 +71,7 @@ function AnalisePage() {
     enabled: !!deviceId,
     refetchInterval: 15_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("devices").select("id, ultimo_contato").eq("id", deviceId!).maybeSingle();
+      const { data, error } = await supabase.from("devices").select("id, ultimo_contato, versao_ponte, nome").eq("id", deviceId!).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -248,6 +249,7 @@ function AnalisePage() {
           <div className="flex flex-wrap items-center gap-2">
             {etiquetaFonte(job) && <Tag tone={etiquetaFonte(job) === "Crédito devolvido" ? "success" : "muted"}>{etiquetaFonte(job)}</Tag>}
             <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
+            <SeloPonte versao={device?.versao_ponte} nome={device?.nome} />
           </div>
         </div>
         {estado === "concluido" && (
