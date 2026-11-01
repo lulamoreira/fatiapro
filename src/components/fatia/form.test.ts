@@ -25,6 +25,33 @@ describe("toOpcoes — produção em lote", () => {
   });
 });
 
+describe("toOpcoes — torre útil", () => {
+  it("envia torre_util só em config_geral e reduzir_tempo", () => {
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "config_geral", torreUtil: "vaso" })).toMatchObject({ torre_util: "vaso" });
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "reduzir_tempo", torreUtil: "caixa" })).toMatchObject({ torre_util: "caixa" });
+    expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "producao", torreUtil: "vaso" })).toBe(false);
+    expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "checklist", torreUtil: "vaso" })).toBe(false);
+    expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "preco", torreUtil: "vaso" })).toBe(false);
+  });
+
+  it("valor inicial é porta_lapis", () => {
+    expect(FORM_INICIAL.torreUtil).toBe("porta_lapis");
+  });
+});
+
+describe("fromOpcoes — torre útil", () => {
+  it("recupera valor válido salvo", () => {
+    expect(fromOpcoes({}, { torre_util: "porta_copo" }).torreUtil).toBe("porta_copo");
+    expect(fromOpcoes({}, { torre_util: "nenhuma" }).torreUtil).toBe("nenhuma");
+  });
+
+  it("valor inválido ou ausente vira porta_lapis", () => {
+    expect(fromOpcoes({}, { torre_util: "foguete" }).torreUtil).toBe("porta_lapis");
+    expect(fromOpcoes({}, { torre_util: 42 }).torreUtil).toBe("porta_lapis");
+    expect(fromOpcoes({}, {}).torreUtil).toBe("porta_lapis");
+  });
+});
+
 describe("validar — quantidade da produção", () => {
   const ok = { ...base, deviceId: "d", fatiador: "bambu", usarAberta: true, impressora: "A1", filTipo: "PLA", filMarca: "Genérica", filLinha: "PLA", motor: "fatiapro" as const };
   it("vazia é válida (encher uma placa)", () => {
