@@ -1,5 +1,5 @@
 /** "What you asked for" summary of a job, built from jobs.opcoes via the existing fromOpcoes parser. */
-import { fromOpcoes } from "@/components/fatia/form";
+import { TORRE_UTIL_NOME, fromOpcoes } from "@/components/fatia/form";
 import { materialTexto } from "@/lib/fatia";
 
 export const ROTEIRO_MENU: Record<string, string> = {
@@ -20,6 +20,7 @@ export function resumoPedido(opcoes: unknown, roteiro: string): ResumoPedido {
   const chips: string[] = [];
   if (f.finalidades.length) chips.push(f.finalidades.join(", "));
   if (f.prioridades.length) chips.push(`Prioridade: ${f.prioridades.join(", ")}`);
+  if ((roteiro === "config_geral" || roteiro === "reduzir_tempo") && f.torreUtil !== "nenhuma") chips.push(`Torre útil: ${TORRE_UTIL_NOME[f.torreUtil] ?? f.torreUtil}`);
   if (f.impressora) {
     const temBico = !!(opcoes as { bico?: unknown } | null)?.bico;
     chips.push(temBico ? `${semBico(f.impressora)} · ${f.bico} mm` : f.impressora);

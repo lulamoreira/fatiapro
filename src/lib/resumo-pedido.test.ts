@@ -12,11 +12,16 @@ describe("resumoPedido", () => {
   it("com todos os campos", () => {
     const r = resumoPedido(cheio, "config_geral");
     expect(r.roteiro).toBe("Configurar a peça");
-    expect(r.chips).toEqual(["Decorativa, Uso mecânico", "Prioridade: Tempo, Acabamento", "Bambu Lab A1 · 0.4 mm", "Genérica PLA"]);
+    expect(r.chips).toEqual(["Decorativa, Uso mecânico", "Prioridade: Tempo, Acabamento", "Torre útil: Porta-lápis", "Bambu Lab A1 · 0.4 mm", "Genérica PLA"]);
   });
   it("sem finalidade, prioridade nem impressora não mostra chip vazio", () => {
     const r = resumoPedido({ filamento: { tipo: "PLA", marca: "Genérica", linha: "PLA" } }, "reduzir_tempo");
-    expect(r.chips).toEqual(["Genérica PLA"]);
+    expect(r.chips).toEqual(["Torre útil: Porta-lápis", "Genérica PLA"]);
+  });
+  it("torre útil aparece com um modelo e não aparece com nenhuma nem em outros roteiros", () => {
+    expect(resumoPedido({ torre_util: "vaso" }, "config_geral").chips).toEqual(["Torre útil: Vaso torcido"]);
+    expect(resumoPedido({ torre_util: "nenhuma" }, "config_geral").chips).toEqual([]);
+    expect(resumoPedido({ torre_util: "vaso" }, "checklist").chips).toEqual([]);
   });
   it("perfil com bico entre parênteses", () => {
     expect(resumoPedido({ impressora: "Snapmaker U1 (0.4 nozzle)", bico: "0.4" }, "checklist").chips).toEqual(["Snapmaker U1 · 0.4 mm"]);
