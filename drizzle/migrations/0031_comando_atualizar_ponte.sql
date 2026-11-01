@@ -1,0 +1,2 @@
+ALTER TABLE public.device_commands DROP CONSTRAINT device_commands_tipo_check;
+ALTER TABLE public.device_commands ADD CONSTRAINT device_commands_tipo_check CHECK (tipo IN ('instalar_claude_code', 'entrar_claude', 'configurar_api', 'escolher_pasta', 'adicionar_fatiador', 'atualizar_ponte'));
