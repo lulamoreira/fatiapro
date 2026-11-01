@@ -10,6 +10,8 @@ import { Segmented } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
 import { VisaoUsuario } from "@/components/inicio/VisaoUsuario";
 import { VisaoAdmin } from "@/components/inicio/VisaoAdmin";
+import { BotaoAtualizarPonte } from "@/components/fatia/AtualizarPonte";
+import { useStatusComputador } from "./app";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 function InicioPage() {
+  const { device } = useStatusComputador();
   const isAdmin = useIsAdmin();
   const [visao, setVisao] = useState<Visao>("conta");
   useEffect(() => setVisao(lerVisao()), []);
@@ -57,6 +60,7 @@ function InicioPage() {
         <Segmented label="Visão" value={visao} onChange={(v) => { setVisao(v); gravarVisao(v); }}
           options={[{ id: "conta", label: "Minha conta" }, { id: "negocio", label: "Negócio" }]} />
       )}
+      {device && <BotaoAtualizarPonte key={device.id} device={device} />}
       {mostrarNegocio ? <VisaoAdmin /> : <VisaoUsuario />}
     </div>
   );
