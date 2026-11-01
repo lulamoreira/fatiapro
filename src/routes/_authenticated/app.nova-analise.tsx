@@ -597,10 +597,10 @@ function NovaAnalise() {
             {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao") && (
               <div className="space-y-1.5">
                 <Label>Torre útil</Label>
-                <p className="text-xs text-muted-foreground">Em peça colorida, a sobra das trocas de cor vira uma peça para usar depois. Ela sai em faixas coloridas e usa filamento a mais.</p>
+                <p className="text-xs text-muted-foreground">A peça substitui a torre: a limpeza das trocas de cor vai para ela, que sai em faixas coloridas. Só entra em peça colorida.</p>
                 <div className="flex flex-wrap gap-2">{TORRES_UTIL.map((t) => <Chip key={t.id} selected={f.torreUtil === t.id} onClick={() => set("torreUtil", t.id)}>{t.label}</Chip>)}</div>
                 <p className="text-xs text-muted-foreground">{TORRES_UTIL.find((t) => t.id === f.torreUtil)?.ajuda}</p>
-                <p className="text-xs text-muted-foreground">Em impressora com um cabeçote por cor, como a U1, não há sobra para aproveitar: a torre é desligada e nenhuma peça extra é impressa.</p>
+                {f.roteiro === "producao" && <p className="text-xs text-muted-foreground">Na produção, a peça entra no arquivo final: fatie no seu fatiador antes de imprimir.</p>}
               </div>
             )}
           </Secao>
