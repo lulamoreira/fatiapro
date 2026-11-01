@@ -13,18 +13,18 @@ describe("resumoPedido", () => {
     expect(resumoPedido({ filamento_misto: { tem: true, tipos: ["TPU"], cores: [{ slot: 1, tipo: "PLA" }, { slot: 2, tipo: "PLA Silk" }, { slot: 3, tipo: "PLA" }] } }, "checklist").chips).toEqual(["Filamentos: PLA, PLA Silk"]);
   });
   it("usa tipos manuais ou mais de um quando vazios", () => {
-    expect(resumoPedido({ filamento_misto: { tem: true, tipos: ["PETG", "PETG", "Outro"] } }, "producao").chips).toEqual(["Torre útil: Porta-lápis", "Filamentos: PETG, Outro"]);
+    expect(resumoPedido({ filamento_misto: { tem: true, tipos: ["PETG", "PETG", "Outro"] } }, "producao").chips).toEqual(["Torre útil: Ovo", "Filamentos: PETG, Outro"]);
     expect(resumoPedido({ filamento_misto: { tem: true } }, "preco").chips).toEqual(["Filamentos: mais de um"]);
     expect(resumoPedido({ filamento_misto: { tem: false } }, "checklist").chips).toEqual([]);
   });
   it("com todos os campos", () => {
     const r = resumoPedido(cheio, "config_geral");
     expect(r.roteiro).toBe("Configurar a peça");
-    expect(r.chips).toEqual(["Decorativa, Uso mecânico", "Prioridade: Tempo, Acabamento", "Torre útil: Porta-lápis", "Bambu Lab A1 · 0.4 mm", "Genérica PLA"]);
+    expect(r.chips).toEqual(["Decorativa, Uso mecânico", "Prioridade: Tempo, Acabamento", "Torre útil: Ovo", "Bambu Lab A1 · 0.4 mm", "Genérica PLA"]);
   });
   it("sem finalidade, prioridade nem impressora não mostra chip vazio", () => {
     const r = resumoPedido({ filamento: { tipo: "PLA", marca: "Genérica", linha: "PLA" } }, "reduzir_tempo");
-    expect(r.chips).toEqual(["Torre útil: Porta-lápis", "Genérica PLA"]);
+    expect(r.chips).toEqual(["Torre útil: Ovo", "Genérica PLA"]);
   });
   it("torre útil aparece com um modelo e não aparece com nenhuma nem em outros roteiros", () => {
     expect(resumoPedido({ torre_util: "vaso" }, "config_geral").chips).toEqual(["Torre útil: Vaso torcido"]);
