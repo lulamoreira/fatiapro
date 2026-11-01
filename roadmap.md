@@ -1,4 +1,5 @@
 # Marca FatiaProAI
+- [ ] Adicionar filamentos mistos opcionais, leitura das cores do 3MF e resumo; validar testes e tela sem mudar as seções existentes.
 - [x] Exibir testes ao vivo agrupados, com comparação e bloco recolhível; 292 testes passaram, sem alterações no banco ou na ponte. Verificação com ponte física não realizada: sessão autenticada indisponível.
 - [x] Ponte 0.3.22: progresso textual filtrado, barra por fase e mapas na aprovação/resultado; 264 testes passaram. Análise real aberta; novos dados conferidos com eventos simulados, em claro/escuro e celular, sem erros. Não executada nova análise pela ponte física.
 - [x] Exibir custo do resultado em reais por padrão, com seleção de moeda e câmbio ajustável; oito testes passaram e build OK. Conferência em análise autenticada indisponível nesta sessão.

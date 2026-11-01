@@ -26,6 +26,10 @@ export function resumoPedido(opcoes: unknown, roteiro: string): ResumoPedido {
     chips.push(temBico ? `${semBico(f.impressora)} · ${f.bico} mm` : f.impressora);
   }
   if (f.filMarca && f.filLinha) chips.push(materialTexto(f.filMarca, f.filLinha));
+  if (f.filMisto === true) {
+    const tipos = [...new Set(f.filMistoCores.length ? f.filMistoCores.map((c) => c.tipo) : f.filMistoTipos)];
+    chips.push(`Filamentos: ${tipos.length ? tipos.join(", ") : "mais de um"}`);
+  }
   if (roteiro === "preco") {
     const q = Number(f.preco.quantidade);
     if ((opcoes as { preco?: { quantidade?: unknown } } | null)?.preco?.quantidade != null && q > 0) chips.push(`${q} un.`);
