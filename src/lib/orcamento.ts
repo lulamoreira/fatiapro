@@ -2,6 +2,7 @@
  * Pure quote (orçamento) rules. The customer-facing text is built here so tests can prove
  * it never leaks internal numbers (cost, margin, minimum price).
  */
+import { formatarContato, formatarDocumento, formatarTelefone } from "./mascaras";
 
 export interface FaixaDesconto { a_partir_de: number; desconto_pct?: number | undefined; preco_unitario: number }
 export interface Precos {
@@ -98,11 +99,11 @@ export function conteudoPdf(n: NegocioDados, o: OrcamentoDados) {
   const emissao = new Date(o.criado_em);
   const validade = new Date(emissao.getTime() + o.validade_dias * 86400000);
   return {
-    negocio: [n.nome, n.documento, n.email, n.whatsapp, n.cidade].filter((x): x is string => !!x && !!x.trim()),
+    negocio: [n.nome, formatarDocumento(n.documento ?? ""), n.email, formatarTelefone(n.whatsapp ?? ""), n.cidade].filter((x): x is string => !!x && !!x.trim()),
     titulo: `ORÇAMENTO ${numeroOrc(o.numero)}`,
     emissao: `Emissão: ${dataBR(emissao)}`,
     valido: `Válido até ${dataBR(validade)}`,
-    para: [o.cliente_nome, o.cliente_contato].filter((x): x is string => !!x),
+    para: [o.cliente_nome, formatarContato(o.cliente_contato ?? "")].filter((x): x is string => !!x),
     cabecalho: ["Descrição", "Qtd", "Valor unitário", "Total"],
     linha: [o.descricao, String(o.quantidade), brl(o.preco_unitario_centavos), brl(totalDe(o))],
     total: `TOTAL ${brl(totalDe(o))}`,
