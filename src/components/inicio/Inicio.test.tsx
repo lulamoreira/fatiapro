@@ -4,6 +4,8 @@ import { render, screen } from "@testing-library/react";
 vi.mock("@/hooks/use-is-admin", () => ({ useIsAdmin: () => false }));
 vi.mock("@/components/inicio/VisaoUsuario", () => ({ VisaoUsuario: () => <p>visao-usuario</p> }));
 vi.mock("@/components/inicio/VisaoAdmin", () => ({ VisaoAdmin: () => <p>visao-admin</p> }));
+vi.mock("@/components/fatia/AtualizarPonte", () => ({ BotaoAtualizarPonte: () => null }));
+vi.mock("@/routes/_authenticated/app", () => ({ useStatusComputador: () => ({ device: undefined }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth: { getUser: async () => ({ data: { user: null } }) } } }));
 vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: "Ana" }) }));
 vi.mock("@tanstack/react-router", () => ({

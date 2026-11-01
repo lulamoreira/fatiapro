@@ -15,9 +15,9 @@ export function BotaoAtualizarPonte({ device }: BotaoAtualizarPonteProps) {
   const now = useNow(10_000);
   const { cmd, ocupado, enviar } = useComando(device.id, "atualizar_ponte");
   const avisado = useRef<string | null>(null);
-  const mensagem = typeof cmd?.resposta.mensagem === "string" ? cmd.resposta.mensagem : null;
+  const mensagem = typeof cmd?.resposta["mensagem"] === "string" ? cmd.resposta["mensagem"] : null;
   useEffect(() => {
-    if (cmd?.estado === "erro" && cmd.resposta.motivo === "analise_aberta" && avisado.current !== cmd.id) {
+    if (cmd?.estado === "erro" && cmd.resposta["motivo"] === "analise_aberta" && avisado.current !== cmd.id) {
       avisado.current = cmd.id;
       toast.warning(mensagem ?? "Há uma análise aberta neste computador.");
     }
