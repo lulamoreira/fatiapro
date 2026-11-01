@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AvisoPonteNova, BotaoAtualizarPonte } from "./AtualizarPonte";
+import { AvisoPonteNova, BotaoAtualizarPonte, BotaoPonteSempre } from "./AtualizarPonte";
 
 const state = vi.hoisted(() => ({ abertas: 0, enviar: vi.fn(), toast: vi.fn(),
   cmd: null as null | { id: string; estado: string; resposta: Record<string, unknown> } }));
@@ -11,7 +11,7 @@ vi.mock("sonner", () => ({ toast: { warning: state.toast } }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@tanstack/react-query", async (original) => ({
   ...await original<typeof import("@tanstack/react-query")>(),
-  useQuery: (q: { queryKey: string[] }) => ({ data: q.queryKey[0] === "ponte-nova"
+  useQuery: (q: { queryKey: string[] }) => ({ isFetched: true, data: q.queryKey[0] === "ponte-nova"
     ? [{ versao: "0.3.52", plataforma: "macos", notas: "Correções" }] : state.abertas }),
 }));
 const device = { id: "d", sistema: "macos", versao_ponte: "0.3.51", ultimo_contato: new Date(now).toISOString() };
