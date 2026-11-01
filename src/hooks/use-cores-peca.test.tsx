@@ -33,9 +33,10 @@ describe("useCoresPeca com memória", () => {
   function montar(filMisto: boolean | null) {
     localStorage.setItem("fatiapro.cores_filamento", JSON.stringify({ "#FFD700": "PLA Silk" }));
     vi.mocked(coresDo3mf).mockResolvedValueOnce(cores);
+    const file = new File(["zip"], "x.3mf");
     return renderHook(() => {
       const [form, setF] = useState<FormState>({ ...FORM_INICIAL, filMisto });
-      useCoresPeca(new File(["zip"], "x.3mf"), null, false, setF);
+      useCoresPeca(file, null, false, setF);
       return form;
     });
   }
