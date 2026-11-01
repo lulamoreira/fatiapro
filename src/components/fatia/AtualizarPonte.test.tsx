@@ -39,3 +39,35 @@ describe("aviso da ponte", () => {
     expect(state.toast).toHaveBeenCalledWith("Termine sua análise primeiro");
   });
 });
+
+describe("BotaoPonteSempre", () => {
+  it("com versão nova, avisa e o clique envia o comando sem navegar", () => {
+    const { container } = render(<BotaoPonteSempre device={device} />);
+    expect(screen.getByText("Versão 0.3.52 disponível")).toBeInTheDocument();
+    const botao = screen.getByRole("button", { name: "Atualizar ponte" });
+    expect(botao).toBeEnabled();
+    fireEvent.click(botao);
+    expect(state.enviar).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("a")).toBeNull();
+  });
+  it("sem versão nova, mostra 'Versão mais recente' depois da consulta", () => {
+    render(<BotaoPonteSempre device={{ ...device, versao_ponte: "0.3.52" }} />);
+    expect(screen.getByText("Versão mais recente")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeEnabled();
+  });
+  it("com o computador desconectado, desabilita e avisa", () => {
+    render(<BotaoPonteSempre device={{ ...device, ultimo_contato: null }} />);
+    expect(screen.getByText("Computador desconectado")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeDisabled();
+  });
+  it("com versão sem botão, desabilita e explica a atualização sozinha", () => {
+    render(<BotaoPonteSempre device={{ ...device, versao_ponte: "0.3.50" }} />);
+    expect(screen.getByText("Ela entra sozinha quando não houver análise aberta")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar ponte" })).toBeDisabled();
+  });
+  it("ao concluir, mostra a mensagem recebida da ponte", () => {
+    state.cmd = { id: "c", estado: "concluido", resposta: { mensagem: "Ponte atualizada para 0.3.52" } };
+    render(<BotaoPonteSempre device={device} />);
+    expect(screen.getByText("Ponte atualizada para 0.3.52")).toBeInTheDocument();
+  });
+});
