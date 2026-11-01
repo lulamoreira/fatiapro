@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tansta
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Box, Download, Wand2 } from "lucide-react";
+import { Box, Download, Pencil, Trash2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { baixar, formatBytes, tamanhoArquivo } from "@/lib/storage";
@@ -192,9 +192,9 @@ function BibliotecaPage() {
                 {p.arquivo_otimizado_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_otimizado_path!, nomeDownloadOtimizado(p.nome_arquivo_otimizado))}><Download className="size-4" aria-hidden />Baixar otimizado</Button>}
                 {p.arquivo_original_path && <Button size="sm" onClick={() => navigate({ to: "/app/nova-analise", search: { peca: p.id } })}>Nova análise com esta peça</Button>}
                 {p.job_id && <Button asChild size="sm" variant="ghost"><Link to="/app/analise/$id" params={{ id: p.job_id }}>Ver análise de origem</Link></Button>}
-                <Button size="sm" variant="ghost" onClick={() => setEditar({ id: p.id, nome: p.nome, observacao: p.observacao ?? "" })}>Editar</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditar({ id: p.id, nome: p.nome, observacao: p.observacao ?? "" })}><Pencil className="h-4 w-4" aria-hidden />Editar</Button>
                 <AlertDialog>
-                  <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive">Remover da biblioteca</Button></AlertDialogTrigger>
+                  <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" aria-hidden />Remover da biblioteca</Button></AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Remover “{p.nome}” da biblioteca?</AlertDialogTitle>
