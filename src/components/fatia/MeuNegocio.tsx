@@ -5,6 +5,7 @@ import { Store, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNegocio } from "@/hooks/use-negocio";
 import { reduzirImagem } from "@/lib/imagem";
+import { formatarDocumento, formatarTelefone } from "@/lib/mascaras";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,13 +27,16 @@ export function MeuNegocio() {
   const [f, setF] = useState<Form>({ nome: "", documento: "", email: "", whatsapp: "", cidade: "" });
   const [salvando, setSalvando] = useState(false);
   useEffect(() => {
-    if (n) setF({ nome: n.nome, documento: n.documento ?? "", email: n.email ?? "", whatsapp: n.whatsapp ?? "", cidade: n.cidade ?? "" });
+    if (n) setF({ nome: n.nome, documento: formatarDocumento(n.documento ?? ""), email: n.email ?? "", whatsapp: formatarTelefone(n.whatsapp ?? ""), cidade: n.cidade ?? "" });
   }, [n]);
 
   const { data: logoUrl } = useQuery({
     queryKey: ["negocio-logo", n?.logo_path],
     enabled: !!n?.logo_path,
-    queryFn: async () => (await supabase.storage.from("negocio").createSignedUrl(n!.logo_path!, 3600)).data?.signedUrl ?? null,
+    queryFn: async () => {
+      if (!n?.logo_path) return null;
+      return (await supabase.storage.from("negocio").createSignedUrl(n.logo_path, 3600)).data?.signedUrl ?? null;
+    },
   });
 
   async function salvar(logo_path?: string) {
@@ -42,8 +46,8 @@ export function MeuNegocio() {
     const uid = u.user?.id;
     if (!uid) { setSalvando(false); return; }
     const linha = {
-      nome: f.nome.trim(), documento: f.documento.trim() || null, email: f.email.trim() || null,
-      whatsapp: f.whatsapp.trim() || null, cidade: f.cidade.trim() || null,
+      nome: f.nome.trim(), documento: formatarDocumento(f.documento).trim() || null, email: f.email.trim() || null,
+      whatsapp: formatarTelefone(f.whatsapp).trim() || null, cidade: f.cidade.trim() || null,
       ...(logo_path !== undefined ? { logo_path } : {}),
     };
     const { error } = n
@@ -63,7 +67,8 @@ export function MeuNegocio() {
     try {
       const img = await reduzirImagem(file, 600, 0.85, true);
       const { data: u } = await supabase.auth.getUser();
-      const path = `${u.user!.id}/logo-${Date.now()}.${img.tipo === "image/png" ? "png" : "jpg"}`;
+      if (!u.user) return;
+      const path = `${u.user.id}/logo-${Date.now()}.${img.tipo === "image/png" ? "png" : "jpg"}`;
       const { error } = await supabase.storage.from("negocio").upload(path, img.blob, { contentType: img.tipo });
       if (error) throw error;
       await salvar(path);
@@ -82,7 +87,12 @@ export function MeuNegocio() {
             {CAMPOS.map((c) => (
               <div key={c.k} className="space-y-1.5">
                 <Label htmlFor={`neg-${c.k}`}>{c.rot}</Label>
-                <Input id={`neg-${c.k}`} value={f[c.k]} maxLength={c.max} required={c.k === "nome"} onChange={(e) => setF((x) => ({ ...x, [c.k]: e.target.value }))} />
+                <Input id={`neg-${c.k}`} value={f[c.k]} maxLength={c.max} required={c.k === "nome"}
+                  inputMode={c.k === "documento" ? "numeric" : c.k === "whatsapp" ? "tel" : undefined}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setF((x) => ({ ...x, [c.k]: c.k === "documento" ? formatarDocumento(v) : c.k === "whatsapp" ? formatarTelefone(v) : v }));
+                  }} />
               </div>
             ))}
           </div>

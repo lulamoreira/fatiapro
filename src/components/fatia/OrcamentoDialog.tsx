@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNegocio } from "@/hooks/use-negocio";
 import { reduzirImagem } from "@/lib/imagem";
 import { baixarOrcamentoPdf } from "@/lib/orcamento-pdf";
+import { formatarContato } from "@/lib/mascaras";
 import { FORMAS_PAGAMENTO, brl, faixaDesconto, paraCentavos, totalCentavos, type Precos } from "@/lib/orcamento";
 import { Chip } from "@/components/fatia/Chip";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export function OrcamentoDialog({ open, onOpenChange, jobId = null, descricaoIni
         if (error) throw error;
       }
       const { data, error } = await supabase.rpc("criar_orcamento", {
-        p_cliente_nome: cliente.trim(), p_cliente_contato: contato.trim() || null, p_descricao: descricao.trim(),
+        p_cliente_nome: cliente.trim(), p_cliente_contato: formatarContato(contato).trim() || null, p_descricao: descricao.trim(),
         p_quantidade: q, p_preco_unitario_centavos: unit, p_job_id: jobId, p_prazo_entrega: prazo.trim() || null,
         p_validade_dias: Math.min(365, Math.max(1, Math.floor(Number(validade) || 7))),
         p_forma_pagamento: formas.length ? formas.join(", ") : null, p_observacoes: obs.trim() || null, p_foto_path: foto_path,
@@ -104,7 +105,7 @@ export function OrcamentoDialog({ open, onOpenChange, jobId = null, descricaoIni
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="o-cli">Cliente *</Label><Input id="o-cli" value={cliente} maxLength={120} onChange={(e) => setCliente(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label htmlFor="o-con">Contato (e-mail ou WhatsApp)</Label><Input id="o-con" value={contato} maxLength={120} onChange={(e) => setContato(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label htmlFor="o-con">Contato (e-mail ou WhatsApp)</Label><Input id="o-con" value={contato} maxLength={120} onChange={(e) => setContato(formatarContato(e.target.value))} /></div>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px]">
             <div className="space-y-1.5"><Label htmlFor="o-desc">Descrição da peça *</Label><Input id="o-desc" value={descricao} maxLength={120} onChange={(e) => setDescricao(e.target.value)} /></div>

@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
+- Document and phone masks are pure helpers in `src/lib/mascaras.ts`, shared by editable business/customer fields and quote text; mixed email/phone contacts preserve email and international numbers; why: saved legacy values and new input must display consistently without losing contact data.
 - Bridge update availability and deferral rules live in `atualizacao-ponte`; shared update controls follow existing device commands and suppress the global dialog during open analyses; why: keep platform comparison, polling and update feedback consistent across screens.
 - Mixed-filament data is serialized defensively in form helpers; `cores-3mf` reads only ZIP metadata ranges and the piece-reading hook discards stale results; why: changing pieces must never retain another file's color slots.
 - Analysis progress text, phase percentages and incremental live-test groups are selected by pure helpers in `progresso-analise`; `TestesAoVivo` displays them and retains pre-approval tests when applying emits none; WorkingCard resets its monotonic bar per phase and MapaPlaca shares printer-coordinate SVG rendering between approval and result; why: preserve message history and completed tests without changing bridge data.

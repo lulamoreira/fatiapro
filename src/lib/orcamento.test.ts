@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { conteudoPdf, faixaDesconto, lerPrecos, nomeArquivoOrc, nomeSemExtensao, numeroOrc, totalCentavos, totalDe } from "./orcamento";
 
 describe("orçamento", () => {
+  it("formata documento e telefones antigos no PDF, preservando e-mail", () => {
+    const negocio = { nome: "Teste", documento: "12345678901234", email: "teste@example.com", whatsapp: "11977749746", cidade: null };
+    const orcamento = { numero: 1, criado_em: "2026-10-09T12:00:00Z", cliente_nome: "Ana", cliente_contato: "1133334444", descricao: "Vaso", quantidade: 1, preco_unitario_centavos: 100, total_centavos: 100, prazo_entrega: null, validade_dias: 7, forma_pagamento: null, observacoes: null };
+    expect(conteudoPdf(negocio, orcamento).negocio).toContain("12.345.678/9012-34");
+    expect(conteudoPdf(negocio, orcamento).negocio).toContain("(11) 97774-9746");
+    expect(conteudoPdf(negocio, orcamento).para).toEqual(["Ana", "(11) 3333-4444"]);
+    expect(conteudoPdf(negocio, { ...orcamento, cliente_contato: "ana@example.com" }).para).toEqual(["Ana", "ana@example.com"]);
+  });
   const descontos = [{ a_partir_de: 5, preco_unitario: 9 }, { a_partir_de: 10, preco_unitario: 8 }, { a_partir_de: 20, preco_unitario: 7 }];
   it("(a) escolhe a maior faixa com a_partir_de ≤ quantidade", () => {
     expect(faixaDesconto(descontos, 4)).toBeNull();
