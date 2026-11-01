@@ -20,7 +20,7 @@ export function resumoPedido(opcoes: unknown, roteiro: string): ResumoPedido {
   const chips: string[] = [];
   if (f.finalidades.length) chips.push(f.finalidades.join(", "));
   if (f.prioridades.length) chips.push(`Prioridade: ${f.prioridades.join(", ")}`);
-  if ((roteiro === "config_geral" || roteiro === "reduzir_tempo") && f.torreUtil !== "nenhuma") chips.push(`Torre útil: ${TORRE_UTIL_NOME[f.torreUtil] ?? f.torreUtil}`);
+  if ((roteiro === "config_geral" || roteiro === "reduzir_tempo" || roteiro === "producao") && f.torreUtil !== "nenhuma") chips.push(`Torre útil: ${TORRE_UTIL_NOME[f.torreUtil] ?? f.torreUtil}`);
   if (f.impressora) {
     const temBico = !!(opcoes as { bico?: unknown } | null)?.bico;
     chips.push(temBico ? `${semBico(f.impressora)} · ${f.bico} mm` : f.impressora);

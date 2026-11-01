@@ -42,10 +42,10 @@ describe("toOpcoes — produção em lote", () => {
 });
 
 describe("toOpcoes — torre útil", () => {
-  it("envia torre_util só em config_geral e reduzir_tempo", () => {
+  it("envia torre_util em config_geral, reduzir_tempo e producao", () => {
     expect(toOpcoes({ ...FORM_INICIAL, roteiro: "config_geral", torreUtil: "vaso" })).toMatchObject({ torre_util: "vaso" });
     expect(toOpcoes({ ...FORM_INICIAL, roteiro: "reduzir_tempo", torreUtil: "caixa" })).toMatchObject({ torre_util: "caixa" });
-    expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "producao", torreUtil: "vaso" })).toBe(false);
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "producao", torreUtil: "vaso" })).toMatchObject({ torre_util: "vaso" });
     expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "checklist", torreUtil: "vaso" })).toBe(false);
     expect("torre_util" in toOpcoes({ ...FORM_INICIAL, roteiro: "preco", torreUtil: "vaso" })).toBe(false);
   });
