@@ -1,8 +1,8 @@
-import type { ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import { Chip, Segmented } from "@/components/fatia/Chip";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { tipoDoPerfil, type Cor3mf } from "@/lib/cores-3mf";
+import { lembradoDaMemoria, lerMemoriaCores, tipoInicial, type Cor3mf } from "@/lib/cores-3mf";
 import type { FormState } from "@/components/fatia/form";
 import { cn } from "@/lib/utils";
 
@@ -15,19 +15,23 @@ export interface FilamentoMistoProps extends Omit<ComponentProps<"div">, "onChan
 
 export function FilamentoMisto({ form: f, cores, onChange, className, ...props }: FilamentoMistoProps) {
   const porCor = cores && cores.length >= 2 ? cores : null;
+  // Colors are read only in the browser after mount, so reading storage here cannot mismatch SSR.
+  const memoria = useMemo(() => (porCor ? lerMemoriaCores() : {}), [porCor]);
+  const inicial = (c: Cor3mf) => tipoInicial(c.perfil, c.cor, memoria);
+  const algumLembrado = porCor?.some((c) => lembradoDaMemoria(c.perfil, c.cor, memoria)) ?? false;
   return (
     <div className={cn("min-w-0 space-y-3", className)} {...props}>
       <Label>Esta peça usa mais de um tipo de filamento?</Label>
       <div><Segmented label="Esta peça usa mais de um tipo de filamento?" options={[{ id: "sim", label: "Sim" }, { id: "nao", label: "Não" }]} value={f.filMisto === null ? null : f.filMisto ? "sim" : "nao"}
-        onChange={(v) => onChange(v === "nao" ? { filMisto: false, filMistoTipos: [], filMistoCores: [] } : { filMisto: true, filMistoTipos: f.filMistoTipos, filMistoCores: porCor ? porCor.map((c) => ({ slot: c.slot, tipo: f.filMistoCores.find((x) => x.slot === c.slot)?.tipo ?? tipoDoPerfil(c.perfil) })) : [] })} /></div>
+        onChange={(v) => onChange(v === "nao" ? { filMisto: false, filMistoTipos: [], filMistoCores: [] } : { filMisto: true, filMistoTipos: f.filMistoTipos, filMistoCores: porCor ? porCor.map((c) => ({ slot: c.slot, tipo: f.filMistoCores.find((x) => x.slot === c.slot)?.tipo ?? inicial(c) })) : [] })} /></div>
       {f.filMisto === true && <>
-        {porCor ? <div className="space-y-2">{porCor.map((c) => (
+        {porCor ? <div className="space-y-2">{algumLembrado && <p className="text-sm text-muted-foreground">Marcamos as cores que você já indicou como especiais. Confira se é o mesmo rolo.</p>}{porCor.map((c) => (
           <div key={c.slot} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
             <span className="flex items-center gap-2 text-sm">
               <svg aria-hidden className="size-5 shrink-0 rounded-full border bg-muted" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill={/^#[\da-f]{6}([\da-f]{2})?$/i.test(c.cor) ? c.cor : "currentColor"} /></svg>
-              Cor {c.slot}
+              <span className="flex flex-col">Cor {c.slot}{lembradoDaMemoria(c.perfil, c.cor, memoria) && <span className="text-xs text-muted-foreground">Lembrado da última vez</span>}</span>
             </span>
-            <Select value={f.filMistoCores.find((x) => x.slot === c.slot)?.tipo ?? tipoDoPerfil(c.perfil)} onValueChange={(tipo) => onChange({ filMisto: true, filMistoTipos: f.filMistoTipos, filMistoCores: porCor.map((x) => ({ slot: x.slot, tipo: x.slot === c.slot ? tipo : f.filMistoCores.find((v) => v.slot === x.slot)?.tipo ?? tipoDoPerfil(x.perfil) })) })}>
+            <Select value={f.filMistoCores.find((x) => x.slot === c.slot)?.tipo ?? inicial(c)} onValueChange={(tipo) => onChange({ filMisto: true, filMistoTipos: f.filMistoTipos, filMistoCores: porCor.map((x) => ({ slot: x.slot, tipo: x.slot === c.slot ? tipo : f.filMistoCores.find((v) => v.slot === x.slot)?.tipo ?? inicial(x) })) })}>
               <SelectTrigger aria-label={`Tipo da Cor ${c.slot}`} className="min-h-11 min-w-0"><SelectValue /></SelectTrigger>
               <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>

@@ -54,3 +54,48 @@ export async function coresDo3mf(ler: LerFaixa, tamanho: number): Promise<Cor3mf
     return null;
   }
 }
+
+const CHAVE_MEMORIA = "fatiapro.cores_filamento";
+const LIMITE_MEMORIA = 200;
+
+/** Remembered special material per color (uppercase hex). Any storage/JSON problem yields {}. */
+export function lerMemoriaCores(): Record<string, string> {
+  try {
+    const bruto: unknown = JSON.parse(localStorage.getItem(CHAVE_MEMORIA) ?? "{}");
+    if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) return {};
+    const out: Record<string, string> = {};
+    for (const [cor, tipo] of Object.entries(bruto)) if (typeof tipo === "string" && tipo) out[cor.toUpperCase()] = tipo;
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** Saves the chosen types; "PLA" removes the color. Keeps the 200 most recent colors. */
+export function guardarMemoriaCores(cores: Cor3mf[], tipoPorSlot: Record<number, string> | { slot: number; tipo: string }[]): void {
+  try {
+    const mapa: Record<number, string> = Array.isArray(tipoPorSlot) ? Object.fromEntries(tipoPorSlot.map((x) => [x.slot, x.tipo])) : tipoPorSlot;
+    const memoria = lerMemoriaCores();
+    for (const c of cores) {
+      const tipo = mapa[c.slot];
+      if (!tipo) continue;
+      const cor = c.cor.toUpperCase();
+      delete memoria[cor]; // re-insert so it becomes the most recent
+      if (tipo !== "PLA") memoria[cor] = tipo;
+    }
+    const entradas = Object.entries(memoria).slice(-LIMITE_MEMORIA);
+    localStorage.setItem(CHAVE_MEMORIA, JSON.stringify(Object.fromEntries(entradas)));
+  } catch { /* storage unavailable: memory is optional */ }
+}
+
+/** Profile wins when it names a special material; plain/generic PLA falls back to memory. */
+export function tipoInicial(perfil: string, cor: string, memoria: Record<string, string>): string {
+  const doPerfil = tipoDoPerfil(perfil);
+  if (doPerfil !== "PLA") return doPerfil;
+  return memoria[cor.toUpperCase()] ?? doPerfil;
+}
+
+/** True when the initial type came from memory rather than the profile. */
+export function lembradoDaMemoria(perfil: string, cor: string, memoria: Record<string, string>): boolean {
+  return tipoDoPerfil(perfil) === "PLA" && Boolean(memoria[cor.toUpperCase()]) && memoria[cor.toUpperCase()] !== "PLA";
+}
