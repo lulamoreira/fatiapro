@@ -1,4 +1,5 @@
 # Marca FatiaProAI
+- [ ] Retirar pré-seleção de impressora mantendo restauração/bico único; aplicar máscaras em negócio, contato do cliente e PDF; executar testes e verificar telas.
 - [x] Incluir Torre útil na Produção e avisos/comando de atualização da ponte; migração aplicada e conferida no banco, 352 testes passaram e build OK. Conferência visual autenticada e atualização física indisponíveis: não foi possível obter sessão da conta solicitante.
 - [x] Adicionar filamentos mistos opcionais, leitura das cores do 3MF e resumo; 336 testes passaram, sem mudar a validação das seções. Conferência autenticada da tela indisponível: não foi possível obter sessão da conta solicitante.
 - [x] Exibir testes ao vivo agrupados, com comparação e bloco recolhível; 292 testes passaram, sem alterações no banco ou na ponte. Verificação com ponte física não realizada: sessão autenticada indisponível.
