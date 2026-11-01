@@ -3,6 +3,16 @@ import { FORM_INICIAL, fromOpcoes, toOpcoes, validar } from "./form";
 
 const base = { ...FORM_INICIAL, roteiro: "producao" as const };
 
+describe("impressora explícita", () => {
+  it("nova análise começa sem impressora e exige escolha", () => {
+    expect(FORM_INICIAL.impressora).toBeNull();
+    expect(validar({ ...base, fatiador: "bambu" }, false).impressora).toBe("Escolha a impressora.");
+  });
+  it("restaura o perfil de análise repetida ou modelo salvo", () => {
+    expect(fromOpcoes({}, { impressora: "Bambu Lab A1 0.6 nozzle", bico: 0.6 }).impressora).toBe("Bambu Lab A1 0.6 nozzle");
+  });
+});
+
 describe("filamento misto", () => {
   it("Sim envia tipos e cores", () => {
     expect(toOpcoes({ ...base, filMisto: true, filMistoTipos: ["PETG"], filMistoCores: [{ slot: 1, tipo: "PLA Silk" }] })).toMatchObject({ filamento_misto: { tem: true, tipos: ["PETG"], cores: [{ slot: 1, tipo: "PLA Silk" }] } });

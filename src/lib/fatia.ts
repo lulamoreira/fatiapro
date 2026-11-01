@@ -421,9 +421,3 @@ export function opcoesImpressora(todos: readonly string[], escolhidos: readonly 
   return { filtrado, modelos: grupos.map((g) => ({ ...g, fora: !!fora && g.bicos.every((b) => b.perfil === fora) })) };
 }
 
-/** Auto-select: one model → that model; one nozzle too → that profile. */
-export function autoImpressora(modelos: readonly ModeloImpressora[]): { modelo: string; perfil: string | null } | null {
-  if (modelos.length !== 1) return null;
-  const g = modelos[0]!;
-  return { modelo: g.modelo, perfil: g.bicos.length === 1 ? g.bicos[0]!.perfil : null };
-}

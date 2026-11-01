@@ -24,7 +24,7 @@ import { devicesQuery, presetsQuery } from "@/lib/queries";
 import {
   BICOS, fatiadorLabel, nomeFatiador, nomeArquivoCompleto, FINALIDADES, MARCA_GENERICA, gruposMarca, grupoDaMarca, linhasDaMarca, materialTexto, PRIORIDADES, ROTEIROS, TIPOS_FILAMENTO,
   isConectado, maquinaResumo, nomeArquivoOtimizado, parseRelatorio, togglePrioridade,
-  opcoesImpressora, parseEscolhidas, separarPerfil, autoImpressora, SEM_BICO,
+  opcoesImpressora, parseEscolhidas, separarPerfil, SEM_BICO,
 } from "@/lib/fatia";
 import { escolherMotor } from "@/lib/motor-choice";
 import { MotorChoice } from "@/components/fatia/MotorChoice";
@@ -233,14 +233,6 @@ function NovaAnalise() {
     const alvo = rel.fatiadores.length === 1 ? rel.fatiadores[0]!.id : rel.fatiadores.find((x) => x.id === ultimoFatiador)?.id;
     if (alvo) setF((p) => (p.fatiador ? p : { ...p, fatiador: alvo }));
   }, [rel.fatiadores, ultimoFatiador, f.fatiador]);
-  // One chosen model (and nozzle) comes preselected.
-  const autoImp = autoImpressora(impOpc.modelos);
-  useEffect(() => {
-    if (!autoImp || f.impressora || impModelo?.fatiador === f.fatiador) return;
-    setImpModelo({ fatiador: f.fatiador, modelo: autoImp.modelo });
-    const perfil = autoImp.perfil;
-    if (perfil) setF((p) => (p.impressora ? p : { ...p, impressora: perfil, bico: separarPerfil(perfil).bico === SEM_BICO ? p.bico : separarPerfil(perfil).bico }));
-  }, [autoImp?.modelo, autoImp?.perfil, f.fatiador, f.impressora]);
   const preco = f.roteiro === "preco";
   const custoDolar = useCustoCurto(f.roteiro, f.motor, premium);
   const custoCurto = usaFatiaPro ? (uso?.texto ?? "—") : custoDolar;
@@ -490,7 +482,7 @@ function NovaAnalise() {
                 )}
                 {erros.impressora && <Erro>{erros.impressora}</Erro>}
               </div>
-              <div className="space-y-1.5">
+              {modeloAtual && <div className="space-y-1.5">
                 <Label>Bico</Label>
                 {grupoModelo && !(grupoModelo.bicos.length === 1 && grupoModelo.bicos[0]!.bico === SEM_BICO) ? (
                   <Segmented label="Bico" options={grupoModelo.bicos.map((b) => ({ id: b.perfil, label: `${b.bico} mm` }))} value={f.impressora ?? ""}
@@ -498,7 +490,7 @@ function NovaAnalise() {
                 ) : (
                   <Segmented label="Bico" options={BICOS.map((b) => ({ id: String(b), label: `${b} mm` }))} value={String(f.bico)} onChange={(v) => set("bico", BICOS.find((b) => String(b) === v) ?? f.bico)} />
                 )}
-              </div>
+              </div>}
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-1.5">

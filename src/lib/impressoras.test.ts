@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { agruparImpressoras, opcoesImpressora, autoImpressora, bicoPadrao } from "./fatia";
+import { agruparImpressoras, opcoesImpressora, bicoPadrao } from "./fatia";
 
 describe("agruparImpressoras", () => {
   const g = agruparImpressoras([
@@ -25,9 +25,6 @@ describe("Nova análise: impressoras", () => {
     const o = opcoesImpressora(todos, ["Bambu Lab A1 0.6 nozzle", "Sumiu 0.4 nozzle"], null);
     expect(o.filtrado).toBe(true);
     expect(o.modelos.map((m) => [m.modelo, m.bicos.map((b) => b.bico)])).toEqual([["Bambu Lab A1", ["0.6"]]]);
-  });
-  it("1 modelo e 1 bico já vêm selecionados", () => {
-    expect(autoImpressora(opcoesImpressora(todos, ["Bambu Lab A1 0.6 nozzle"], null).modelos)).toEqual({ modelo: "Bambu Lab A1", perfil: "Bambu Lab A1 0.6 nozzle" });
   });
   it("sem escolha aparece tudo", () => {
     const o = opcoesImpressora(todos, undefined, null);
