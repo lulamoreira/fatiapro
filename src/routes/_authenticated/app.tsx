@@ -12,6 +12,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { AceiteTermosModal } from "@/components/fatia/AceiteTermos";
 import { LinksLegais } from "@/components/fatia/PaginaLegal";
 import { DicaInstalar } from "@/components/fatia/DicaInstalar";
+import { AvisoPonteNova } from "@/components/fatia/AtualizarPonte";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -41,7 +42,7 @@ export const Logo = ({ className }: { className?: string }) => (
 );
 
 /** Status of the first connected (or first) computer, shared by sidebar and mobile dot. */
-function useStatusComputador() {
+export function useStatusComputador() {
   const now = useNow(10_000);
   const { data: devices = [] } = useQuery(devicesQuery);
   const on = devices.find((d) => isConectado(d.ultimo_contato, now));
@@ -77,6 +78,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] md:flex">
       <AceiteTermosModal />
+      <AvisoPonteNova device={status.device} />
       {/* Desktop glass sidebar */}
       <aside className="glass sticky top-5 m-5 hidden h-[calc(100vh-40px)] w-60 shrink-0 flex-col rounded-[22px] p-3 md:flex" aria-label="Menu">
         <div className="px-3 pb-5 pt-3"><Link to="/app" aria-label="FatiaPro — Início" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Logo /></Link></div>

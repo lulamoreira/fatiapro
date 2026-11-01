@@ -600,12 +600,13 @@ function NovaAnalise() {
               <Label>Prioridade (até 2)</Label>
               <div className="flex flex-wrap gap-2">{PRIORIDADES.map((x) => { const i = f.prioridades.indexOf(x); return <Chip key={x} selected={i >= 0} badge={i >= 0 ? i + 1 : undefined} onClick={() => set("prioridades", togglePrioridade(f.prioridades, x))}>{x}</Chip>; })}</div>
             </div>
-            {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo") && (
+            {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao") && (
               <div className="space-y-1.5">
                 <Label>Torre útil</Label>
                 <p className="text-xs text-muted-foreground">Em peça colorida, a sobra das trocas de cor vira uma peça para usar depois. Ela sai em faixas coloridas e usa filamento a mais.</p>
                 <div className="flex flex-wrap gap-2">{TORRES_UTIL.map((t) => <Chip key={t.id} selected={f.torreUtil === t.id} onClick={() => set("torreUtil", t.id)}>{t.label}</Chip>)}</div>
                 <p className="text-xs text-muted-foreground">{TORRES_UTIL.find((t) => t.id === f.torreUtil)?.ajuda}</p>
+                <p className="text-xs text-muted-foreground">Em impressora com um cabeçote por cor, como a U1, não há sobra para aproveitar: a torre é desligada e nenhuma peça extra é impressa.</p>
               </div>
             )}
           </Secao>

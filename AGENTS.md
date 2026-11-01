@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
+- Bridge update availability and deferral rules live in `atualizacao-ponte`; shared update controls follow existing device commands and suppress the global dialog during open analyses; why: keep platform comparison, polling and update feedback consistent across screens.
 - Mixed-filament data is serialized defensively in form helpers; `cores-3mf` reads only ZIP metadata ranges and the piece-reading hook discards stale results; why: changing pieces must never retain another file's color slots.
 - Analysis progress text, phase percentages and incremental live-test groups are selected by pure helpers in `progresso-analise`; `TestesAoVivo` displays them and retains pre-approval tests when applying emits none; WorkingCard resets its monotonic bar per phase and MapaPlaca shares printer-coordinate SVG rendering between approval and result; why: preserve message history and completed tests without changing bridge data.
 - Result currency conversion is isolated in `CustoReal` and is display-only with an editable reference exchange rate; why: preserve recorded provider costs and credit billing while allowing local-currency display.

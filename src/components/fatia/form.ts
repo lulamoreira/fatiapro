@@ -1,7 +1,7 @@
 /** Nova-análise form state, (de)serialization to job.opcoes and validation. */
 import { MARCA_OUTRA, TEMP_BICO, TEMP_MESA, type FatiadorId, type Motor, type Roteiro } from "@/lib/fatia";
 
-/** Torre útil: a sobra das trocas de cor vira uma peça aproveitável (só config_geral/reduzir_tempo). */
+/** Torre útil: a sobra das trocas de cor vira uma peça aproveitável (otimização e produção). */
 export const TORRES_UTIL = [
   { id: "porta_lapis", label: "Porta-lápis", ajuda: "Até 11 cm de altura. Bom para peças altas." },
   { id: "vaso", label: "Vaso torcido", ajuda: "Até 13 cm de altura. Bom para peças altas." },
@@ -67,7 +67,7 @@ export interface FormState {
   preco: PrecoCampos;
   /** Produção em lote: quantas peças (vazio = encher uma placa). */
   prodQuantidade: string;
-  /** Torre útil (só config_geral/reduzir_tempo). */
+  /** Torre útil (otimização e produção). */
   torreUtil: TorreUtil;
   motor: Motor | null;
 }
@@ -117,7 +117,7 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
     ...(f.roteiro === "producao" && num(f.prodQuantidade) != null ? { quantidade: num(f.prodQuantidade) } : {}),
-    ...(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" ? { torre_util: f.torreUtil } : {}),
+    ...(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao" ? { torre_util: f.torreUtil } : {}),
     ...(f.roteiro === "preco"
       ? {
           preco: {

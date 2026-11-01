@@ -37,6 +37,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { progressoDaFase, testesDaFase, textoProgresso } from "@/lib/progresso-analise";
 import { BlocoTestesAoVivo } from "@/components/fatia/TestesAoVivo";
 import { SeloPonte } from "@/components/fatia/SeloPonte";
+import { BotaoAtualizarPonte } from "@/components/fatia/AtualizarPonte";
+import { ESTADOS_ANALISE_ABERTA, ponteNovaQuery, precisaAtualizar } from "@/lib/atualizacao-ponte";
 
 export const Route = createFileRoute("/_authenticated/app/analise/$id")({
   head: () => ({ meta: [{ title: "Análise — FatiaPro" }, { name: "description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:title", content: "Análise — FatiaPro" }, { property: "og:description", content: "Acompanhe a análise ao vivo e aprove as mudanças." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -54,6 +56,7 @@ function AnalisePage() {
   const { data: eventos = [] } = useQuery(jobEventsQuery(id));
   const now = useNow(1000);
   useDevicesLive();
+  const { data: versoesPonte = [] } = useQuery(ponteNovaQuery);
   /** Optimistic phase set on click, before server/bridge confirm. */
   const [erroRep, setErroRep] = useState<ErroAnalise | null>(null);
   const [questJob, setQuestJob] = useState<string | null>(null);
@@ -71,7 +74,8 @@ function AnalisePage() {
     enabled: !!deviceId,
     refetchInterval: 15_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("devices").select("id, ultimo_contato, versao_ponte, nome").eq("id", deviceId!).maybeSingle();
+      if (!deviceId) return null;
+      const { data, error } = await supabase.from("devices").select("id, ultimo_contato, versao_ponte, nome, sistema").eq("id", deviceId).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -160,6 +164,7 @@ function AnalisePage() {
     );
 
   const estado = (job.estado as Estado) ?? "na_fila";
+  const novaPonte = device ? precisaAtualizar(device, versoesPonte) : null;
   const est = ESTADOS[estado];
   const opc = (job.opcoes ?? {}) as { impressora?: string; filamento?: { tipo?: string; marca?: string; linha?: string } };
   type Ev = (typeof eventos)[number];
@@ -250,6 +255,9 @@ function AnalisePage() {
             {etiquetaFonte(job) && <Tag tone={etiquetaFonte(job) === "Crédito devolvido" ? "success" : "muted"}>{etiquetaFonte(job)}</Tag>}
             <Tag tone={est.tone} className="text-sm">{est.label}</Tag>
             <SeloPonte versao={device?.versao_ponte} nome={device?.nome} />
+            {device && novaPonte && (ESTADOS_ANALISE_ABERTA.includes(estado)
+              ? <p className="min-w-0 max-w-full break-words text-xs text-muted-foreground">Versão {novaPonte.versao} disponível: entra quando esta análise terminar</p>
+              : <BotaoAtualizarPonte key={device.id} device={device} />)}
           </div>
         </div>
         {estado === "concluido" && (

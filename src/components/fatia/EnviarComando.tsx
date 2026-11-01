@@ -7,7 +7,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { Button, type buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
 
-export type TipoComando = "instalar_claude_code" | "entrar_claude" | "configurar_api" | "escolher_pasta" | "adicionar_fatiador";
+export type TipoComando = "instalar_claude_code" | "entrar_claude" | "configurar_api" | "escolher_pasta" | "adicionar_fatiador" | "atualizar_ponte";
 
 export interface EnviarComandoProps {
   deviceId: string;
@@ -40,7 +40,8 @@ export function useComando(deviceId: string, tipo: TipoComando, parametros: Reco
     enabled: !!cmdId,
     refetchInterval: (q) => (q.state.data && ["concluido", "erro"].includes(q.state.data.estado) ? false : 4_000),
     queryFn: async () => {
-      const { data, error } = await supabase.from("device_commands").select("id, estado, resposta").eq("id", cmdId!).maybeSingle();
+      if (!cmdId) return null;
+      const { data, error } = await supabase.from("device_commands").select("id, estado, resposta").eq("id", cmdId).maybeSingle();
       if (error) throw error;
       return data;
     },
