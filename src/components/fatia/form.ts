@@ -86,6 +86,7 @@ export const FORM_INICIAL: FormState = {
   gramasRestantes: "",
   preco: { precoRolo: "", pesoRolo: "1", consumoW: "", kwh: "", minAcabamento: "", rsHora: "", quantidade: "1", taxaFalha: "10", gramas: null, segundos: null },
   prodQuantidade: "",
+  torreUtil: "porta_lapis",
   motor: null,
 };
 
@@ -109,6 +110,7 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
     ...(f.roteiro === "producao" && num(f.prodQuantidade) != null ? { quantidade: num(f.prodQuantidade) } : {}),
+    ...(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" ? { torre_util: f.torreUtil } : {}),
     ...(f.roteiro === "preco"
       ? {
           preco: {
