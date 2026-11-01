@@ -38,6 +38,43 @@ export function BotaoAtualizarPonte({ device }: BotaoAtualizarPonteProps) {
   );
 }
 
+export interface BotaoPonteSempreProps { device: DeviceAtualizacao }
+/** Botão de atualização sempre visível quando há computador, com o estado logo abaixo. */
+export function BotaoPonteSempre({ device }: BotaoPonteSempreProps) {
+  const versoesQuery = useQuery(ponteNovaQuery);
+  const versoes = versoesQuery.data ?? [];
+  const now = useNow(10_000);
+  const { cmd, ocupado, enviar } = useComando(device.id, "atualizar_ponte");
+  const avisado = useRef<string | null>(null);
+  const mensagem = typeof cmd?.resposta["mensagem"] === "string" ? cmd.resposta["mensagem"] : null;
+  useEffect(() => {
+    if (cmd?.estado === "erro" && cmd.resposta["motivo"] === "analise_aberta" && avisado.current !== cmd.id) {
+      avisado.current = cmd.id;
+      toast.warning(mensagem ?? "Há uma análise aberta neste computador.");
+    }
+  }, [cmd, mensagem]);
+  const nova = precisaAtualizar(device, versoes);
+  const conectado = isConectado(device.ultimo_contato, now);
+  const podeBotao = temBotao(device.versao_ponte);
+  // A mensagem do comando continua visível mesmo quando a ponte reinicia.
+  let detalhe: string | null = null;
+  if (cmd?.estado === "concluido") detalhe = mensagem ?? "Ponte atualizada";
+  else if (ocupado) detalhe = mensagem ?? "Aguardando o computador…";
+  else if (!conectado) detalhe = "Computador desconectado";
+  else if (!podeBotao) detalhe = "Ela entra sozinha quando não houver análise aberta";
+  else if (nova) detalhe = `Versão ${nova.versao} disponível`;
+  else if (versoesQuery.isFetched) detalhe = "Versão mais recente";
+  return (
+    <div className="min-w-0 max-w-full space-y-1">
+      <Button type="button" size="sm" variant={nova ? "default" : "outline"} disabled={ocupado || !conectado || !podeBotao} onClick={enviar}>
+        {ocupado ? <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden /> : <Download className="size-4" aria-hidden />}
+        Atualizar ponte
+      </Button>
+      {detalhe && <p aria-live="polite" className="break-words text-xs text-muted-foreground">{detalhe}</p>}
+    </div>
+  );
+}
+
 export interface AvisoPonteNovaProps { device: DeviceAtualizacao | undefined }
 export function AvisoPonteNova({ device }: AvisoPonteNovaProps) {
   const { data: versoes = [] } = useQuery(ponteNovaQuery);
