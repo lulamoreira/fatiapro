@@ -3,6 +3,22 @@ import { FORM_INICIAL, fromOpcoes, toOpcoes, validar } from "./form";
 
 const base = { ...FORM_INICIAL, roteiro: "producao" as const };
 
+describe("filamento misto", () => {
+  it("Sim envia tipos e cores", () => {
+    expect(toOpcoes({ ...base, filMisto: true, filMistoTipos: ["PETG"], filMistoCores: [{ slot: 1, tipo: "PLA Silk" }] })).toMatchObject({ filamento_misto: { tem: true, tipos: ["PETG"], cores: [{ slot: 1, tipo: "PLA Silk" }] } });
+  });
+  it("Não envia somente tem false", () => expect(toOpcoes({ ...base, filMisto: false })).toMatchObject({ filamento_misto: { tem: false } }));
+  it("sem resposta omite o campo", () => expect(toOpcoes(base)).not.toHaveProperty("filamento_misto"));
+  it("restaura seleção válida", () => {
+    expect(fromOpcoes({}, { filamento_misto: { tem: true, tipos: ["TPU"], cores: [{ slot: 2, tipo: "PLA Silk" }] } })).toMatchObject({ filMisto: true, filMistoTipos: ["TPU"], filMistoCores: [{ slot: 2, tipo: "PLA Silk" }] });
+    expect(fromOpcoes({}, { filamento_misto: { tem: false } }).filMisto).toBe(false);
+  });
+  it.each([null, "sim", { tem: "true" }, { tem: true, tipos: [42] }, { tem: true, cores: [{ slot: 0, tipo: "PLA" }] }, { tem: true, cores: [{ slot: 1.5, tipo: "PLA" }] }, { tem: true, cores: [{ slot: 1, tipo: 42 }] }])("restauração inválida volta ao inicial: %j", (raw) => {
+    expect(fromOpcoes({}, { filamento_misto: raw })).toMatchObject({ filMisto: null, filMistoTipos: [], filMistoCores: [] });
+  });
+  it("resposta não altera validação", () => expect(validar({ ...base, filMisto: true }, false)).toEqual(validar(base, false)));
+});
+
 describe("toOpcoes — produção em lote", () => {
   it("envia quantidade como número quando preenchida", () => {
     const o = toOpcoes({ ...base, prodQuantidade: "250" });

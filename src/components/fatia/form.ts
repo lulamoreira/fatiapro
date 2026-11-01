@@ -53,6 +53,9 @@ export interface FormState {
   impressora: string | null;
   bico: string;
   filTipo: string | null;
+  filMisto: boolean | null;
+  filMistoTipos: string[];
+  filMistoCores: { slot: number; tipo: string }[];
   filMarca: string | null;
   /** Optional label temperatures, used when the slicer has no profile for the brand. */
   tempBico: string;
@@ -77,6 +80,9 @@ export const FORM_INICIAL: FormState = {
   impressora: null,
   bico: "0.4",
   filTipo: null,
+  filMisto: null,
+  filMistoTipos: [],
+  filMistoCores: [],
   filMarca: null,
   tempBico: "",
   tempMesa: "",
@@ -107,6 +113,7 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
       ...(tm != null ? { temp_mesa: tm } : {}),
     },
     finalidades: f.finalidades,
+    ...(f.filMisto === true ? { filamento_misto: { tem: true, tipos: f.filMistoTipos, cores: f.filMistoCores } } : f.filMisto === false ? { filamento_misto: { tem: false } } : {}),
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
     ...(f.roteiro === "producao" && num(f.prodQuantidade) != null ? { quantidade: num(f.prodQuantidade) } : {}),
@@ -146,6 +153,7 @@ interface OpcoesSalvas {
   bico?: string;
   filamento?: { tipo?: string | null; marca?: string | null; linha?: string | null; temp_bico?: unknown; temp_mesa?: unknown };
   filamento_marca_escolhida?: string | null;
+  filamento_misto?: unknown;
   finalidades?: unknown;
   prioridades?: unknown;
   gramas_restantes?: unknown;
@@ -154,6 +162,22 @@ interface OpcoesSalvas {
   preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+
+/** Malformed saved mixed-material data must not become a user selection. */
+export function lerFilamentoMisto(raw: unknown): Pick<FormState, "filMisto" | "filMistoTipos" | "filMistoCores"> {
+  const inicial = { filMisto: null, filMistoTipos: [], filMistoCores: [] };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return inicial;
+  const o = raw as { tem?: unknown; tipos?: unknown; cores?: unknown };
+  if (typeof o.tem !== "boolean") return inicial;
+  if (o.tipos !== undefined && (!Array.isArray(o.tipos) || !o.tipos.every((v) => typeof v === "string"))) return inicial;
+  const corValida = (v: unknown): v is { slot: number; tipo: string } => {
+    if (!v || typeof v !== "object") return false;
+    const c = v as { slot?: unknown; tipo?: unknown };
+    return typeof c.slot === "number" && Number.isInteger(c.slot) && c.slot > 0 && typeof c.tipo === "string";
+  };
+  if (o.cores !== undefined && (!Array.isArray(o.cores) || !o.cores.every(corValida))) return inicial;
+  return { filMisto: o.tem, filMistoTipos: o.tem ? strArr(o.tipos) : [], filMistoCores: o.tem && Array.isArray(o.cores) ? o.cores.filter(corValida) : [] };
+}
 
 /** Rebuild a form from a saved preset or an earlier job. */
 export function fromOpcoes(
@@ -164,6 +188,7 @@ export function fromOpcoes(
   const p = o.preco ?? {};
   return {
     ...FORM_INICIAL,
+    ...lerFilamentoMisto(o.filamento_misto),
     deviceId: base.device_id ?? null,
     roteiro: (base.roteiro ?? o.roteiro ?? null) as Roteiro | null,
     fatiador: (base.fatiador ?? o.fatiador ?? null) as FatiadorId | null,

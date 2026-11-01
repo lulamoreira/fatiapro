@@ -9,6 +9,14 @@ const cheio = {
 };
 
 describe("resumoPedido", () => {
+  it("filamentos distintos por cor têm prioridade sobre tipos", () => {
+    expect(resumoPedido({ filamento_misto: { tem: true, tipos: ["TPU"], cores: [{ slot: 1, tipo: "PLA" }, { slot: 2, tipo: "PLA Silk" }, { slot: 3, tipo: "PLA" }] } }, "checklist").chips).toEqual(["Filamentos: PLA, PLA Silk"]);
+  });
+  it("usa tipos manuais ou mais de um quando vazios", () => {
+    expect(resumoPedido({ filamento_misto: { tem: true, tipos: ["PETG", "PETG", "Outro"] } }, "producao").chips).toEqual(["Filamentos: PETG, Outro"]);
+    expect(resumoPedido({ filamento_misto: { tem: true } }, "preco").chips).toEqual(["Filamentos: mais de um"]);
+    expect(resumoPedido({ filamento_misto: { tem: false } }, "checklist").chips).toEqual([]);
+  });
   it("com todos os campos", () => {
     const r = resumoPedido(cheio, "config_geral");
     expect(r.roteiro).toBe("Configurar a peça");

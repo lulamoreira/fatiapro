@@ -16,6 +16,8 @@ import { Questionario } from "@/components/fatia/Questionario";
 import { PecaAbertaAviso } from "@/components/fatia/PecaAberta";
 import { AvisoSemCores, formatoSemCores } from "@/components/fatia/AvisoSemCores";
 import { Switch } from "@/components/ui/switch";
+import { FilamentoMisto } from "@/components/fatia/FilamentoMisto";
+import { useCoresPeca } from "@/hooks/use-cores-peca";
 import { Wallet } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { devicesQuery, presetsQuery } from "@/lib/queries";
@@ -104,6 +106,7 @@ function NovaAnalise() {
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
   const [pecaBib, setPecaBib] = useState<PecaEscolhida | null>(null);
+  const coresPeca = useCoresPeca(arquivo, pecaBib?.path ?? null, form.usarAberta, setF);
   const [ajustes, setAjustes] = useState<AjusteModelo[]>([]);
   /** Model chosen in "Usar um modelo"; recorded on the job as opcoes.modelo_id/modelo_nome. */
   const [modeloSel, setModeloSel] = useState<{ id: string; nome: string } | null>(null);
@@ -527,6 +530,7 @@ function NovaAnalise() {
               </div>
             </div>
             {erros.filamento && <Erro>{erros.filamento}</Erro>}
+            <FilamentoMisto form={f} cores={coresPeca} onChange={(campos) => setF((p) => ({ ...p, ...campos }))} />
           </Secao>
 
           <Secao id="sec-3" n={3} ok={s2ok} titulo={`Peça${preco ? " (opcional)" : ""}`} subtitulo=".stl, .3mf, .step ou .stp · até 100 MB">
