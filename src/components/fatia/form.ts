@@ -3,7 +3,7 @@ import { MARCA_OUTRA, TEMP_BICO, TEMP_MESA, type FatiadorId, type Motor, type Ro
 
 /** Torre útil: a sobra das trocas de cor vira uma peça aproveitável (otimização e produção). */
 export const TORRES_UTIL = [
-  { id: "ovo", label: "Ovo", ajuda: "Fica com a altura da peça. Para usar o seu modelo, salve ovo.stl em Documentos/FatiaPro/Pecas uteis." },
+  { id: "ovo", label: "Ovo", ajuda: "Usa o seu modelo salvo como ovo.3mf em Documentos/FatiaPro/Pecas uteis. Sem esse arquivo, usa o ovo com escamas do FatiaPro." },
   { id: "porta_lapis", label: "Porta-lápis", ajuda: "Fica com a altura da peça." },
   { id: "vaso", label: "Vaso torcido", ajuda: "Fica com a altura da peça." },
   { id: "caixa", label: "Caixa organizadora", ajuda: "Fica com a altura da peça." },
