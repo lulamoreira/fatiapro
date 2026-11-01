@@ -150,6 +150,7 @@ interface OpcoesSalvas {
   prioridades?: unknown;
   gramas_restantes?: unknown;
   quantidade?: unknown;
+  torre_util?: unknown;
   preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -180,6 +181,7 @@ export function fromOpcoes(
     prioridades: strArr(o.prioridades).slice(0, 2),
     gramasRestantes: str(o.gramas_restantes),
     prodQuantidade: str(o.quantidade),
+    torreUtil: torreUtilValida(o.torre_util),
     preco: {
       precoRolo: str(p.preco_rolo_brl),
       pesoRolo: str(p.peso_rolo_kg ?? 1),
