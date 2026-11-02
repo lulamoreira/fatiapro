@@ -185,7 +185,6 @@ function BibliotecaPage() {
                 <Tag tone={p.arquivo_otimizado_path ? "success" : "muted"}>Otimizado</Tag>
               </div>
               {p.arquivo_original_path && <p className="mt-2 break-all text-xs"><span className="text-muted-foreground">Original: </span>{nomeDownloadOriginal(p.nome_arquivo_original, p.jobs?.nome_peca)}</p>}
-              {p.arquivo_otimizado_path && <p className="break-all text-xs"><span className="text-muted-foreground">Otimizado: </span>{nomeDownloadOtimizado(p.nome_arquivo_otimizado)}</p>}
               {p.observacao && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{p.observacao}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 {p.arquivo_original_path && <Button size="sm" variant="outline" onClick={() => onBaixar(p.arquivo_original_path!, nomeDownloadOriginal(p.nome_arquivo_original, p.jobs?.nome_peca))}><Download className="size-4" aria-hidden />Baixar original</Button>}
