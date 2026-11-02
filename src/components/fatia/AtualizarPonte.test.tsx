@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({ abertas: 0, enviar: vi.fn(), toast: vi.fn(),
 const now = 2_000_000;
 vi.mock("@/hooks/use-now", () => ({ useNow: () => now }));
 vi.mock("@/components/fatia/EnviarComando", () => ({ useComando: () => ({ cmd: state.cmd, ocupado: false, enviar: state.enviar }) }));
-vi.mock("sonner", () => ({ toast: { warning: state.toast } }));
+vi.mock("sonner", () => ({ toast: { warning: state.toast, info: state.toast, success: state.toast, error: state.toast } }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@tanstack/react-query", async (original) => ({
   ...await original<typeof import("@tanstack/react-query")>(),
@@ -27,6 +27,24 @@ describe("aviso da ponte", () => {
     state.abertas = 1;
     render(<AvisoPonteNova device={device} />);
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  });
+  it("Atualizar agora envia o comando e fecha a janela", async () => {
+    render(<AvisoPonteNova device={device} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Atualizar agora" }));
+    expect(state.enviar).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem("fatiapro.ponte_depois.d.0.3.52")).toBe(String(now));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  });
+  it("aviso concluído e erro apagam a marcação e avisam uma vez por comando", async () => {
+    const { rerender } = render(<AvisoPonteNova device={device} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Atualizar agora" }));
+    state.cmd = { id: "c1", estado: "erro", resposta: { motivo: "analise_aberta" } };
+    rerender(<AvisoPonteNova device={device} />);
+    await waitFor(() => expect(state.toast).toHaveBeenCalledWith("Há uma análise aberta neste computador. A ponte será atualizada depois."));
+    expect(localStorage.getItem("fatiapro.ponte_depois.d.0.3.52")).toBeNull();
+    state.cmd = { id: "c2", estado: "concluido", resposta: {} };
+    rerender(<AvisoPonteNova device={device} />);
+    await waitFor(() => expect(state.toast).toHaveBeenCalledWith("Ponte atualizada para a versão 0.3.52"));
   });
   it("envia o comando pelo botão", () => {
     render(<BotaoAtualizarPonte device={device} />);
