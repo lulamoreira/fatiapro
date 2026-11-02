@@ -24,12 +24,12 @@ export function caminhosDoJob(job: Pick<Tables<"jobs">, "arquivo_path" | "result
 export function SalvarBibliotecaDialog({ job, trigger }: { job: Tables<"jobs">; trigger?: "icon" | "button" }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const sugestao = (job.nome_peca ?? "peca-aberta").replace(/\.[^.]+$/, "");
+  const nomes = nomesDoJob(job);
+  const sugestao = (nomes.otimizado ?? job.nome_peca ?? "peca-aberta").replace(/\.[^.]+$/, "").slice(0, 120);
   const [nome, setNome] = useState(sugestao);
   const [obs, setObs] = useState("");
   const [salvando, setSalvando] = useState(false);
   const { original, otimizado } = caminhosDoJob(job);
-  const nomes = nomesDoJob(job);
 
   useEffect(() => { if (open) { setNome(sugestao); setObs(""); } }, [open, sugestao]);
 
