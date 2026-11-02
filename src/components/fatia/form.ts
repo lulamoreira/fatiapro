@@ -1,5 +1,6 @@
 /** Nova-análise form state, (de)serialization to job.opcoes and validation. */
 import { MARCA_OUTRA, TEMP_BICO, TEMP_MESA, type FatiadorId, type Motor, type Roteiro } from "@/lib/fatia";
+import { kwhEstimado } from "@/lib/energia";
 
 /** Torre útil: a sobra das trocas de cor vira uma peça aproveitável (otimização e produção). */
 export const TORRES_UTIL = [
@@ -38,6 +39,8 @@ export interface PrecoCampos {
   pesoRolo: string;
   consumoW: string;
   kwh: string;
+  /** undefined uses the profile; null means explicitly no state. */
+  uf: string | null | undefined;
   minAcabamento: string;
   rsHora: string;
   quantidade: string;
@@ -91,7 +94,7 @@ export const FORM_INICIAL: FormState = {
   finalidades: [],
   prioridades: [],
   gramasRestantes: "",
-  preco: { precoRolo: "", pesoRolo: "1", consumoW: "", kwh: "", minAcabamento: "", rsHora: "", quantidade: "1", taxaFalha: "10", gramas: null, segundos: null },
+  preco: { precoRolo: "", pesoRolo: "1", consumoW: "", kwh: "", uf: undefined, minAcabamento: "", rsHora: "", quantidade: "1", taxaFalha: "10", gramas: null, segundos: null },
   prodQuantidade: "",
   torreUtil: "ovo",
   motor: null,
@@ -125,7 +128,9 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
             preco_rolo_brl: num(f.preco.precoRolo),
             peso_rolo_kg: num(f.preco.pesoRolo),
             consumo_w: num(f.preco.consumoW),
-            kwh_brl: num(f.preco.kwh),
+            uf: f.preco.uf ?? null,
+            kwh_brl: f.preco.kwh.trim() ? num(f.preco.kwh) : kwhEstimado(f.preco.uf).valor,
+            ...(!f.preco.kwh.trim() ? { kwh_estimado: kwhEstimado(f.preco.uf).origem } : {}),
             minutos_acabamento: num(f.preco.minAcabamento),
             brl_por_hora: num(f.preco.rsHora),
             quantidade: num(f.preco.quantidade),
@@ -160,7 +165,7 @@ interface OpcoesSalvas {
   gramas_restantes?: unknown;
   quantidade?: unknown;
   torre_util?: unknown;
-  preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
+  preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "kwh_estimado" | "uf" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 
@@ -212,7 +217,8 @@ export function fromOpcoes(
       precoRolo: str(p.preco_rolo_brl),
       pesoRolo: str(p.peso_rolo_kg ?? 1),
       consumoW: str(p.consumo_w),
-      kwh: str(p.kwh_brl),
+      kwh: typeof p.kwh_estimado === "string" ? "" : str(p.kwh_brl),
+      uf: p.uf === null ? null : typeof p.uf === "string" && /^[A-Z]{2}$/.test(p.uf) ? p.uf : undefined,
       minAcabamento: str(p.minutos_acabamento),
       rsHora: str(p.brl_por_hora),
       quantidade: str(p.quantidade ?? 1),
@@ -249,7 +255,7 @@ export function validar(f: FormState, temArquivo: boolean): Erros {
   if (preco) {
     if (!(Number(f.preco.precoRolo.replace(",", ".")) > 0)) e.precoRolo = "Informe o preço do rolo.";
     if (!(Number(f.preco.pesoRolo.replace(",", ".")) > 0)) e.pesoRolo = "Informe o peso do rolo.";
-    if (!(Number(f.preco.kwh.replace(",", ".")) >= 0) || !f.preco.kwh.trim()) e.kwh = "Informe o preço do kWh.";
+    if (f.preco.kwh.trim() && !(num(f.preco.kwh) != null && Number(f.preco.kwh.replace(",", ".")) > 0)) e.kwh = "Informe um valor válido ou deixe em branco.";
     if (!(Number(f.preco.rsHora.replace(",", ".")) >= 0) || !f.preco.rsHora.trim()) e.rsHora = "Informe o valor da hora.";
     if (!(Number(f.preco.quantidade) >= 1)) e.quantidade = "Quantidade mínima 1.";
   }

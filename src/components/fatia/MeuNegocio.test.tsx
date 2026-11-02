@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
 }));
 vi.mock("@/hooks/use-negocio", () => ({ useNegocio: () => ({ data: mocks.negocio, isLoading: false }) }));
+vi.mock("@/hooks/use-estado-perfil", () => ({ useEstadoPerfil: () => ({ data: null, salvar: { isPending: false, mutate: vi.fn() } }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   auth: { getUser: async () => ({ data: { user: { id: "teste" } } }) },
   from: () => ({ update: mocks.update }),

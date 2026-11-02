@@ -355,6 +355,7 @@ export const ARTIGOS_AJUDA: ArtigoAjuda[] = [
     resumo: "Seu custo por unidade e sugestões de preço.",
     passos: [
       "O roteiro Preço de venda calcula seu custo por unidade.",
+      "O preço do kWh é opcional. Em branco, usamos uma média estimada do seu estado, com impostos, sem bandeira tarifária. Para um cálculo exato, digite o valor da sua conta de luz.",
       "Ele sugere preço mínimo, justo e premium.",
       "Também mostra descontos por quantidade.",
     ],

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EstadoSelect } from "./EstadoSelect";
+import { useEstadoPerfil } from "@/hooks/use-estado-perfil";
 
 const CAMPOS = [
   { k: "nome", rot: "Nome do negócio *", max: 120 },
@@ -22,6 +24,7 @@ type Form = Record<(typeof CAMPOS)[number]["k"], string>;
 
 /** "Meu negócio" — header data printed on quotes. */
 export function MeuNegocio() {
+  const estado = useEstadoPerfil();
   const qc = useQueryClient();
   const { data: n, isLoading } = useNegocio();
   const [f, setF] = useState<Form>({ nome: "", documento: "", email: "", whatsapp: "", cidade: "" });
@@ -95,6 +98,8 @@ export function MeuNegocio() {
                   }} />
               </div>
             ))}
+            <EstadoSelect id="neg-uf" label="Estado" value={estado.data} disabled={estado.salvar.isPending} onChange={(uf) => estado.salvar.mutate(uf)} />
+            {estado.isError && <p className="text-xs text-destructive" role="alert">Não foi possível carregar o estado.</p>}
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex size-20 items-center justify-center overflow-hidden rounded-2xl border bg-secondary">
