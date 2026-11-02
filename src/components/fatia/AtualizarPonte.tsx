@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { useComando } from "@/components/fatia/EnviarComando";
 import { useNow } from "@/hooks/use-now";
 import { isConectado } from "@/lib/fatia";
-import { analiseAbertaQuery, avisoPodeVoltar, guardarDepois, lerDepois, ponteNovaQuery, precisaAtualizar, temBotao, type DeviceAtualizacao } from "@/lib/atualizacao-ponte";
+import { analiseAbertaQuery, avisoPodeVoltar, chaveDepois, guardarDepois, lerDepois, ponteNovaQuery, precisaAtualizar, temBotao, type DeviceAtualizacao } from "@/lib/atualizacao-ponte";
 
 export interface BotaoAtualizarPonteProps { device: DeviceAtualizacao }
 export function BotaoAtualizarPonte({ device }: BotaoAtualizarPonteProps) {
@@ -80,17 +80,50 @@ export function AvisoPonteNova({ device }: AvisoPonteNovaProps) {
   const { data: versoes = [] } = useQuery(ponteNovaQuery);
   const { data: abertas } = useQuery(analiseAbertaQuery(device?.id));
   const now = useNow(30_000);
+  // O acompanhamento do comando fica aqui, sempre montado no layout, para continuar depois que a janela fecha.
+  const { cmd, enviar } = useComando(device?.id ?? "", "atualizar_ponte");
+  const avisado = useRef<string | null>(null);
+  const versaoPedida = useRef<string | null>(null);
   const nova = device ? precisaAtualizar(device, versoes) : null;
   const chave = device && nova ? `${device.id}.${nova.versao}` : null;
   const [adiamento, setAdiamento] = useState<{ chave: string; data: string | null } | null>(null);
   useEffect(() => {
     if (device && nova && chave) setAdiamento({ chave, data: lerDepois(device.id, nova.versao) });
   }, [device?.id, nova?.versao, chave]);
+  const mensagem = typeof cmd?.resposta["mensagem"] === "string" ? cmd.resposta["mensagem"] : null;
+  // Avisos do fim do comando, uma vez por comando, mesmo com a janela já fechada.
+  useEffect(() => {
+    if (!cmd || avisado.current === cmd.id) return;
+    if (cmd.estado !== "concluido" && cmd.estado !== "erro") return;
+    avisado.current = cmd.id;
+    if (cmd.estado === "concluido") {
+      toast.success(`Ponte atualizada para a versão ${versaoPedida.current ?? "mais recente"}`);
+      return;
+    }
+    // Em caso de erro, apaga a marcação para a janela poder voltar quando não houver análise aberta.
+    if (device && nova) {
+      try { globalThis.localStorage?.removeItem(chaveDepois(device.id, nova.versao)); }
+      catch { /* A indisponibilidade do armazenamento não impede o aviso. */ }
+    }
+    if (cmd.resposta["motivo"] === "analise_aberta") {
+      toast.warning(mensagem ?? "Há uma análise aberta neste computador. A ponte será atualizada depois.");
+    } else {
+      toast.error(mensagem ?? "Não foi possível atualizar a ponte.");
+    }
+  }, [cmd, mensagem, device?.id, nova?.versao]);
   if (!device || !nova || !chave) return null;
   const open = abertas === 0 && adiamento?.chave === chave && avisoPodeVoltar(adiamento.data, now);
   const depois = () => {
     guardarDepois(device.id, nova.versao, now);
     setAdiamento({ chave, data: String(now) });
+  };
+  const atualizarAgora = () => {
+    versaoPedida.current = nova.versao;
+    enviar();
+    // Fecha na hora e marca a versão como pedida, para a janela não reabrir enquanto a ponte reinicia.
+    guardarDepois(device.id, nova.versao, now);
+    setAdiamento({ chave, data: String(now) });
+    toast.info("Atualizando a ponte em segundo plano. Avisaremos quando terminar.");
   };
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) depois(); }}>
@@ -103,7 +136,12 @@ export function AvisoPonteNova({ device }: AvisoPonteNovaProps) {
         {!temBotao(device.versao_ponte) && <p className="text-sm text-muted-foreground">Ela entra sozinha quando não houver análise aberta</p>}
         <AlertDialogFooter className="gap-2">
           <Button variant="ghost" onClick={depois}>{temBotao(device.versao_ponte) ? "Depois" : "Entendi"}</Button>
-          {temBotao(device.versao_ponte) && <BotaoAtualizarPonte key={device.id} device={device} />}
+          {temBotao(device.versao_ponte) && (
+            <Button type="button" disabled={!isConectado(device.ultimo_contato, now)} onClick={atualizarAgora}>
+              <Download className="size-4" aria-hidden />
+              Atualizar agora
+            </Button>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
