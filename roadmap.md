@@ -1,5 +1,6 @@
 # Marca FatiaProAI
-- [ ] Tornar kWh opcional com médias por UF, estado salvo no perfil nos dois formulários, restauração e testes.
+- [x] Tornar kWh opcional com médias por UF, estado salvo no perfil nos dois formulários, restauração e testes; migração aplicada, permissões conferidas, 417 testes passaram e build OK.
+- [ ] Conferir estado nas duas telas com conta real: bloqueado porque não foi possível obter sessão da conta solicitante; depende de entrar na prévia.
 - [x] Retirar pré-seleção de impressora mantendo restauração/bico único; aplicar máscaras em negócio, contato do cliente e PDF. 381 testes passaram e build OK; edição/salvamento/leitura conferidos com testes de interface. Conferência autenticada real bloqueada: a sessão automática não encontrou a conta solicitante.
 - [x] Incluir Torre útil na Produção e avisos/comando de atualização da ponte; migração aplicada e conferida no banco, 352 testes passaram e build OK. Conferência visual autenticada e atualização física indisponíveis: não foi possível obter sessão da conta solicitante.
 - [x] Adicionar filamentos mistos opcionais, leitura das cores do 3MF e resumo; 336 testes passaram, sem mudar a validação das seções. Conferência autenticada da tela indisponível: não foi possível obter sessão da conta solicitante.
