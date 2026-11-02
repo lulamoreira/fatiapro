@@ -7,14 +7,14 @@ export interface EstadoSelectProps {
   label: string;
   value: string | null | undefined;
   onChange: (uf: string | null) => void;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 export function EstadoSelect({ id, label, value, onChange, disabled }: EstadoSelectProps) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value || "sem-estado"} onValueChange={(v) => onChange(v === "sem-estado" ? null : v)} disabled={disabled}>
+      <Select value={value || "sem-estado"} onValueChange={(v) => onChange(v === "sem-estado" ? null : v)} disabled={disabled ?? false}>
         <SelectTrigger id={id}><SelectValue placeholder="Não informado" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="sem-estado">Não informado</SelectItem>

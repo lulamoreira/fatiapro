@@ -8,7 +8,8 @@ export const KWH_MEDIO_UF: Record<string, number> = {
 
 export function kwhEstimado(uf: string | null | undefined): { valor: number; origem: string } {
   if (uf && Object.hasOwn(KWH_MEDIO_UF, uf)) {
-    return { valor: KWH_MEDIO_UF[uf], origem: `média de ${uf}` };
+    const valor = KWH_MEDIO_UF[uf];
+    if (valor !== undefined) return { valor, origem: `média de ${uf}` };
   }
   return { valor: KWH_MEDIO_BRASIL, origem: "média do Brasil" };
 }
