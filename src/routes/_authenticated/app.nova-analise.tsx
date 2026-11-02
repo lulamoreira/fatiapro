@@ -9,6 +9,7 @@ import { Upload, FileBox, BookmarkPlus, ChevronDown, ChevronUp, ArrowRight, Book
 import { supabase } from "@/integrations/supabase/client";
 import { criarAnalise } from "@/lib/analise.functions";
 import { usePlano } from "@/hooks/use-plano";
+import { useEstadoPerfil } from "@/hooks/use-estado-perfil";
 import { erroAnalise, linhaUso, motoresVisiveis, ponteDesatualizada, roteiroComCredito, usaTeste, DIAS_TESTE, type ErroAnalise } from "@/lib/plano";
 import { compararVersao } from "@/lib/ponte";
 import { ErroAnaliseAviso } from "@/components/fatia/ErroAnaliseAviso";
@@ -96,6 +97,7 @@ function NovaAnalise() {
   const { repetir, modelo, peca } = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const estado = useEstadoPerfil();
   const now = useNow(5000);
   useDevicesLive();
   /** null = use the computer's default folder. */
@@ -131,7 +133,7 @@ function NovaAnalise() {
     },
     staleTime: 60_000,
   });
-  const f: FormState = { ...form, motor: escolherMotor(form.motor, ultimoMotor, motoresOk) };
+  const f: FormState = { ...form, preco: { ...form.preco, uf: form.preco.uf === undefined ? estado.data : form.preco.uf }, motor: escolherMotor(form.motor, ultimoMotor, motoresOk) };
   const usaFatiaPro = f.motor === "fatiapro";
   const premiumPossivel = usaFatiaPro && roteiroComCredito(f.roteiro);
   const premiumTravado = !!plano && usaTeste(plano);
@@ -581,7 +583,11 @@ function NovaAnalise() {
                   {erros.gramasRestantes && <Erro>{erros.gramasRestantes}</Erro>}
                 </div>
               )}
-              {preco && <PrecoFields v={f.preco} onChange={(p) => set("preco", p)} erros={erros} />}
+              {preco && <PrecoFields v={f.preco} onChange={(p) => set("preco", p)} erros={erros} estadoSalvando={estado.salvar.isPending} onEstadoChange={(uf) => {
+                setF((cur) => ({ ...cur, preco: { ...cur.preco, uf } }));
+                estado.salvar.mutate(uf);
+              }} />}
+              {preco && estado.isError && <Erro>Não foi possível carregar o estado. Você pode escolhê-lo ou deixar em branco.</Erro>}
             </Secao>
           )}
 

@@ -1102,6 +1102,7 @@ export type Database = {
           nome: string | null
           termos_aceitos_em: string | null
           termos_versao: string | null
+          uf: string | null
         }
         Insert: {
           criado_em?: string
@@ -1109,6 +1110,7 @@ export type Database = {
           nome?: string | null
           termos_aceitos_em?: string | null
           termos_versao?: string | null
+          uf?: string | null
         }
         Update: {
           criado_em?: string
@@ -1116,6 +1118,7 @@ export type Database = {
           nome?: string | null
           termos_aceitos_em?: string | null
           termos_versao?: string | null
+          uf?: string | null
         }
         Relationships: []
       }

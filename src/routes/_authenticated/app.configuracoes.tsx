@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações — FatiaPro" }, { name: "description", content: "Conecte e gerencie a ponte FatiaPro." }] }),
+  head: () => ({ meta: [{ title: "Configurações — FatiaPro" }, { name: "description", content: "Conecte e gerencie a ponte FatiaPro." }, { property: "og:title", content: "Configurações — FatiaPro" }, { property: "og:description", content: "Conecte e gerencie a ponte FatiaPro." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ComputadorPage,
 });
 

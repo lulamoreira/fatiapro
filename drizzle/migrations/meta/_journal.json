@@ -225,6 +225,13 @@
       "when": 1793543968015,
       "tag": "0031_comando_atualizar_ponte",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793588719158,
+      "tag": "0032_profiles_uf_energia",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { formatDuracao, formatGramas, roteiroLabel } from "@/lib/fatia";
 import type { Erros, PrecoCampos } from "./form";
+import { EstadoSelect } from "./EstadoSelect";
+import { kwhEstimado } from "@/lib/energia";
 
 const CAMPOS: { k: keyof PrecoCampos; label: string; hint?: string }[] = [
   { k: "precoRolo", label: "Preço do rolo (R$)" },
@@ -20,16 +22,21 @@ const CAMPOS: { k: keyof PrecoCampos; label: string; hint?: string }[] = [
   { k: "taxaFalha", label: "Taxa de falha (%)" },
 ];
 
-export function PrecoFields({ v, onChange, erros }: { v: PrecoCampos; onChange: (p: PrecoCampos) => void; erros: Erros }) {
+export function PrecoFields({ v, onChange, erros, onEstadoChange, estadoSalvando }: { v: PrecoCampos; onChange: (p: PrecoCampos) => void; erros: Erros; onEstadoChange: (uf: string | null) => void; estadoSalvando?: boolean }) {
+  const estimativa = kwhEstimado(v.uf);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {CAMPOS.map((c) => (
+          <div key={c.k} className="contents">
+          {c.k === "kwh" && <EstadoSelect id="p-uf" label="Seu estado" value={v.uf} onChange={onEstadoChange} disabled={estadoSalvando} />}
           <div key={c.k} className="space-y-1.5">
             <Label htmlFor={`p-${c.k}`}>{c.label}</Label>
             <Input id={`p-${c.k}`} inputMode="decimal" value={String(v[c.k] ?? "")} onChange={(e) => onChange({ ...v, [c.k]: e.target.value })} aria-invalid={!!erros[c.k]} />
             {c.hint && <p className="text-xs text-muted-foreground">{c.hint}</p>}
+            {c.k === "kwh" && <p className="text-xs text-muted-foreground">Em branco, usamos a {estimativa.origem}: R$ {estimativa.valor.toFixed(2).replace(".", ",")}</p>}
             {erros[c.k] && <p className="text-xs text-destructive">{erros[c.k]}</p>}
+          </div>
           </div>
         ))}
       </div>

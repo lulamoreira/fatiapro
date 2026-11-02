@@ -3,6 +3,31 @@ import { FORM_INICIAL, fromOpcoes, toOpcoes, validar } from "./form";
 
 const base = { ...FORM_INICIAL, roteiro: "producao" as const };
 
+describe("kWh opcional", () => {
+  const f = { ...FORM_INICIAL, roteiro: "preco" as const, preco: { ...FORM_INICIAL.preco, uf: "SP" } };
+  it("aceita vazio sem exigir estado", () => expect(validar({ ...f, preco: { ...f.preco, uf: null, kwh: "" } }, false).kwh).toBeUndefined());
+  it.each(["0", "-1", "abc", "Infinity", "NaN"])("recusa preenchido inválido: %s", (kwh) => expect(validar({ ...f, preco: { ...f.preco, kwh } }, false).kwh).toBeTruthy());
+  it("aceita preenchido positivo", () => expect(validar({ ...f, preco: { ...f.preco, kwh: "1,50" } }, false).kwh).toBeUndefined());
+  it("valor digitado tem preferência e omite origem", () => {
+    const p = toOpcoes({ ...f, preco: { ...f.preco, kwh: "1,50" } }).preco;
+    expect(p?.kwh_brl).toBe(1.5);
+    expect(p).not.toHaveProperty("kwh_estimado");
+  });
+  it("vazio envia média e origem da UF", () => expect(toOpcoes(f).preco).toMatchObject({ uf: "SP", kwh_brl: 1.06, kwh_estimado: "média de SP" }));
+  it("sem estado envia Brasil", () => expect(toOpcoes({ ...f, preco: { ...f.preco, uf: null } }).preco).toMatchObject({ kwh_brl: 1.14, kwh_estimado: "média do Brasil" }));
+  it("restaura UF e mantém estimativa como campo vazio", () => {
+    const r = fromOpcoes({ roteiro: "preco" }, toOpcoes(f));
+    expect(r.preco.uf).toBe("SP");
+    expect(r.preco.kwh).toBe("");
+    expect(toOpcoes(r).preco?.kwh_brl).toBe(1.06);
+  });
+  it("restaura antigos sem UF e preserva tarifa manual", () => {
+    expect(fromOpcoes({}, { preco: { kwh_brl: 0.9 } }).preco).toMatchObject({ uf: undefined, kwh: "0.9" });
+    expect(fromOpcoes({}, {}).preco.uf).toBeUndefined();
+  });
+  it("restaura ausência explícita de estado", () => expect(fromOpcoes({}, { preco: { uf: null } }).preco.uf).toBeNull());
+});
+
 describe("impressora explícita", () => {
   it("nova análise começa sem impressora e exige escolha", () => {
     expect(FORM_INICIAL.impressora).toBeNull();
