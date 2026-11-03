@@ -21,10 +21,18 @@ export interface ComboboxProps {
   disabled?: boolean;
   /** When set, typed text not in the list is offered as "Usar '<texto>' como …". */
   criarComo?: string | undefined;
+  /** When set, search matches each word separately, case-insensitive ("pla silk" acha "Generic PLA Silk"). */
+  filtroPalavras?: boolean;
 }
 
+const filtroPorPalavras = (valor: string, busca: string) => {
+  const alvo = valor.toLowerCase();
+  const termos = busca.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return termos.every((t) => alvo.includes(t)) ? 1 : 0;
+};
+
 /** Searchable single-choice field for long lists (printers, filament brands/lines). */
-export function Combobox({ options = [], groups, value, onChange, placeholder, label, vazio = "Nada encontrado.", disabled, criarComo }: ComboboxProps) {
+export function Combobox({ options = [], groups, value, onChange, placeholder, label, vazio = "Nada encontrado.", disabled, criarComo, filtroPalavras }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
   const grupos = groups ?? [{ options }];
@@ -48,7 +56,7 @@ export function Combobox({ options = [], groups, value, onChange, placeholder, l
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] min-w-64 p-1" align="start">
-        <Command className="bg-transparent">
+        <Command className="bg-transparent" {...(filtroPalavras ? { filter: filtroPorPalavras } : {})}>
           <CommandInput placeholder="Buscar…" value={busca} onValueChange={setBusca} />
           <CommandList>
             {!(criarComo && texto) && <CommandEmpty>{vazio}</CommandEmpty>}

@@ -108,6 +108,15 @@ describe("lista de marcas em 3 grupos", () => {
   it("linhas do grupo c vêm de qualquer fatiador + o tipo", () => {
     expect(_ld(rel, "anycubic", "PLA", "Bambu Lab", "outras")).toEqual(["PLA Basic", "PLA Lite", "PLA"]);
   });
+  it("linhas da marca Genérica: o tipo primeiro + as linhas genéricas reais do fatiador", () => {
+    const r = _pr({ fatiadores: [
+      { id: "snapmaker", filamentos: { PLA: { "Genérica": ["Generic PLA", "Generic PLA Silk"] } } },
+    ] });
+    expect(_ld(r, "snapmaker", "PLA", "Genérica", "generica")).toEqual(["PLA", "Generic PLA", "Generic PLA Silk"]);
+    // Fatiador sem linhas genéricas fica só com o tipo.
+    const vazio = _pr({ fatiadores: [{ id: "bambu", filamentos: { PLA: { BambuLab: ["PLA Basic"] } } }] });
+    expect(_ld(vazio, "bambu", "PLA", "Genérica", "generica")).toEqual(["PLA"]);
+  });
 });
 
 import { custoEstimadoUSD as _ce, textoCustoEstimado as _tc } from "./fatia";
