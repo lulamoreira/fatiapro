@@ -316,7 +316,14 @@ export function grupoDaMarca(marca: string, g: GruposMarca): GrupoMarca {
 
 /** Lines: group b from the selected slicer; group c from any slicer + the type itself. */
 export function linhasDaMarca(rel: Relatorio, fatiadorId: string | null, tipo: string, marca: string, grupo: GrupoMarca): string[] {
-  if (grupo === "generica") return [tipo];
+  if (grupo === "generica") {
+    // O tipo continua primeiro (padrão); depois as linhas genéricas reais do fatiador.
+    const fat = rel.fatiadores.find((f) => f.id === fatiadorId);
+    const gen = fat
+      ? unicos(Object.entries(fat.filamentos[tipo] ?? {}).filter(([m]) => chaveMarca(m) === chaveMarca(MARCA_GENERICA)).flatMap(([, l]) => l))
+      : [];
+    return gen.length ? unicos([tipo, ...gen]) : [tipo];
+  }
   const k = chaveMarca(marca);
   const de = (f: FatiadorRelatorio) => Object.entries(f.filamentos[tipo] ?? {}).filter(([m]) => chaveMarca(m) === k).flatMap(([, l]) => l);
   if (grupo === "perfil") {
