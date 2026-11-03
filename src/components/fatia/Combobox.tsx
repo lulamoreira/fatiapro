@@ -56,7 +56,7 @@ export function Combobox({ options = [], groups, value, onChange, placeholder, l
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] min-w-64 p-1" align="start">
-        <Command className="bg-transparent" filter={filtroPalavras ? filtroPorPalavras : undefined}>
+        <Command className="bg-transparent" {...(filtroPalavras ? { filter: filtroPorPalavras } : {})}>
           <CommandInput placeholder="Buscar…" value={busca} onValueChange={setBusca} />
           <CommandList>
             {!(criarComo && texto) && <CommandEmpty>{vazio}</CommandEmpty>}
