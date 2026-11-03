@@ -520,7 +520,7 @@ function NovaAnalise() {
                 {f.filMarca && (
                   <>
                     <Label className="pt-1">Linha</Label>
-                    <Combobox label="Linha" options={linhas} value={f.filLinha} placeholder="Escolha a linha" criarComo={grupo === "outras" ? "linha" : undefined} onChange={(l) => set("filLinha", l)} />
+                    <Combobox label="Linha" options={linhas} value={f.filLinha} placeholder="Escolha a linha" criarComo={grupo === "outras" ? "linha" : undefined} filtroPalavras onChange={(l) => set("filLinha", l)} />
                   </>
                 )}
               </div>
