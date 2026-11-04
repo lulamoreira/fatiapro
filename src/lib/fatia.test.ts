@@ -112,7 +112,12 @@ describe("lista de marcas em 3 grupos", () => {
     const r = _pr({ fatiadores: [
       { id: "snapmaker", filamentos: { PLA: { "Genérica": ["Generic PLA", "Generic PLA Silk"] } } },
     ] });
-    expect(_ld(r, "snapmaker", "PLA", "Genérica", "generica")).toEqual(["PLA", "Generic PLA", "Generic PLA Silk"]);
+    expect(_ld(r, "snapmaker", "PLA", "Genérica", "generica")).toEqual(["PLA", "Generic PLA Silk"]);
+    // "Generic ABS" e "Generic ASA" são perfis diferentes: nada é removido.
+    const abs = _pr({ fatiadores: [
+      { id: "snapmaker", filamentos: { "ABS/ASA": { "Genérica": ["Generic ABS", "Generic ASA"] } } },
+    ] });
+    expect(_ld(abs, "snapmaker", "ABS/ASA", "Genérica", "generica")).toEqual(["ABS/ASA", "Generic ABS", "Generic ASA"]);
     // Fatiador sem linhas genéricas fica só com o tipo.
     const vazio = _pr({ fatiadores: [{ id: "bambu", filamentos: { PLA: { BambuLab: ["PLA Basic"] } } }] });
     expect(_ld(vazio, "bambu", "PLA", "Genérica", "generica")).toEqual(["PLA"]);
