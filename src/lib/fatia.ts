@@ -319,8 +319,15 @@ export function linhasDaMarca(rel: Relatorio, fatiadorId: string | null, tipo: s
   if (grupo === "generica") {
     // O tipo continua primeiro (padrão); depois as linhas genéricas reais do fatiador.
     const fat = rel.fatiadores.find((f) => f.id === fatiadorId);
+    // "Generic <tipo>" é o mesmo perfil do tipo: remove a linha repetida.
+    const dupe = chaveMarca(`Generic ${tipo}`);
     const gen = fat
-      ? unicos(Object.entries(fat.filamentos[tipo] ?? {}).filter(([m]) => chaveMarca(m) === chaveMarca(MARCA_GENERICA)).flatMap(([, l]) => l))
+      ? unicos(
+          Object.entries(fat.filamentos[tipo] ?? {})
+            .filter(([m]) => chaveMarca(m) === chaveMarca(MARCA_GENERICA))
+            .flatMap(([, l]) => l)
+            .filter((l) => chaveMarca(l) !== dupe),
+        )
       : [];
     return gen.length ? unicos([tipo, ...gen]) : [tipo];
   }
