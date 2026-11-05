@@ -44,7 +44,7 @@ import { ApiKeyWizard } from "@/components/fatia/ApiKeyWizard";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CostCard, useCustoCurto } from "@/components/fatia/CostCard";
 import { PrecoFields } from "@/components/fatia/PrecoFields";
-import { EXTENSOES, FORM_INICIAL, MAX_BYTES, TORRES_UTIL, fromOpcoes, guardarTorreUtilLocal, lerTorreUtilLocal, toOpcoes, validar, type Erros, type FormState } from "@/components/fatia/form";
+import { EXTENSOES, FORM_INICIAL, MAX_BYTES, TORRES_UTIL, fromOpcoes, guardarPosicaoLocal, guardarTorreUtilLocal, lerPosicaoLocal, lerTorreUtilLocal, toOpcoes, validar, type Erros, type FormState } from "@/components/fatia/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,7 +104,7 @@ function NovaAnalise() {
   const [pastaSaida, setPastaSaida] = useState<string | null>(null);
   const { data: devices = [] } = useQuery(devicesQuery);
   const { data: presets = [] } = useQuery(presetsQuery);
-  const [form, setF] = useState<FormState>(() => ({ ...FORM_INICIAL, torreUtil: lerTorreUtilLocal() }));
+  const [form, setF] = useState<FormState>(() => ({ ...FORM_INICIAL, torreUtil: lerTorreUtilLocal(), posicao: lerPosicaoLocal() }));
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erros, setErros] = useState<Erros>({});
   const [enviando, setEnviando] = useState(false);
@@ -146,6 +146,7 @@ function NovaAnalise() {
 
   // Remember the last chosen tower for the next new analysis.
   useEffect(() => guardarTorreUtilLocal(form.torreUtil), [form.torreUtil]);
+  useEffect(() => guardarPosicaoLocal(form.posicao), [form.posicao]);
 
   // Default device: first connected, else first.
   useEffect(() => {
@@ -600,6 +601,16 @@ function NovaAnalise() {
               <Label>Prioridade (até 2)</Label>
               <div className="flex flex-wrap gap-2">{PRIORIDADES.map((x) => { const i = f.prioridades.indexOf(x); return <Chip key={x} selected={i >= 0} badge={i >= 0 ? i + 1 : undefined} onClick={() => set("prioridades", togglePrioridade(f.prioridades, x))}>{x}</Chip>; })}</div>
             </div>
+            {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao") && (
+              <div className="space-y-1.5">
+                <Label>Posição da peça</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Chip selected={f.posicao === "sistema"} onClick={() => set("posicao", "sistema")}>Recomendada pelo sistema</Chip>
+                  <Chip selected={f.posicao === "original"} onClick={() => set("posicao", "original")}>Manter como veio</Chip>
+                </div>
+                <p className="text-xs text-muted-foreground">{f.posicao === "original" ? "A peça fica exatamente na posição em que veio no arquivo. Nenhum giro é testado nem aplicado." : "A FatiaPro testa outras posições e só troca se a peça ficar melhor (menos suporte, base firme na mesa, longe do rosto)."}</p>
+              </div>
+            )}
             {(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao") && (
               <div className="space-y-1.5">
                 <Label>Torre útil</Label>
