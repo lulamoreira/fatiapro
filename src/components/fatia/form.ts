@@ -34,6 +34,27 @@ export function guardarTorreUtilLocal(v: string): void {
   }
 }
 
+/** Posição da peça: o sistema pode testar giros ("sistema") ou a peça fica como veio ("original"). */
+export type Posicao = "sistema" | "original";
+export const posicaoValida = (v: unknown): Posicao => (v === "original" ? "original" : "sistema");
+
+const CHAVE_POSICAO = "fatiapro.posicao";
+/** Last chosen position, remembered locally; never throws (private mode etc.). */
+export function lerPosicaoLocal(): Posicao {
+  try {
+    return posicaoValida(globalThis.localStorage?.getItem(CHAVE_POSICAO));
+  } catch {
+    return "sistema";
+  }
+}
+export function guardarPosicaoLocal(v: string): void {
+  try {
+    globalThis.localStorage?.setItem(CHAVE_POSICAO, v);
+  } catch {
+    /* storage unavailable — ignore */
+  }
+}
+
 export interface PrecoCampos {
   precoRolo: string;
   pesoRolo: string;
@@ -73,6 +94,8 @@ export interface FormState {
   prodQuantidade: string;
   /** Torre útil (otimização e produção). */
   torreUtil: TorreUtil;
+  /** Posição da peça (otimização e produção). */
+  posicao: Posicao;
   motor: Motor | null;
 }
 
@@ -97,6 +120,7 @@ export const FORM_INICIAL: FormState = {
   preco: { precoRolo: "", pesoRolo: "1", consumoW: "", kwh: "", uf: undefined, minAcabamento: "", rsHora: "", quantidade: "1", taxaFalha: "10", gramas: null, segundos: null },
   prodQuantidade: "",
   torreUtil: "ovo",
+  posicao: "sistema",
   motor: null,
 };
 
@@ -121,7 +145,7 @@ export function toOpcoes(f: FormState, perfilNoFatiador = false) {
     prioridades: f.prioridades,
     ...(f.roteiro === "checklist" ? { gramas_restantes: num(f.gramasRestantes) } : {}),
     ...(f.roteiro === "producao" && num(f.prodQuantidade) != null ? { quantidade: num(f.prodQuantidade) } : {}),
-    ...(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao" ? { torre_util: f.torreUtil } : {}),
+    ...(f.roteiro === "config_geral" || f.roteiro === "reduzir_tempo" || f.roteiro === "producao" ? { torre_util: f.torreUtil, posicao: f.posicao } : {}),
     ...(f.roteiro === "preco"
       ? {
           preco: {
@@ -165,6 +189,7 @@ interface OpcoesSalvas {
   gramas_restantes?: unknown;
   quantidade?: unknown;
   torre_util?: unknown;
+  posicao?: unknown;
   preco?: Partial<Record<"preco_rolo_brl" | "peso_rolo_kg" | "consumo_w" | "kwh_brl" | "kwh_estimado" | "uf" | "minutos_acabamento" | "brl_por_hora" | "quantidade" | "taxa_falha_pct" | "gramas" | "segundos", unknown>>;
 }
 const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -213,6 +238,7 @@ export function fromOpcoes(
     gramasRestantes: str(o.gramas_restantes),
     prodQuantidade: str(o.quantidade),
     torreUtil: torreUtilValida(o.torre_util),
+    posicao: posicaoValida(o.posicao),
     preco: {
       precoRolo: str(p.preco_rolo_brl),
       pesoRolo: str(p.peso_rolo_kg ?? 1),
