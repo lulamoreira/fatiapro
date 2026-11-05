@@ -103,6 +103,27 @@ describe("fromOpcoes — torre útil", () => {
   });
 });
 
+describe("posição da peça", () => {
+  it("o padrão é sistema", () => {
+    expect(FORM_INICIAL.posicao).toBe("sistema");
+  });
+  it("com original e reduzir_tempo as opções enviam posicao original", () => {
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "reduzir_tempo", posicao: "original" })).toMatchObject({ posicao: "original" });
+  });
+  it("envia posicao em config_geral e producao, mas não em checklist nem preco", () => {
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "config_geral", posicao: "original" })).toMatchObject({ posicao: "original" });
+    expect(toOpcoes({ ...FORM_INICIAL, roteiro: "producao", posicao: "original" })).toMatchObject({ posicao: "original" });
+    expect("posicao" in toOpcoes({ ...FORM_INICIAL, roteiro: "checklist", posicao: "original" })).toBe(false);
+    expect("posicao" in toOpcoes({ ...FORM_INICIAL, roteiro: "preco", posicao: "original" })).toBe(false);
+  });
+  it("valor inválido ou ausente carregado de modelo volta para sistema", () => {
+    expect(fromOpcoes({}, { posicao: "girada" }).posicao).toBe("sistema");
+    expect(fromOpcoes({}, { posicao: 42 }).posicao).toBe("sistema");
+    expect(fromOpcoes({}, {}).posicao).toBe("sistema");
+    expect(fromOpcoes({}, { posicao: "original" }).posicao).toBe("original");
+  });
+});
+
 describe("validar — quantidade da produção", () => {
   const ok = { ...base, deviceId: "d", fatiador: "bambu", usarAberta: true, impressora: "A1", filTipo: "PLA", filMarca: "Genérica", filLinha: "PLA", motor: "fatiapro" as const };
   it("vazia é válida (encher uma placa)", () => {
