@@ -22,7 +22,8 @@ import { useDevicesLive } from "@/hooks/use-devices-live";
 import { SalvarModeloDialog } from "@/components/fatia/SalvarModeloDialog";
 import { SalvarBibliotecaDialog } from "@/components/fatia/SalvarBibliotecaDialog";
 import { FecharAnaliseDialog } from "@/components/fatia/FecharAnaliseDialog";
-import { Check } from "lucide-react";
+import { Check, RotateCcw } from "lucide-react";
+import { podeRefazer, veioDePecaAberta } from "@/lib/refazer-analise";
 import { WorkingCard, type Fase } from "@/components/fatia/WorkingCard";
 import { FraseAnimo } from "@/components/fatia/FraseAnimo";
 import { podeMostrarAnimo } from "@/lib/frases-animo";
@@ -260,10 +261,22 @@ function AnalisePage() {
               : <BotaoAtualizarPonte key={device.id} device={device} />)}
           </div>
         </div>
-        {estado === "concluido" && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <SalvarModeloDialog job={job} trigger="button" />
-            <SalvarBibliotecaDialog job={job} trigger="button" />
+        {podeRefazer(estado) && (
+          <div className="mt-4 space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {estado === "concluido" && (
+                <>
+                  <SalvarModeloDialog job={job} trigger="button" />
+                  <SalvarBibliotecaDialog job={job} trigger="button" />
+                </>
+              )}
+              <Button variant="outline" onClick={() => navigate({ to: "/app/nova-analise", search: { repetir: job.id } })}>
+                <RotateCcw className="size-4" aria-hidden />Refazer com outras escolhas
+              </Button>
+            </div>
+            {veioDePecaAberta(job.opcoes) && (
+              <p className="text-xs text-muted-foreground">As escolhas vêm preenchidas; a peça você escolhe de novo (abra no fatiador ou envie o arquivo).</p>
+            )}
           </div>
         )}
         {podeCancelar && !mostrarAprovacao && (
