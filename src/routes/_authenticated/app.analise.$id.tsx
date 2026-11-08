@@ -270,7 +270,7 @@ function AnalisePage() {
                   <SalvarBibliotecaDialog job={job} trigger="button" />
                 </>
               )}
-              <Button variant="outline" onClick={() => navigate({ to: "/app/nova-analise", search: { repetir: job.id } })}>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/app/nova-analise", search: { repetir: job.id } })}>
                 <RotateCcw className="size-4" aria-hidden />Refazer com outras escolhas
               </Button>
             </div>
