@@ -64,6 +64,8 @@ export function exportar3mf(
     );
   write("</vertices><triangles>");
   for (let i = 0; i < t.length; i += 3) {
+    // Keep the original face index for painting; only omit its geometry.
+    if (t[i] === t[i + 1] || t[i] === t[i + 2] || t[i + 1] === t[i + 2]) continue;
     const f = i / 3,
       tree = p.detalhes.get(f),
       slot = p.slots[f] ?? 1,

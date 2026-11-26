@@ -135,7 +135,13 @@ export function Geometria(p: GeometriaProps) {
   };
   return (
     <>
-      <mesh geometry={geo} material={mat} raycast={acceleratedRaycast} {...handlers} />
+      <mesh
+        name="colorir-superficie"
+        geometry={geo}
+        material={mat}
+        raycast={acceleratedRaycast}
+        {...handlers}
+      />
       <Detalhes
         dados={p.dados}
         paleta={p.paleta}

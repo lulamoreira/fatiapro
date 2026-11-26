@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { Line } from "@react-three/drei";
 import { Plane, Vector3 } from "three";
+import { useThree } from "@react-three/fiber";
+import { espelharForma } from "@/lib/colorir/formas";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { Forma } from "@/lib/colorir/formas";
 import type { Vec3 } from "@/lib/colorir/pintura";
@@ -21,11 +23,9 @@ export function pontoForma(f: Forma, x: number, y: number): Vec3 {
     f.centro[2] + f.direita[2] * u + f.cima[2] * v + f.camera[2] * 0.025,
   ];
 }
-export function espelharForma(f: Forma, cx: number): Forma {
-  return { ...f, centro: [2 * cx - f.centro[0], f.centro[1], f.centro[2]], rotacao: -f.rotacao };
-}
 export function FormaCena({ forma: f, onForma, cor, espelho, centroX }: FormaCenaProps) {
   const drag = useRef<"centro" | "tamanho" | null>(null);
+  const { scene, raycaster } = useThree();
   const points: Vec3[] = [];
   if (f.tipo === "oval") {
     for (let i = 0; i <= 80; i++) {
@@ -50,14 +50,21 @@ export function FormaCena({ forma: f, onForma, cor, espelho, centroX }: FormaCen
   function move(e: ThreeEvent<PointerEvent>) {
     if (!drag.current) return;
     e.stopPropagation();
+    if (drag.current === "centro") {
+      const mesh = scene.getObjectByName("colorir-superficie");
+      if (!mesh) return;
+      raycaster.ray.copy(e.ray);
+      const hit = raycaster.intersectObject(mesh, false)[0];
+      if (hit) onForma({ ...f, centro: hit.point.toArray() as Vec3 });
+      return;
+    }
     const plane = new Plane().setFromNormalAndCoplanarPoint(
         new Vector3(...f.camera),
         new Vector3(...f.centro),
       ),
       point = e.ray.intersectPlane(plane, new Vector3());
     if (!point) return;
-    if (drag.current === "centro") onForma({ ...f, centro: point.toArray() as Vec3 });
-    else {
+    {
       const d = point.sub(new Vector3(...f.centro)),
         a = (f.rotacao * Math.PI) / 180,
         u =

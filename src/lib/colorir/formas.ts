@@ -13,6 +13,81 @@ export interface Forma {
   espessura: number;
 }
 const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+function unit(v: Vec3): Vec3 {
+  const length = Math.hypot(...v);
+  if (length < 1e-12) throw new Error("Não foi possível orientar a forma nesta superfície.");
+  return [v[0] / length, v[1] / length, v[2] / length];
+}
+export type EixosCamera = Pick<Forma, "camera" | "direita" | "cima">;
+/** The cross product is twice face area times its normal: no per-face normalization needed. */
+export function planoDaSuperficie(p: Float32Array, f: Forma, view: EixosCamera): Forma {
+  const radius2 = (Math.max(f.largura, f.altura) / 2) ** 2;
+  let nx = 0,
+    ny = 0,
+    nz = 0,
+    closest = Infinity;
+  let fallback: Vec3 = view.camera;
+  for (let i = 0; i < p.length; i += 9) {
+    const ax = p[i] ?? 0,
+      ay = p[i + 1] ?? 0,
+      az = p[i + 2] ?? 0;
+    const bx = p[i + 3] ?? 0,
+      by = p[i + 4] ?? 0,
+      bz = p[i + 5] ?? 0;
+    const cx = p[i + 6] ?? 0,
+      cy = p[i + 7] ?? 0,
+      cz = p[i + 8] ?? 0;
+    const ux = bx - ax,
+      uy = by - ay,
+      uz = bz - az;
+    const vx = cx - ax,
+      vy = cy - ay,
+      vz = cz - az;
+    const x = uy * vz - uz * vy,
+      y = uz * vx - ux * vz,
+      z = ux * vy - uy * vx;
+    if (x * view.camera[0] + y * view.camera[1] + z * view.camera[2] <= 0) continue;
+    const distance2 =
+      ((ax + bx + cx) / 3 - f.centro[0]) ** 2 +
+      ((ay + by + cy) / 3 - f.centro[1]) ** 2 +
+      ((az + bz + cz) / 3 - f.centro[2]) ** 2;
+    if (distance2 < closest) {
+      closest = distance2;
+      fallback = [x, y, z];
+    }
+    if (distance2 <= radius2) {
+      nx += x;
+      ny += y;
+      nz += z;
+    }
+  }
+  // Coarse triangles may have no centroid within the radius: use the nearest visible face.
+  const normal = unit(Math.hypot(nx, ny, nz) > 1e-12 ? [nx, ny, nz] : fallback);
+  const component = dot(view.direita, normal);
+  let right: Vec3 = [
+    view.direita[0] - component * normal[0],
+    view.direita[1] - component * normal[1],
+    view.direita[2] - component * normal[2],
+  ];
+  if (Math.hypot(...right) < 1e-6) right = cross(view.cima, normal);
+  right = unit(right);
+  return { ...f, camera: normal, direita: right, cima: unit(cross(normal, right)) };
+}
+export function espelharForma(f: Forma, cx: number): Forma {
+  const reflect = (v: Vec3): Vec3 => [v[0] === 0 ? 0 : -v[0], v[1], v[2]];
+  return {
+    ...f,
+    centro: [2 * cx - f.centro[0], f.centro[1], f.centro[2]],
+    camera: reflect(f.camera),
+    direita: reflect(f.direita),
+    cima: reflect(f.cima),
+  };
+}
 export function projetar(p: Vec3, f: Forma): [number, number, number] {
   const d: Vec3 = [p[0] - f.centro[0], p[1] - f.centro[1], p[2] - f.centro[2]],
     x = dot(d, f.direita),
@@ -40,7 +115,7 @@ export function aplicarForma(tri: Triangulo, anterior: No, f: Forma, slot: numbe
     Math.min(...pts.map((p) => p[1])) > maxY ||
     Math.max(...pts.map((p) => p[1])) < -maxY ||
     Math.max(...pts.map((p) => p[2])) < -1.5 ||
-    Math.min(...pts.map((p) => p[2])) > 0.01
+    Math.min(...pts.map((p) => p[2])) > 1.5
   )
     return anterior;
   const children = subdividir(tri),
@@ -52,7 +127,7 @@ export function aplicarForma(tri: Triangulo, anterior: No, f: Forma, slot: numbe
   const samples = [...tri, children[0][1], children[1][2], children[0][2], centro];
   const inside = samples.map((p) => {
     const [x, y, z] = projetar(p, f);
-    return z >= -1.5 && z <= 0.01 && dentro(x, y, f);
+    return z >= -1.5 && z <= 1.5 && dentro(x, y, f);
   });
   if (inside.every(Boolean)) return folha(slot);
   const maxEdge = Math.max(

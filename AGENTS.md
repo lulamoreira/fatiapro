@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## FatiaPro architecture
+- Colorir derives shape projection and mirrored preview axes from a pure area-weighted local surface frame, welds exact float32 coordinates and skips degenerate export faces without renumbering paint; why: preserve millimetre dimensions and painting provenance without changing subdivision or paint_color.
 - Energy estimates use pure energia helpers; UF uses a shared user-scoped profile RLS query/mutation independent of business data; price serialization retains estimate provenance; why: manual rates win and restored estimates remain optional.
 - Document and phone masks are pure helpers in `src/lib/mascaras.ts`, shared by editable business/customer fields and quote text; mixed email/phone contacts preserve email and international numbers; why: saved legacy values and new input must display consistently without losing contact data.
 - Bridge update availability and deferral rules live in `atualizacao-ponte`; shared update controls follow existing device commands and suppress the global dialog during open analyses; why: keep platform comparison, polling and update feedback consistent across screens.

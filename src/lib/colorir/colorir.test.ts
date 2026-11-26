@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { Blob as NodeBlob } from "node:buffer";
 beforeAll(() => vi.stubGlobal("Blob", NodeBlob));
@@ -94,6 +95,20 @@ describe("STL e regiões", () => {
     expect(lerSTL(ascii(cube))).toEqual(cube);
   });
   it("solda 12 triângulos em 8 vértices", () => expect(soldar(cube).vertices.length / 3).toBe(8));
+  it("não une vértices separados por 0,00005 mm", () => {
+    const p = new Float32Array([0, 0, 0, 0.00005, 0, 0]);
+    const m = soldar(p);
+    expect(m.vertices.length / 3).toBe(2);
+    expect(m.indices[0]).not.toBe(m.indices[1]);
+    expect([...m.vertices]).toContain(p[3]);
+  });
+  it("solda por bits float32, respeitando offsets e tratando -0 como 0", () => {
+    const buffer = new Float32Array([99, 0, -0, 0, -0, 0, -0, 99]);
+    const m = soldar(buffer.subarray(1, 7));
+    expect(m.vertices.length / 3).toBe(1);
+    expect([...m.indices]).toEqual([0, 0]);
+    expect([...m.vertices].some((v) => Object.is(v, -0))).toBe(false);
+  });
   it("cubo convexo dá uma região", () =>
     expect(new Set(segmentar(prepararMalha(cube), 6)).size).toBe(1));
   it("vinco interno em L separa duas regiões a 6 graus", () =>
@@ -250,6 +265,22 @@ describe("formas e pintura", () => {
   });
 });
 describe("3MF e entrada", () => {
+  it("omite faces degeneradas sem deslocar a pintura das demais", async () => {
+    const m = soldar(
+      new Float32Array([
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1,
+      ]),
+    );
+    const tree: No = { filhos: [{ slot: 1 }, { slot: 2 }, { slot: 3 }, { slot: 4 }] };
+    const p: Pintura = { slots: new Uint8Array([2, 3, 1]), detalhes: new Map([[2, tree]]) };
+    const zip = unzipSync(new Uint8Array(await exportar3mf(m, p).arrayBuffer()));
+    const xml = strFromU8(zip["3D/3dmodel.model"] ?? new Uint8Array());
+    const triangles = [...xml.matchAll(/<triangle v1="(\d+)" v2="(\d+)" v3="(\d+)"([^>]*)\/>/g)];
+    expect(triangles).toHaveLength(2);
+    for (const t of triangles) expect(new Set(t.slice(1, 4)).size).toBe(3);
+    expect(triangles[0]?.[4]).toContain(`paint_color="${encodePaint({ slot: 2 })}"`);
+    expect(triangles[1]?.[4]).toContain(`paint_color="${encodePaint(tree)}"`);
+  });
   it("zip contém exatamente três arquivos, malha soldada e nenhuma configuração", async () => {
     const m = prepararMalha(cube),
       p: Pintura = { slots: new Uint8Array(12).fill(2), detalhes: new Map() },

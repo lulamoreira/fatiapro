@@ -47,14 +47,13 @@ function validar(p: Float32Array) {
 export function soldar(posicoes: Float32Array): { vertices: Float64Array; indices: Uint32Array } {
   const n = posicoes.length / 3,
     ordem = new Uint32Array(n),
-    q = new Float64Array(posicoes.length);
-  for (let i = 0; i < q.length; i++) q[i] = Math.round((posicoes[i] ?? 0) * 10000);
+    bits = new Uint32Array(posicoes.buffer, posicoes.byteOffset, posicoes.length);
+  // Compare the original float32 bits, canonicalizing only signed zero.
+  const bit = (i: number) => (posicoes[i] === 0 ? 0 : (bits[i] ?? 0));
   for (let i = 0; i < n; i++) ordem[i] = i;
   ordem.sort(
     (a, b) =>
-      (q[a * 3] ?? 0) - (q[b * 3] ?? 0) ||
-      (q[a * 3 + 1] ?? 0) - (q[b * 3 + 1] ?? 0) ||
-      (q[a * 3 + 2] ?? 0) - (q[b * 3 + 2] ?? 0),
+      bit(a * 3) - bit(b * 3) || bit(a * 3 + 1) - bit(b * 3 + 1) || bit(a * 3 + 2) - bit(b * 3 + 2),
   );
   const vertices = new Float64Array(posicoes.length),
     indices = new Uint32Array(n);
@@ -63,11 +62,11 @@ export function soldar(posicoes: Float32Array): { vertices: Float64Array; indice
   for (const i of ordem) {
     const diferente =
       anterior < 0 ||
-      q[i * 3] !== q[anterior * 3] ||
-      q[i * 3 + 1] !== q[anterior * 3 + 1] ||
-      q[i * 3 + 2] !== q[anterior * 3 + 2];
+      bit(i * 3) !== bit(anterior * 3) ||
+      bit(i * 3 + 1) !== bit(anterior * 3 + 1) ||
+      bit(i * 3 + 2) !== bit(anterior * 3 + 2);
     if (diferente) {
-      for (let k = 0; k < 3; k++) vertices[total * 3 + k] = (q[i * 3 + k] ?? 0) / 10000;
+      for (let k = 0; k < 3; k++) vertices[total * 3 + k] = posicoes[i * 3 + k] || 0;
       total++;
     }
     indices[i] = total - 1;

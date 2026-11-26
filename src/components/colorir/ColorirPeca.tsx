@@ -34,7 +34,8 @@ import { Paleta } from "./Paleta";
 import { Ferramentas, Medida, FORMA_INICIAL } from "./Ferramentas";
 import type { Ferramenta } from "./Ferramentas";
 import { FotoReferencia } from "./FotoReferencia";
-import { espelharForma } from "./FormaCena";
+import { espelharForma, planoDaSuperficie } from "@/lib/colorir/formas";
+import type { EixosCamera, Forma } from "@/lib/colorir/formas";
 export interface ColorirPecaProps {
   userId: string;
 }
@@ -60,6 +61,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
   const ultimo = useRef<number | null>(null),
     traco = useRef(false),
     ultimoPincel = useRef(0),
+    eixosCamera = useRef<EixosCamera | null>(null),
     seedId = useRef(0);
   const n = IMPRESSORAS.find((i) => i.id === impressora)?.slots ?? 4,
     disabled = !api.dados || api.ocupado,
@@ -140,15 +142,23 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
       return;
     }
     if (tool === "forma") {
-      setForma((f) => ({
-        ...f,
-        centro: c.ponto,
-        camera: c.camera,
-        direita: c.direita,
-        cima: c.cima,
-      }));
+      eixosCamera.current = c;
+      const dados = api.dados;
+      if (!dados) return;
+      setForma((f) => planoDaSuperficie(dados.posicoes, { ...f, centro: c.ponto }, c));
       setPosicionada(true);
     }
+  }
+  function mudarForma(f: Forma) {
+    const view = eixosCamera.current;
+    const dados = api.dados;
+    const mudouPlano =
+      f.largura !== forma.largura ||
+      f.altura !== forma.altura ||
+      f.centro.some((v, i) => v !== forma.centro[i]);
+    setForma(
+      posicionada && mudouPlano && dados && view ? planoDaSuperficie(dados.posicoes, f, view) : f,
+    );
   }
   function aplicar() {
     const d = api.dados;
@@ -179,6 +189,8 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
     setSeeds([]);
     setPosicionada(false);
     setEspelho(false);
+    eixosCamera.current = null;
+    setVista((v) => ({ id: v.id + 1, nome: "frente", face: null }));
     ultimo.current = null;
     traco.current = false;
     await api.abrir(file, sens);
@@ -241,8 +253,8 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
           </Button>
         </div>
       )}
-      <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="space-y-5 xl:order-first">
+      <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <aside className="space-y-5 lg:order-last lg:max-h-[calc(100dvh-210px)] lg:overflow-y-auto lg:overscroll-contain lg:pr-2">
           <section className="space-y-2">
             <Label htmlFor="colorir-impressora">Impressora / cores</Label>
             <select
@@ -279,7 +291,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
             raio={raio}
             onRaio={setRaio}
             forma={forma}
-            onForma={setForma}
+            onForma={mudarForma}
             posicionada={posicionada}
             espelho={espelho}
             onEspelho={() => setEspelho(!espelho)}
@@ -313,7 +325,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
             />
           )}
         </aside>
-        <section className="order-first min-w-0 space-y-3 xl:order-last">
+        <section className="order-first min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <Button
               variant="ghost"
@@ -386,7 +398,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
           </div>
           <div
             className={cn(
-              "h-[520px] min-w-0 overflow-hidden border border-border bg-card md:h-[640px]",
+              "h-[520px] min-w-0 overflow-hidden border border-border bg-card md:h-[640px] lg:h-[calc(100dvh-330px)] lg:min-h-96",
               comparar && "grid grid-cols-2",
             )}
           >
@@ -400,7 +412,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
                 onHit={hit}
                 onFim={finalizar}
                 forma={forma}
-                onForma={setForma}
+                onForma={mudarForma}
                 posicionada={posicionada}
                 espelho={espelho}
                 seeds={seeds}

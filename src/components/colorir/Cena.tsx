@@ -3,7 +3,8 @@ import type { ComponentRef } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Environment, Lightformer } from "@react-three/drei";
-import { Box3, Vector3, OrthographicCamera, Quaternion } from "three";
+import { Box3, Vector3, Quaternion } from "three";
+import type { OrthographicCamera } from "three";
 import type { CorSlot } from "@/lib/colorir/paleta";
 import type { Forma } from "@/lib/colorir/formas";
 import type { Vec3 } from "@/lib/colorir/pintura";
@@ -54,26 +55,19 @@ export function Cena(p: CenaProps) {
           raycaster.firstHitOnly = true;
         }}
       >
-        <SceneContent {...p} />
-        <Pronta onReady={() => wrapper.current?.setAttribute("data-scene-ready", "true")} />
+        <SceneContent
+          {...p}
+          onReady={() => wrapper.current?.setAttribute("data-scene-ready", "true")}
+        />
       </Canvas>
     </div>
   );
 }
-function Pronta({ onReady }: { onReady: () => void }) {
-  const ready = useRef(false);
-  useFrame(() => {
-    if (!ready.current) {
-      ready.current = true;
-      requestAnimationFrame(onReady);
-    }
-  });
-  return null;
-}
-function SceneContent(p: CenaProps) {
+function SceneContent(p: CenaProps & { onReady: () => void }) {
   const { camera, size, invalidate, gl } = useThree(),
     controls = useRef<ComponentRef<typeof OrbitControls>>(null),
-    [hover, setHover] = useState(-1);
+    [hover, setHover] = useState(-1),
+    enquadrar = useRef(true);
   const bounds = useMemo(() => {
     const b = new Box3();
     for (let i = 0; i < p.dados.posicoes.length; i += 3)
@@ -83,7 +77,14 @@ function SceneContent(p: CenaProps) {
     return b;
   }, [p.dados.posicoes]);
   useEffect(() => {
-    if (!(camera instanceof OrthographicCamera)) return;
+    enquadrar.current = true;
+    invalidate();
+  }, [bounds, p.vista, size.width, size.height, camera, invalidate]);
+  // Fit before drawing, after R3F has created the real camera and measured the canvas.
+  useFrame(() => {
+    if (!enquadrar.current || size.width <= 0 || size.height <= 0 || bounds.isEmpty()) return;
+    if (!("isOrthographicCamera" in camera) || !camera.isOrthographicCamera) return;
+    const ortho = camera as OrthographicCamera;
     const box = bounds.clone();
     if (p.vista.nome === "close" && p.vista.face !== null) {
       box.makeEmpty();
@@ -97,6 +98,7 @@ function SceneContent(p: CenaProps) {
             );
           }
     }
+    if (box.isEmpty()) box.copy(bounds);
     const center = box.getCenter(new Vector3()),
       extent = box.getSize(new Vector3()),
       diag = Math.max(extent.length(), 0.1),
@@ -121,13 +123,16 @@ function SceneContent(p: CenaProps) {
     if (p.vista.nome === "topo") camera.up.set(0, 1, 0);
     camera.position.copy(center).addScaledVector(dir, distance);
     camera.lookAt(center);
-    camera.zoom =
+    ortho.zoom =
       Math.min(size.width, size.height) / (diag * (p.vista.nome === "close" ? 1.08 : 1.3));
-    camera.updateProjectionMatrix();
+    ortho.updateProjectionMatrix();
     controls.current?.target.copy(center);
     controls.current?.update();
+    camera.updateMatrixWorld();
+    enquadrar.current = false;
     invalidate();
-  }, [bounds, p.vista, size.width, size.height, camera, invalidate]);
+    requestAnimationFrame(p.onReady);
+  });
   useEffect(() => {
     const onUp = () => p.onFim();
     gl.domElement.addEventListener("pointerup", onUp);
