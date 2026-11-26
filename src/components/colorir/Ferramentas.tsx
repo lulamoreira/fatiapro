@@ -1,21 +1,278 @@
-import {PaintBucket,Paintbrush,Sprout,Pipette,ScanFace,Move,Trash2,FlipHorizontal} from 'lucide-react';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Slider} from '@/components/ui/slider';
-import {cn} from '@/lib/utils';
-import type {Forma} from '@/lib/colorir/formas';
-import type {Semente} from '@/lib/colorir/watershed';
-export type Ferramenta='mover'|'balde'|'pincel'|'sementes'|'conta-gotas'|'forma';
-const TOOLS=[{id:'mover',nome:'Mover',Icon:Move},{id:'balde',nome:'Balde',Icon:PaintBucket},{id:'pincel',nome:'Pincel',Icon:Paintbrush},{id:'sementes',nome:'Sementes',Icon:Sprout},{id:'conta-gotas',nome:'Conta-gotas',Icon:Pipette},{id:'forma',nome:'Forma',Icon:ScanFace}] as const;
-export const FORMA_INICIAL:Forma={tipo:'oval',centro:[0,0,0],direita:[1,0,0],cima:[0,0,1],camera:[0,-1,0],largura:2,altura:1,rotacao:0,curvatura:1,espessura:.5};
-export interface FerramentasProps {tool:Ferramenta;onTool:(t:Ferramenta)=>void;raio:number;onRaio:(v:number)=>void;forma:Forma;onForma:(f:Forma)=>void;posicionada:boolean;espelho:boolean;onEspelho:()=>void;onAplicar:()=>void;seeds:Semente[];onRemoveSeed:(id:number)=>void;onDistribuir:()=>void;disabled:boolean}
-export function Ferramentas(p:FerramentasProps){return <section className="space-y-3"><h2 className="font-semibold">Pintura</h2><div className="grid grid-cols-3 gap-1.5">{TOOLS.map(({id,nome,Icon})=><Button key={id} variant="ghost" size="sm" aria-pressed={p.tool===id} title={nome} className={cn('flex-col gap-1 border border-border py-2',p.tool===id&&'bg-sidebar-accent text-primary-ink')} onClick={()=>p.onTool(id)}><Icon/>{nome}</Button>)}</div>
- {p.tool==='pincel'&&<Medida nome="Raio do pincel" valor={p.raio} min={.5} max={10} step={.5} unidade="mm" onChange={p.onRaio}/>}
- {p.tool==='sementes'&&<div className="space-y-2"><span className="text-xs text-muted-foreground">{p.seeds.length} sementes</span><div className="max-h-32 overflow-auto">{p.seeds.map((s,i)=><div key={s.id} className="flex items-center justify-between text-xs"><span>Semente {i+1} · Filamento {s.slot}</span><Button variant="ghost" size="icon" title="Remover semente" aria-label={`Remover semente ${i+1}`} onClick={()=>p.onRemoveSeed(s.id)}><Trash2/></Button></div>)}</div><Button variant="outline" size="sm" disabled={p.disabled||!p.seeds.length} onClick={p.onDistribuir}><Sprout/>Distribuir cores</Button></div>}
- {p.tool==='forma'&&<div className="space-y-3"><div className="grid grid-cols-2 gap-1">{(['oval','sorriso']as const).map(t=><Button key={t} variant="secondary" size="sm" aria-pressed={p.forma.tipo===t} className={cn(p.forma.tipo===t&&'ring-2 ring-ring')} onClick={()=>p.onForma({...p.forma,tipo:t})}>{t==='oval'?'Oval':'Sorriso'}</Button>)}</div><p className="text-sm font-semibold tabular-nums">{p.forma.largura.toFixed(2)} × {(p.forma.tipo==='oval'?p.forma.altura:p.forma.espessura).toFixed(2)} mm</p>
- <Numero nome="Largura (mm)" valor={p.forma.largura} min={.1} onChange={v=>p.onForma({...p.forma,largura:v})}/>{p.forma.tipo==='oval'?<Numero nome="Altura (mm)" valor={p.forma.altura} min={.1} onChange={v=>p.onForma({...p.forma,altura:v})}/>:<><Numero nome="Curvatura (mm)" valor={p.forma.curvatura} min={0} onChange={v=>p.onForma({...p.forma,curvatura:v})}/><Numero nome="Espessura no meio (mm)" valor={p.forma.espessura} min={.05} onChange={v=>p.onForma({...p.forma,espessura:v})}/></>}
- <Numero nome="Rotação (graus)" valor={p.forma.rotacao} min={-360} onChange={v=>p.onForma({...p.forma,rotacao:v})}/><div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" disabled={!p.posicionada} onClick={p.onEspelho} aria-pressed={p.espelho}><FlipHorizontal/>Espelhar</Button><Button variant="secondary" size="sm" disabled={p.disabled||!p.posicionada} onClick={p.onAplicar}>Aplicar</Button></div><p className="text-xs text-muted-foreground">Olhos: meça na foto e use Oval. Nunca pinte a cavidade esculpida inteira; em bonecos, o olho pintado costuma ser menor que a cavidade.</p></div>}
- </section>;}
-export function Medida({nome,valor,min,max,step,onChange,unidade}:{nome:string;valor:number;min:number;max:number;step:number;onChange:(v:number)=>void;unidade:string}){return <div className="space-y-2"><div className="flex justify-between gap-2"><Label>{nome}</Label><span className="text-xs tabular-nums text-muted-foreground">{valor} {unidade}</span></div><Slider aria-label={nome} value={[valor]} min={min} max={max} step={step} onValueChange={v=>onChange(v[0]??min)}/></div>;}
-function Numero({nome,valor,min,onChange}:{nome:string;valor:number;min:number;onChange:(v:number)=>void}){return <Label className="flex items-center justify-between gap-2 text-xs">{nome}<Input aria-label={nome} className="w-24" type="number" min={min} max={1000} step={.1} value={valor} onChange={e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=min&&v<=1000)onChange(v);}}/></Label>;}
+import {
+  PaintBucket,
+  Paintbrush,
+  Sprout,
+  Pipette,
+  ScanFace,
+  Move,
+  Trash2,
+  FlipHorizontal,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { cn } from "@/lib/utils";
+import type { Forma } from "@/lib/colorir/formas";
+import type { Semente } from "@/lib/colorir/watershed";
+export type Ferramenta = "mover" | "balde" | "pincel" | "sementes" | "conta-gotas" | "forma";
+const TOOLS = [
+  { id: "mover", nome: "Mover", Icon: Move },
+  { id: "balde", nome: "Balde", Icon: PaintBucket },
+  { id: "pincel", nome: "Pincel", Icon: Paintbrush },
+  { id: "sementes", nome: "Sementes", Icon: Sprout },
+  { id: "conta-gotas", nome: "Conta-gotas", Icon: Pipette },
+  { id: "forma", nome: "Forma", Icon: ScanFace },
+] as const;
+export const FORMA_INICIAL: Forma = {
+  tipo: "oval",
+  centro: [0, 0, 0],
+  direita: [1, 0, 0],
+  cima: [0, 0, 1],
+  camera: [0, -1, 0],
+  largura: 2,
+  altura: 1,
+  rotacao: 0,
+  curvatura: 1,
+  espessura: 0.5,
+};
+export interface FerramentasProps {
+  tool: Ferramenta;
+  onTool: (t: Ferramenta) => void;
+  raio: number;
+  onRaio: (v: number) => void;
+  forma: Forma;
+  onForma: (f: Forma) => void;
+  posicionada: boolean;
+  espelho: boolean;
+  onEspelho: () => void;
+  onAplicar: () => void;
+  seeds: Semente[];
+  onRemoveSeed: (id: number) => void;
+  onDistribuir: () => void;
+  disabled: boolean;
+}
+export function Ferramentas(p: FerramentasProps) {
+  return (
+    <section className="space-y-3">
+      <h2 className="font-semibold">Pintura</h2>
+      <div className="grid grid-cols-3 gap-1.5">
+        {TOOLS.map(({ id, nome, Icon }) => (
+          <Button
+            key={id}
+            variant="ghost"
+            size="sm"
+            aria-pressed={p.tool === id}
+            title={nome}
+            className={cn(
+              "flex-col gap-1 border border-border py-2",
+              p.tool === id && "bg-sidebar-accent text-primary-ink",
+            )}
+            onClick={() => p.onTool(id)}
+          >
+            <Icon />
+            {nome}
+          </Button>
+        ))}
+      </div>
+      {p.tool === "pincel" && (
+        <Medida
+          nome="Raio do pincel"
+          valor={p.raio}
+          min={0.5}
+          max={10}
+          step={0.5}
+          unidade="mm"
+          onChange={p.onRaio}
+        />
+      )}
+      {p.tool === "sementes" && (
+        <div className="space-y-2">
+          <span className="text-xs text-muted-foreground">{p.seeds.length} sementes</span>
+          <div className="max-h-32 overflow-auto">
+            {p.seeds.map((s, i) => (
+              <div key={s.id} className="flex items-center justify-between text-xs">
+                <span>
+                  Semente {i + 1} · Filamento {s.slot}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Remover semente"
+                  aria-label={`Remover semente ${i + 1}`}
+                  onClick={() => p.onRemoveSeed(s.id)}
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={p.disabled || !p.seeds.length}
+            onClick={p.onDistribuir}
+          >
+            <Sprout />
+            Distribuir cores
+          </Button>
+        </div>
+      )}
+      {p.tool === "forma" && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-1">
+            {(["oval", "sorriso"] as const).map((t) => (
+              <Button
+                key={t}
+                variant="secondary"
+                size="sm"
+                aria-pressed={p.forma.tipo === t}
+                className={cn(p.forma.tipo === t && "ring-2 ring-ring")}
+                onClick={() => p.onForma({ ...p.forma, tipo: t })}
+              >
+                {t === "oval" ? "Oval" : "Sorriso"}
+              </Button>
+            ))}
+          </div>
+          <p className="text-sm font-semibold tabular-nums">
+            {p.forma.largura.toFixed(2)} ×{" "}
+            {(p.forma.tipo === "oval" ? p.forma.altura : p.forma.espessura).toFixed(2)} mm
+          </p>
+          <Numero
+            nome="Largura (mm)"
+            valor={p.forma.largura}
+            min={0.1}
+            onChange={(v) => p.onForma({ ...p.forma, largura: v })}
+          />
+          {p.forma.tipo === "oval" ? (
+            <Numero
+              nome="Altura (mm)"
+              valor={p.forma.altura}
+              min={0.1}
+              onChange={(v) => p.onForma({ ...p.forma, altura: v })}
+            />
+          ) : (
+            <>
+              <Numero
+                nome="Curvatura (mm)"
+                valor={p.forma.curvatura}
+                min={0}
+                onChange={(v) => p.onForma({ ...p.forma, curvatura: v })}
+              />
+              <Numero
+                nome="Espessura no meio (mm)"
+                valor={p.forma.espessura}
+                min={0.05}
+                onChange={(v) => p.onForma({ ...p.forma, espessura: v })}
+              />
+            </>
+          )}
+          <Numero
+            nome="Rotação (graus)"
+            valor={p.forma.rotacao}
+            min={-360}
+            onChange={(v) => p.onForma({ ...p.forma, rotacao: v })}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!p.posicionada}
+              onClick={p.onEspelho}
+              aria-pressed={p.espelho}
+            >
+              <FlipHorizontal />
+              Espelhar
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={p.disabled || !p.posicionada}
+              onClick={p.onAplicar}
+            >
+              Aplicar
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Olhos: meça na foto e use Oval. Nunca pinte a cavidade esculpida inteira; em bonecos, o
+            olho pintado costuma ser menor que a cavidade.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+export function Medida({
+  nome,
+  valor,
+  min,
+  max,
+  step,
+  onChange,
+  unidade,
+}: {
+  nome: string;
+  valor: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+  unidade: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between gap-2">
+        <Label>{nome}</Label>
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {valor} {unidade}
+        </span>
+      </div>
+      <SliderPrimitive.Root
+        className="relative flex w-full touch-none select-none items-center"
+        value={[valor]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={(v) => onChange(v[0] ?? min)}
+      >
+        <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20">
+          <SliderPrimitive.Range className="absolute h-full bg-primary" />
+        </SliderPrimitive.Track>
+        <SliderPrimitive.Thumb
+          aria-label={nome}
+          className="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </SliderPrimitive.Root>
+    </div>
+  );
+}
+function Numero({
+  nome,
+  valor,
+  min,
+  onChange,
+}: {
+  nome: string;
+  valor: number;
+  min: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <Label className="flex items-center justify-between gap-2 text-xs">
+      {nome}
+      <Input
+        aria-label={nome}
+        className="w-24"
+        type="number"
+        min={min}
+        max={1000}
+        step={0.1}
+        value={valor}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          if (Number.isFinite(v) && v >= min && v <= 1000) onChange(v);
+        }}
+      />
+    </Label>
+  );
+}

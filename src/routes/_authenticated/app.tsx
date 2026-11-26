@@ -147,17 +147,17 @@ function AppLayout() {
       </div>
 
       {/* Mobile glass bottom nav */}
-      <nav className="glass fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] right-[calc(0.75rem+env(safe-area-inset-right))] z-30 flex justify-between rounded-[22px] p-1.5 md:hidden" aria-label="Menu principal">
+      <nav className="glass fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] right-[calc(0.75rem+env(safe-area-inset-right))] z-30 flex justify-between overflow-x-auto rounded-[22px] p-1.5 md:hidden" aria-label="Menu principal">
         {NAV.map((n) => (
           <Link
             key={n.to}
             to={n.to}
-            className="flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-medium text-muted-foreground"
+            className="flex min-h-12 w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-medium text-muted-foreground"
             activeOptions={{ exact: n.to === "/app" }}
             activeProps={{ className: "bg-sidebar-accent text-primary-ink shadow-sm" }}
           >
             <n.icon className="size-5" aria-hidden />
-            <span className="truncate">{n.curto}</span>
+            <span className="w-full truncate px-1 text-center">{n.curto}</span>
           </Link>
         ))}
       </nav>
