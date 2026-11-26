@@ -1,4 +1,5 @@
 ## src/lib presentation helpers
+- Colorir keeps geometry, painting and streaming 3MF export in pure modules orchestrated by a browser worker; no slicer configuration is exported because partial settings break printer profiles; subdivision children are (v0,m01,m20), (m01,v1,m12), (m12,v2,m20), (m01,m12,m20), encoded in reverse order.
 - Motivational phrases use a shuffled-bag helper in `src/lib/frases-animo.ts` and an isolated timed component below WorkingCard; why: testable timing.
 - Open-piece notice availability, device-specific save shortcuts and timeline version parsing use pure helpers in `src/lib/peca-aberta.ts`, rendered by `PecaAberta` components; why: testable presentation rules.
 - Nova análise resolves available motor defaults with the pure `escolherMotor` helper and renders choices through Radix radio cards; why: keep history fallback testable and keyboard/ARIA behavior consistent without changing server permissions.

@@ -36,6 +36,19 @@ export const CATEGORIAS_AJUDA: CategoriaAjuda[] = [
 ];
 
 export const ARTIGOS_AJUDA: ArtigoAjuda[] = [
+  {
+    slug: "como-colorir-uma-peca", categoria: "analise", titulo: "Como colorir uma peça",
+    resumo: "Pinte um STL e baixe um 3MF colorido, sem usar créditos.",
+    passos: [
+      "Em Colorir peça, envie um STL e escolha a quantidade de filamentos da sua impressora. A peça e a foto de referência são processadas só no seu navegador.",
+      "As regiões seguem os vincos da peça. Ajuste a Sensibilidade e use Ver regiões para conferir a separação. O Balde pinta uma região inteira; o Pincel pinta somente a superfície voltada para você.",
+      "Quando o vinco não separar cabelo de roupa, coloque Sementes com os filamentos desejados e clique em Distribuir cores.",
+      "Para olhos e boca, aproxime o rosto e use as formas Oval e Sorriso. Ajuste as medidas em milímetros, espelhe os olhos e clique em Aplicar.",
+      "Baixe o 3MF. Ele leva a pintura para Snapmaker Orca, OrcaSlicer e Bambu Studio, sem alterar seu perfil de impressora. Se perguntado, escolha Importar apenas a geometria e configure as cores dos filamentos no fatiador.",
+      "Enviar para uma análise é opcional: só esse botão guarda o arquivo colorido na sua Biblioteca para preencher a Nova análise. A foto nunca é enviada.",
+    ],
+    relacionados: ["escolher-roteiro"],
+  },
   // A. Primeiros passos
   {
     slug: "o-que-e", categoria: "primeiros-passos", titulo: "O que é o FatiaPro",

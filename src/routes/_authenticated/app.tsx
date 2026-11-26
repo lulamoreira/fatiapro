@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield, CircleHelp } from "lucide-react";
+import { Home, Box, Bookmark, FileText, FilePlus2, History, Settings, Wallet, LogOut, ShieldCheck, Shield, CircleHelp, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { devicesQuery } from "@/lib/queries";
 import { isConectado, nomeFatiador, parseRelatorio } from "@/lib/fatia";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 const NAV = [
   { to: "/app", label: "Início", curto: "Início", icon: Home },
   { to: "/app/nova-analise", label: "Nova análise", curto: "Nova", icon: FilePlus2 },
+  { to: "/app/colorir", label: "Colorir peça", curto: "Colorir", icon: Palette },
   { to: "/app/historico", label: "Histórico", curto: "Histórico", icon: History },
   { to: "/app/biblioteca", label: "Biblioteca de peças", curto: "Peças", icon: Box },
   { to: "/app/orcamentos", label: "Orçamentos", curto: "Orçamentos", icon: FileText },

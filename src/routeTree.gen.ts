@@ -21,6 +21,7 @@ import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppAjudaRouteImport } from './routes/_authenticated/app.ajuda'
 import { Route as AuthenticatedAppBaixarRouteImport } from './routes/_authenticated/app.baixar'
 import { Route as AuthenticatedAppBibliotecaRouteImport } from './routes/_authenticated/app.biblioteca'
+import { Route as AuthenticatedAppColorirRouteImport } from './routes/_authenticated/app.colorir'
 import { Route as AuthenticatedAppComputadorRouteImport } from './routes/_authenticated/app.computador'
 import { Route as AuthenticatedAppConfiguracoesRouteImport } from './routes/_authenticated/app.configuracoes'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
@@ -102,6 +103,11 @@ const AuthenticatedAppBibliotecaRoute =
     path: '/biblioteca',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppColorirRoute = AuthenticatedAppColorirRouteImport.update({
+  id: '/colorir',
+  path: '/colorir',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppComputadorRoute =
   AuthenticatedAppComputadorRouteImport.update({
     id: '/computador',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/app/ajuda': typeof AuthenticatedAppAjudaRoute
   '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
+  '/app/colorir': typeof AuthenticatedAppColorirRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/app/ajuda': typeof AuthenticatedAppAjudaRoute
   '/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
+  '/app/colorir': typeof AuthenticatedAppColorirRoute
   '/app/computador': typeof AuthenticatedAppComputadorRoute
   '/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/app/ajuda': typeof AuthenticatedAppAjudaRoute
   '/_authenticated/app/baixar': typeof AuthenticatedAppBaixarRoute
   '/_authenticated/app/biblioteca': typeof AuthenticatedAppBibliotecaRoute
+  '/_authenticated/app/colorir': typeof AuthenticatedAppColorirRoute
   '/_authenticated/app/computador': typeof AuthenticatedAppComputadorRoute
   '/_authenticated/app/configuracoes': typeof AuthenticatedAppConfiguracoesRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/app/ajuda'
     | '/app/baixar'
     | '/app/biblioteca'
+    | '/app/colorir'
     | '/app/computador'
     | '/app/configuracoes'
     | '/app/historico'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/app/ajuda'
     | '/app/baixar'
     | '/app/biblioteca'
+    | '/app/colorir'
     | '/app/computador'
     | '/app/configuracoes'
     | '/app/historico'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/ajuda'
     | '/_authenticated/app/baixar'
     | '/_authenticated/app/biblioteca'
+    | '/_authenticated/app/colorir'
     | '/_authenticated/app/computador'
     | '/_authenticated/app/configuracoes'
     | '/_authenticated/app/historico'
@@ -524,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/biblioteca'
       fullPath: '/app/biblioteca'
       preLoaderRoute: typeof AuthenticatedAppBibliotecaRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/colorir': {
+      id: '/_authenticated/app/colorir'
+      path: '/colorir'
+      fullPath: '/app/colorir'
+      preLoaderRoute: typeof AuthenticatedAppColorirRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/computador': {
@@ -674,6 +693,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAjudaRoute: typeof AuthenticatedAppAjudaRoute
   AuthenticatedAppBaixarRoute: typeof AuthenticatedAppBaixarRoute
   AuthenticatedAppBibliotecaRoute: typeof AuthenticatedAppBibliotecaRoute
+  AuthenticatedAppColorirRoute: typeof AuthenticatedAppColorirRoute
   AuthenticatedAppComputadorRoute: typeof AuthenticatedAppComputadorRoute
   AuthenticatedAppConfiguracoesRoute: typeof AuthenticatedAppConfiguracoesRoute
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
@@ -690,6 +710,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAjudaRoute: AuthenticatedAppAjudaRoute,
   AuthenticatedAppBaixarRoute: AuthenticatedAppBaixarRoute,
   AuthenticatedAppBibliotecaRoute: AuthenticatedAppBibliotecaRoute,
+  AuthenticatedAppColorirRoute: AuthenticatedAppColorirRoute,
   AuthenticatedAppComputadorRoute: AuthenticatedAppComputadorRoute,
   AuthenticatedAppConfiguracoesRoute: AuthenticatedAppConfiguracoesRoute,
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
