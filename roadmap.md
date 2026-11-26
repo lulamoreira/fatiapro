@@ -1,4 +1,5 @@
 # Marca FatiaProAI
+- [ ] Colorir pela foto: cobrança idempotente/estorno, servidor validado e custo limitado, imagens locais, proposta no worker, prévia e aplicação única, termos/ajuda e testes.
 - [x] Corrigir somente Colorir: testes node, profundidade simétrica, normal local/espelho, enquadramento inicial, solda exata e exportação sem degeneradas; ferramentas à direita desde 1024 px. 462 testes passaram; carregamento, arraste, tamanho, pintura e download conferidos com sessão real em computador/celular, sem erros. Peça original de 868 mil triângulos, GPU real e importação no OrcaSlicer não disponíveis neste ambiente.
 - [x] Colorir peça: algoritmos locais/worker, pintura e 3MF, tela/menu, envio opcional e ajuda. Ferramentas, arquivo exportado e recuperação na Nova análise conferidos com conta de teste; computador/celular sem erros. Importação nos fatiadores físicos e desempenho em GPU real não verificados neste ambiente.
 - [x] Tornar kWh opcional com médias por UF, estado salvo no perfil nos dois formulários, restauração e testes; migração aplicada, permissões conferidas, 417 testes passaram e build OK.
