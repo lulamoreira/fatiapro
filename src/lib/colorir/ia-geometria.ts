@@ -37,7 +37,16 @@ export function formaDePixels(c:CameraIA,mesh:Mesh,posicoes:Float32Array,o:{cx:n
 export function cameraRosto(posicoes:Float32Array,regioes:Uint32Array,id:number):CameraIA {
   const faces:number[]=[];for(let f=0;f<regioes.length;f++)if(regioes[f]===id)faces.push(f);
   if(!faces.length)throw new Error("Rosto não encontrado.");const p=new Float32Array(faces.length*9);faces.forEach((f,i)=>p.set(posicoes.subarray(f*9,f*9+9),i*9));
-  const initial:Forma={tipo:"oval",centro:[0,0,0],direita:[1,0,0],cima:[0,0,1],camera:[0,-1,0],largura:1e9,altura:1e9,rotacao:0,curvatura:0,espessura:1};
-  const plano=planoDaSuperficie(p,initial,initial);
-  return cameraOrto(p,plano.camera,1024,.15);
+  const normais:Vector3[]=[];
+  for(let f=0;f<p.length;f+=9){
+    const a=new Vector3(p[f]??0,p[f+1]??0,p[f+2]??0),b=new Vector3(p[f+3]??0,p[f+4]??0,p[f+5]??0),c=new Vector3(p[f+6]??0,p[f+7]??0,p[f+8]??0);
+    // O comprimento do produto vetorial é o dobro da área: somá-lo pondera cada face por área.
+    const n=new Vector3().subVectors(b,a).cross(new Vector3().subVectors(c,a));if(n.lengthSq()>0)normais.push(n);
+  }
+  if(!normais.length)throw new Error("Rosto sem superfície.");
+  const soma=(filtrar:boolean,base:Vector3)=>{const total=new Vector3();for(const n of normais)if(!filtrar||n.clone().normalize().dot(base)>.5)total.add(n);return total.lengthSq()>0?total.normalize():base;};
+  let normal=soma(false,new Vector3());
+  // O queixo e outras bordas deixam de puxar a câmera para baixo após as iterações.
+  for(let i=0;i<4;i++)normal=soma(true,normal);
+  return cameraOrto(p,normal.toArray() as Vec3,1024,.15);
 }

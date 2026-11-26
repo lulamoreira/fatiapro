@@ -70,13 +70,13 @@ const ERROS: Record<string, ErroAnalise> = {
   premium_no_teste: { mensagem: "A Análise Premium usa créditos. Desligue o Premium para usar o teste grátis.", acao: null },
   teste_ja_usado_nesta_maquina: { mensagem: "O teste grátis já foi usado neste computador por outra conta. Veja os planos para continuar.", acao: "planos" },
   maquina_sem_identificacao: { mensagem: "A ponte está se atualizando. Tente de novo em alguns minutos.", acao: null },
-  limite_diario: { mensagem: "Você chegou ao limite de 20 análises grátis de hoje.", acao: null },
+  limite_diario: { mensagem: "Você chegou ao limite de 20 usos grátis (análises e colorizações) de hoje.", acao: null },
   questionario_pendente: { mensagem: "Conte como foi a sua última otimização para liberar a de hoje.", acao: "questionario" },
 };
 
 /** criarAnalise error code → message + action. Unknown codes use the server detail. */
 export function erroAnalise(codigo: string, detalhe: string, limiteGratis = 20): ErroAnalise {
-  if (codigo === "limite_diario") return { mensagem: `Você chegou ao limite de ${limiteGratis} análises grátis de hoje.`, acao: null };
+  if (codigo === "limite_diario") return { mensagem: `Você chegou ao limite de ${limiteGratis} usos grátis (análises e colorizações) de hoje.`, acao: null };
   return ERROS[codigo] ?? { mensagem: detalhe || "Não foi possível criar a análise.", acao: null };
 }
 
@@ -137,6 +137,10 @@ export const ORIGEM_LOTE: Record<string, string> = {
 
 export function descricaoMovimento(tipo: string, nomePeca: string | null | undefined, motivo?: string | null): string {
   if (tipo === "entrada" && motivo?.startsWith("cupom ")) return `Cupom ${motivo.slice(6)}`;
+  if (motivo?.startsWith("Colorir pela foto")) {
+    if (tipo === "reserva") return motivo;
+    if (tipo === "estorno") return "Devolvido — Colorir pela foto";
+  }
   switch (tipo) {
     case "entrada": return "Entrada";
     case "reserva": return `Análise "${nomePecaExibicao(nomePeca)}"`;

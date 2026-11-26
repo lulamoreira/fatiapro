@@ -4,7 +4,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { EntradaColorir, validarGeral, validarRosto, schemaGeralJSON, schemaRostoJSON, SISTEMA_GERAL, SISTEMA_ROSTO } from "./colorir/ia-schema";
 import type { PropostaGeral, PropostaRosto } from "./colorir/ia-schema";
 import { MODELO_IA, custoChamadaUSD } from "./ia";
-import { setResponseStatus } from "@tanstack/react-start/server";
 export type ResultadoColorir = { ok: true; etapa: "geral"; dados: PropostaGeral } | { ok: true; etapa: "rosto"; dados: PropostaRosto } | { ok: false; codigo: string; mensagem: string; estornado: boolean };
 export function mensagemColorir(codigo: string): string {
   if (codigo === "sem_creditos") return "Você não tem créditos para colorir pela foto.";
@@ -16,6 +15,7 @@ export function mensagemColorir(codigo: string): string {
   if (codigo === "questionario_pendente") return "Responda o questionário da última análise para continuar no teste grátis.";
   if (codigo === "teste_ja_usado_nesta_maquina") return "O teste grátis já foi usado neste computador por outra conta.";
   if (codigo === "acesso_negado") return "O acesso à IA está indisponível. O responsável precisa restaurar o acesso antes de uma nova colorização.";
+  if (codigo === "ia_indisponivel") return "A IA está temporariamente indisponível; seu crédito foi devolvido.";
   return "Não deu certo desta vez; seu crédito foi devolvido.";
 }
 export const colorirPelaFoto = createServerFn({ method: "POST" })
@@ -69,15 +69,8 @@ export const colorirPelaFoto = createServerFn({ method: "POST" })
         }),
       });
       if (!resp.ok) {
-        const errorBody: unknown = await resp.json().catch(() => null);
-        const providerError = z.object({ error: z.object({ type: z.string(), message: z.string() }) }).safeParse(errorBody);
-        // Only provider status/type are recorded, never request content or images.
-        console.error("[colorir/ia]", resp.status, providerError.success ? providerError.data.error.type : "resposta_invalida");
-        if (resp.status === 403 || resp.status === 401) {
-          setResponseStatus(resp.status);
-          await db.from("colorir_ia_bloqueios").upsert({user_id:context.userId,motivo:"acesso_negado"});
-          return falha("acesso_negado");
-        }
+        // A chave e a conta da IA são do serviço: nunca bloquear o usuário nem repassar 401/403 à sessão dele.
+        console.error("[colorir/ia]", resp.status);
         return falha("ia_indisponivel");
       }
       const r = z.object({stop_reason:z.string().nullable(),content:z.array(z.object({type:z.string(),text:z.string().optional()})),usage:z.object({input_tokens:z.number().nonnegative().default(0),output_tokens:z.number().nonnegative().default(0),cache_read_input_tokens:z.number().nonnegative().default(0),cache_creation_input_tokens:z.number().nonnegative().default(0)})}).parse(await resp.json());

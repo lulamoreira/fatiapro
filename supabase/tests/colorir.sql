@@ -1,7 +1,7 @@
 -- Isolated, rollback-only regression: credits, idempotency, ownership, hourly and shared daily limits.
 begin;
 do $$
-declare u uuid:=gen_random_uuid(); other_user uuid:=gen_random_uuid(); k uuid:=gen_random_uuid(); l uuid; before_balance integer; r jsonb; i integer; d uuid; c uuid;
+declare u uuid:=gen_random_uuid(); other_user uuid:=gen_random_uuid(); delivered_user uuid:=gen_random_uuid(); k uuid:=gen_random_uuid(); l uuid; before_balance integer; r jsonb; i integer; d uuid; c uuid;
 begin
  if has_function_privilege('authenticated','public.consumir_colorir(uuid,uuid)','EXECUTE') or has_function_privilege('anon','public.estornar_colorir(uuid)','EXECUTE') then raise exception 'credit permissions exposed'; end if;
  insert into creditos_lotes(user_id,origem,quantidade,restante,expira_em) values(u,'ajuste',30,30,now()+interval '1 day') returning id into l;
@@ -20,6 +20,11 @@ begin
  if public.saldo_creditos(u)<>before_balance then raise exception 'refund not exact'; end if;
  if (select count(*) from creditos_movimentos where chave_colorir=k and tipo='estorno' and quantidade=1 and lote_id=l)<>1 then raise exception 'wrong refund lot/amount'; end if;
  if (select motivo from creditos_movimentos where chave_colorir=k and tipo='reserva')<>'Colorir pela foto: boneco.stl' then raise exception 'wrong statement description'; end if;
+ k:=gen_random_uuid();insert into creditos_lotes(user_id,origem,quantidade,restante,expira_em) values(delivered_user,'ajuste',1,1,now()+interval '1 day');
+ perform public.consumir_colorir(delivered_user,k);
+ update colorir_pedidos set estado='pronto' where chave=k;
+ if public.cancelar_colorir(delivered_user,k) then raise exception 'delivered result refunded';end if;
+ if public.saldo_creditos(delivered_user)<>0 then raise exception 'delivered result changed balance';end if;
  k:=gen_random_uuid();perform public.cancelar_colorir(u,k);
  begin perform public.iniciar_colorir_etapa(u,k,'geral','cancelado','[0]'::jsonb,4);raise exception 'canceled request revived';exception when others then if sqlerrm='canceled request revived' then raise; end if;end;
  for i in 1..9 loop perform public.consumir_colorir(u,gen_random_uuid());end loop;

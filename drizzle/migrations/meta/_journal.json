@@ -246,6 +246,13 @@
       "when": 1795718751039,
       "tag": "0034_colorir_cobranca_ajustes",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795720587597,
+      "tag": "0035_colorir_cancelamento_seguro",
+      "breakpoints": true
     }
   ]
 }

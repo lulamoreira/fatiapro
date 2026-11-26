@@ -13,9 +13,9 @@ export async function reduzirFoto(url:string):Promise<ImagemIA> {
 function renderizador(posicoes:Float32Array,regioes:Uint32Array,size:number){
   const renderer=new WebGLRenderer({antialias:false,preserveDrawingBuffer:true});renderer.setSize(size,size);renderer.setPixelRatio(1);renderer.toneMapping=NoToneMapping;
   const scene=new Scene();scene.background=new Color("#FFFFFF");const geo=new BufferGeometry();geo.setAttribute("position",new BufferAttribute(posicoes,3));geo.computeVertexNormals();
-  const standard=new MeshStandardMaterial({color:"#B8B8B8",roughness:.85}),basic=new MeshBasicMaterial({vertexColors:true,toneMapped:false}),mesh:Mesh<BufferGeometry,MeshStandardMaterial|MeshBasicMaterial>=new Mesh(geo,standard);scene.add(mesh);scene.add(new AmbientLight("#FFFFFF",1.2));const light=new DirectionalLight("#FFFFFF",2);scene.add(light);
+  const standard=new MeshStandardMaterial({color:"#B8B8B8",roughness:.85}),basic=new MeshBasicMaterial({vertexColors:true,toneMapped:false}),mesh:Mesh<BufferGeometry,MeshStandardMaterial|MeshBasicMaterial>=new Mesh(geo,standard);scene.add(mesh);scene.add(new AmbientLight("#FFFFFF",1.2));const light=new DirectionalLight("#FFFFFF",2);scene.add(light);scene.add(light.target);
   const target=new WebGLRenderTarget(size,size),pixels=new Uint8Array(size*size*4);
-  const draw=(camera:CameraIA,mapa=false)=>{const cam=criarCamera(camera);light.position.set(...camera.posicao);mesh.material=mapa?basic:standard;renderer.outputColorSpace=mapa?LinearSRGBColorSpace:SRGBColorSpace;renderer.setRenderTarget(mapa?target:null);renderer.render(scene,cam);};
+  const draw=(camera:CameraIA,mapa=false)=>{const cam=criarCamera(camera);light.position.set(...camera.posicao);light.target.position.set(...camera.centro);light.target.updateMatrixWorld();mesh.material=mapa?basic:standard;renderer.outputColorSpace=mapa?LinearSRGBColorSpace:SRGBColorSpace;renderer.setRenderTarget(mapa?target:null);renderer.render(scene,cam);};
   return {renderer,scene,geo,draw,target,pixels,dispose:()=>{geo.dispose();standard.dispose();basic.dispose();target.dispose();renderer.dispose();renderer.forceContextLoss();}};
 }
 const DIRECOES:Vec3[]=[[0,-1,0],[0,1,0],[-1,0,0],[1,0,0],[Math.cos(Math.PI/6)/Math.SQRT2,-Math.cos(Math.PI/6)/Math.SQRT2,.5]];

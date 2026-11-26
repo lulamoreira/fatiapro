@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { erroAnalise, etiquetaFonte, linhaUso, motoresVisiveis, payloadQuestionario, ponteDesatualizada, type PlanoInfo } from "./plano";
+import { descricaoMovimento, erroAnalise, etiquetaFonte, linhaUso, motoresVisiveis, payloadQuestionario, ponteDesatualizada, type PlanoInfo } from "./plano";
 import { escolherMotor } from "./motor-choice";
 
 const base: PlanoInfo = {
@@ -40,7 +40,7 @@ describe("erros do criarAnalise", () => {
     ["premium_no_teste", "A Análise Premium usa créditos. Desligue o Premium para usar o teste grátis.", null],
     ["teste_ja_usado_nesta_maquina", "O teste grátis já foi usado neste computador por outra conta. Veja os planos para continuar.", "planos"],
     ["maquina_sem_identificacao", "A ponte está se atualizando. Tente de novo em alguns minutos.", null],
-    ["limite_diario", "Você chegou ao limite de 20 análises grátis de hoje.", null],
+    ["limite_diario", "Você chegou ao limite de 20 usos grátis (análises e colorizações) de hoje.", null],
   ])("%s", (codigo, mensagem, acao) => {
     expect(erroAnalise(codigo, "x")).toEqual({ mensagem, acao });
   });
@@ -78,6 +78,19 @@ describe("questionário", () => {
   it("problemas só quando deu problema", () => {
     expect(payloadQuestionario("j", { ...ok, problemas: ["descolou"] })?.problemas).toEqual([]);
     expect(payloadQuestionario("j", { ...ok, imprimiu: "sim_problema", problemas: ["descolou"] })?.problemas).toEqual(["descolou"]);
+  });
+});
+
+describe("extrato de colorização", () => {
+  it("reserva mostra o próprio motivo e o nome da peça", () => {
+    expect(descricaoMovimento("reserva", null, "Colorir pela foto: princesa.stl")).toBe("Colorir pela foto: princesa.stl");
+  });
+  it("estorno identifica a devolução da colorização", () => {
+    expect(descricaoMovimento("estorno", null, "Colorir pela foto: princesa.stl")).toBe("Devolvido — Colorir pela foto");
+  });
+  it("análises continuam com os textos anteriores", () => {
+    expect(descricaoMovimento("reserva", "princesa.stl", "otimização")).toBe('Análise "princesa.stl"');
+    expect(descricaoMovimento("estorno", "princesa.stl", "falha")).toBe("Devolvido — falha na análise");
   });
 });
 
