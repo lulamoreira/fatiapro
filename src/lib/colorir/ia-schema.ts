@@ -34,8 +34,10 @@ export function validarRosto(raw: unknown, quantidade: number): PropostaRosto {
 }
 const number = { type: "number" }, integer = { type: "integer" }, string = { type: "string" };
 const object = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
-const array = (items: unknown, maxItems: number, minItems = 0) => ({ type: "array", items, minItems, maxItems });
-const unit = { ...number, minimum: 0, maximum: 1 }, px = { ...number, minimum: 0, maximum: 1024 };
+// Native structured output does not support array or numeric bounds. Zod above
+// enforces them before returning; describe them here rather than sending rejected fields.
+const array = (items: unknown, maxItems: number, minItems = 0) => ({ type: "array", items, description: `De ${minItems} a ${maxItems} itens.` });
+const unit = { ...number, description: "Número entre 0 e 1, inclusive." }, px = { ...number, description: "Pixels entre 0 e 1024, inclusive." };
 export function schemaGeralJSON(n: number) {
   return object({ paleta: array(object({ nome: string, hex: { ...string, pattern: "^#[0-9A-Fa-f]{6}$" } }), n, 1),
     regioes: array(object({ id: integer, parte: string, cor: integer, confianca: unit }), 60, 1),

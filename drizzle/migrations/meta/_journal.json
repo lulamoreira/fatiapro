@@ -232,6 +232,20 @@
       "when": 1793588719158,
       "tag": "0032_profiles_uf_energia",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795718354625,
+      "tag": "0033_colorir_ia_creditos",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795718751039,
+      "tag": "0034_colorir_cobranca_ajustes",
+      "breakpoints": true
     }
   ]
 }

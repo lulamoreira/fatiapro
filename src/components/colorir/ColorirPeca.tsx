@@ -36,6 +36,8 @@ import type { Ferramenta } from "./Ferramentas";
 import { FotoReferencia } from "./FotoReferencia";
 import { espelharForma, planoDaSuperficie } from "@/lib/colorir/formas";
 import type { EixosCamera, Forma } from "@/lib/colorir/formas";
+import { useColorirIA } from "./useColorirIA";
+import { PainelColorirIA } from "./PainelColorirIA";
 export interface ColorirPecaProps {
   userId: string;
 }
@@ -63,8 +65,12 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
     ultimoPincel = useRef(0),
     eixosCamera = useRef<EixosCamera | null>(null),
     seedId = useRef(0);
-  const n = IMPRESSORAS.find((i) => i.id === impressora)?.slots ?? 4,
-    disabled = !api.dados || api.ocupado,
+  const n = IMPRESSORAS.find((i) => i.id === impressora)?.slots ?? 4;
+  const ia = useColorirIA(api, nome, foto, n, (cores) => {
+    setPaleta(p => p.map((c, i) => cores[i] ?? c));
+  });
+  const bloqueadoIA = !!ia.etapa || !!ia.proposta;
+  const disabled = !api.dados || api.ocupado || bloqueadoIA,
     saida = useSaidaColorida(userId, nome, api.exportar);
   useEffect(() => {
     const m = lerMemoria();
@@ -75,6 +81,9 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
   useEffect(() => {
     if (memoriaLida) guardarMemoria(impressora, paleta);
   }, [memoriaLida, impressora, paleta]);
+  useEffect(() => {
+    if (api.paletaHistorico) setPaleta(api.paletaHistorico);
+  }, [api.paletaHistorico]);
   useEffect(
     () => () => {
       if (foto) URL.revokeObjectURL(foto);
@@ -88,7 +97,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
         e.key.toLowerCase() !== "z" ||
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
-        api.ocupado
+        api.ocupado || bloqueadoIA
       )
         return;
       e.preventDefault();
@@ -96,7 +105,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [api.enviar, api.ocupado]);
+  }, [api.enviar, api.ocupado, bloqueadoIA]);
   function cor(index: number, c: CorSlot) {
     setPaleta((p) => p.map((old, i) => (i === index ? c : old)));
   }
@@ -116,6 +125,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
     }
   }
   function hit(c: CliquePeca) {
+    if (bloqueadoIA) return;
     ultimo.current = c.face;
     if (c.arrasto && tool !== "pincel") return;
     if (tool === "conta-gotas") {
@@ -209,7 +219,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
           {nome && <p className="mt-1 max-w-xl break-all text-sm text-muted-foreground">{nome}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={api.ocupado} onClick={() => input.current?.click()}>
+          <Button variant="outline" disabled={api.ocupado || bloqueadoIA} onClick={() => input.current?.click()}>
             <Upload />
             {api.dados ? "Trocar STL" : "Enviar STL"}
           </Button>
@@ -255,6 +265,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
       )}
       <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
         <aside className="space-y-5 lg:order-last lg:max-h-[calc(100dvh-210px)] lg:overflow-y-auto lg:overscroll-contain lg:pr-2">
+          <fieldset disabled={bloqueadoIA} className="min-w-0 space-y-5">
           <section className="space-y-2">
             <Label htmlFor="colorir-impressora">Impressora / cores</Label>
             <select
@@ -324,6 +335,17 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               comparar={false}
             />
           )}
+          </fieldset>
+          <PainelColorirIA ia={ia} habilitado={!!api.dados && !!foto} ocupado={api.ocupado} onAplicar={() => {
+            if (ia.montagem && ia.montagem.paleta.some((c, i) => c.nome !== paleta[i]?.nome || c.cor !== paleta[i]?.cor) && !window.confirm("Aplicar a paleta da IA substituirá os nomes e cores dos seus slots. Continuar?")) return;
+            const manual = ia.montagem?.manuais[0];
+            if (manual) { setForma(manual.forma); setPosicionada(true); setAtivo(manual.slot); setTool("forma"); eixosCamera.current = manual.forma; }
+            ia.aplicar(paleta);
+          }} onSelecionar={id => {
+            ia.setSelecionada(id);
+            const face = api.dados?.regioes.findIndex(r => r === id) ?? -1;
+            if (face >= 0) setVista(v => ({ id: v.id + 1, nome: "close", face }));
+          }} />
         </aside>
         <section className="order-first min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -332,7 +354,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               size="icon"
               title="Desfazer"
               aria-label="Desfazer"
-              disabled={!api.undo || api.ocupado}
+              disabled={!api.undo || api.ocupado || bloqueadoIA}
               onClick={() => api.enviar({ tipo: "historico", refazer: false })}
             >
               <Undo2 />
@@ -342,7 +364,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               size="icon"
               title="Refazer"
               aria-label="Refazer"
-              disabled={!api.redo || api.ocupado}
+              disabled={!api.redo || api.ocupado || bloqueadoIA}
               onClick={() => api.enviar({ tipo: "historico", refazer: true })}
             >
               <Redo2 />
@@ -399,15 +421,16 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
           <div
             className={cn(
               "h-[520px] min-w-0 overflow-hidden border border-border bg-card md:h-[640px] lg:h-[calc(100dvh-330px)] lg:min-h-96",
-              comparar && "grid grid-cols-2",
+              comparar && !bloqueadoIA && "grid grid-cols-2",
             )}
           >
             {api.dados ? (
               <Cena
-                dados={api.dados}
-                paleta={paleta}
-                tool={tool}
-                verRegioes={regioes}
+                dados={ia.proposta && api.previa ? api.previa : api.dados}
+                paleta={ia.proposta && ia.montagem ? ia.montagem.paleta : paleta}
+                tool={bloqueadoIA ? "mover" : tool}
+                realcar={ia.proposta ? [...ia.proposta.geral.regioes.filter(r => r.confianca < .6).map(r => r.id), ...(ia.selecionada === null ? [] : [ia.selecionada])] : []}
+                verRegioes={bloqueadoIA ? false : regioes}
                 vista={vista}
                 onHit={hit}
                 onFim={finalizar}
@@ -416,7 +439,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
                 posicionada={posicionada}
                 espelho={espelho}
                 seeds={seeds}
-                disabled={api.ocupado}
+                disabled={api.ocupado || bloqueadoIA}
               />
             ) : (
               <div
@@ -440,7 +463,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
                 </Button>
               </div>
             )}
-            {comparar && (
+            {comparar && !bloqueadoIA && (
               <FotoReferencia
                 url={foto}
                 onUrl={setFoto}
@@ -449,6 +472,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               />
             )}
           </div>
+          {ia.proposta && <p className="text-sm font-semibold text-primary-ink">Prévia da IA</p>}
           {saida.aviso !== null && (
             <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
               Abra no fatiador com sua impressora já selecionada e pelo menos {saida.aviso}{" "}

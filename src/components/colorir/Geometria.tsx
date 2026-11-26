@@ -12,12 +12,13 @@ export interface GeometriaProps {
   paleta: CorSlot[];
   verRegioes: boolean;
   hover: number;
+  realcar?: number[];
   onHit: (event: ThreeEvent<PointerEvent>, face: number, slot: number, drag: boolean) => void;
   onHover: (face: number) => void;
   onFim: () => void;
 }
-function rgb(slot: number, paleta: CorSlot[], regiao: number, ver: boolean): Color {
-  return ver
+function rgb(slot: number, paleta: CorSlot[], regiao: number, ver: boolean, realcar: readonly number[] = []): Color {
+  return realcar.includes(regiao) ? new Color("#FFD600") : ver
     ? new Color().setHSL(((regiao * 137.508) % 360) / 360, 0.55, 0.55)
     : new Color(paleta[slot - 1]?.cor ?? "#FFFFFF");
 }
@@ -80,11 +81,11 @@ export function Geometria(p: GeometriaProps) {
     const attr = geo.getAttribute("color") as BufferAttribute;
     const a = attr.array as Uint8Array;
     for (let f = 0; f < p.dados.slots.length; f++)
-      writeColor(a, f, rgb(p.dados.slots[f] ?? 1, p.paleta, p.dados.regioes[f] ?? 0, p.verRegioes));
+      writeColor(a, f, rgb(p.dados.slots[f] ?? 1, p.paleta, p.dados.regioes[f] ?? 0, p.verRegioes, p.realcar));
     attr.clearUpdateRanges();
     attr.needsUpdate = true;
     invalidate();
-  }, [geo, p.paleta, p.verRegioes, p.dados.regioes, invalidate]);
+  }, [geo, p.paleta, p.verRegioes, p.dados.regioes, p.realcar, invalidate]);
   useEffect(() => {
     const attr = geo.getAttribute("color") as BufferAttribute,
       a = attr.array as Uint8Array;
@@ -146,6 +147,7 @@ export function Geometria(p: GeometriaProps) {
         dados={p.dados}
         paleta={p.paleta}
         ver={p.verRegioes}
+        realcar={p.realcar ?? []}
         onHit={handle}
         onHover={p.onHover}
         onFim={p.onFim}
@@ -157,6 +159,7 @@ function Detalhes({
   dados,
   paleta,
   ver,
+  realcar,
   onHit,
   onHover,
   onFim,
@@ -164,6 +167,7 @@ function Detalhes({
   dados: DadosCena;
   paleta: CorSlot[];
   ver: boolean;
+  realcar: number[];
   onHit: GeometriaProps["onHit"];
   onHover: (f: number) => void;
   onFim: () => void;
@@ -192,11 +196,12 @@ function Detalhes({
           paleta,
           dados.regioes[dados.detalhes.faces[f] ?? 0] ?? 0,
           ver,
+          realcar,
         ),
       );
     attr.needsUpdate = true;
     invalidate();
-  }, [g, paleta, ver, dados.regioes, invalidate]);
+  }, [g, paleta, ver, realcar, dados.regioes, invalidate]);
   useEffect(() => () => g.dispose(), [g]);
   function hit(e: ThreeEvent<PointerEvent>, move = false) {
     const i = e.faceIndex ?? -1;

@@ -53,7 +53,7 @@ export function resumoFeedback(rows: readonly FeedbackRow[]): ResumoFeedback {
 }
 
 // ===== Financeiro =====
-export interface ChamadaRow { job_id: string; user_id: string; modelo: string; custo_usd: number }
+export interface ChamadaRow { job_id: string | null; user_id: string; modelo: string; custo_usd: number }
 export interface JobFinRow { id: string; user_id: string; fonte: string | null; roteiro: string; premium: boolean }
 export interface MovRow { tipo: string; quantidade: number }
 export interface GrupoFin {
@@ -81,7 +81,7 @@ function grupo(jobs: readonly JobFinRow[], custoJob: Map<string, number>): Grupo
 
 export function resumoFinanceiro(i: { chamadas: readonly ChamadaRow[]; jobs: readonly JobFinRow[]; movimentos: readonly MovRow[]; cambio: number }) {
   const custoJob = new Map<string, number>();
-  for (const c of i.chamadas) custoJob.set(c.job_id, (custoJob.get(c.job_id) ?? 0) + Number(c.custo_usd || 0));
+  for (const c of i.chamadas) if (c.job_id) custoJob.set(c.job_id, (custoJob.get(c.job_id) ?? 0) + Number(c.custo_usd || 0));
   const cliente = grupo(i.jobs.filter((j) => ehCliente(j.fonte)), custoJob);
   const admin = grupo(i.jobs.filter((j) => j.fonte === "admin"), custoJob);
   // reservas are negative, estornos positive: consumed = -(sum)
@@ -89,8 +89,8 @@ export function resumoFinanceiro(i: { chamadas: readonly ChamadaRow[]; jobs: rea
   const custoCreditosUSD = i.jobs.filter((j) => j.fonte === "creditos").reduce((s, j) => s + (custoJob.get(j.id) ?? 0), 0);
   return {
     cliente, admin,
-    total_usd: cliente.custo_usd + admin.custo_usd,
-    total_brl: (cliente.custo_usd + admin.custo_usd) * i.cambio,
+    total_usd: cliente.custo_usd + admin.custo_usd + i.chamadas.filter(c => !c.job_id).reduce((s, c) => s + Number(c.custo_usd || 0), 0),
+    total_brl: (cliente.custo_usd + admin.custo_usd + i.chamadas.filter(c => !c.job_id).reduce((s, c) => s + Number(c.custo_usd || 0), 0)) * i.cambio,
     creditos_consumidos: creditos,
     custo_por_credito_brl: creditos > 0 ? (custoCreditosUSD * i.cambio) / creditos : null,
   };

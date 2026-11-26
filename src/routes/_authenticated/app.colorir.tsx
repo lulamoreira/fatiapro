@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/colorir")({
       {
         property: "og:description",
         content:
-          "Coloração de peças 3D com regiões, pincel, sementes e formas, sem gastar créditos.",
+          "Pintura manual gratuita de peças 3D e sugestões por foto com IA, prévia e aplicação opcional por 1 crédito.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

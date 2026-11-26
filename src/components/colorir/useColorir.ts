@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Comando, Resposta, DetalhesRender } from "@/lib/colorir/protocolo";
 import type { SerializedBVH } from "three-mesh-bvh";
+import type { CorSlot } from "@/lib/colorir/paleta";
 export interface DadosCena {
   posicoes: Float32Array;
   normais: Float32Array;
@@ -25,6 +26,8 @@ export function useColorir() {
       reject: (e: Error) => void;
     } | null>(null);
   const [dados, setDados] = useState<DadosCena | null>(null),
+    [previa, setPrevia] = useState<DadosCena | null>(null),
+    [paletaHistorico, setPaletaHistorico] = useState<CorSlot[] | null>(null),
     [progresso, setProgresso] = useState<{ etapa: string; percentual: number } | null>(null),
     [ocupado, setOcupado] = useState(false),
     [usadas, setUsadas] = useState([1]),
@@ -37,6 +40,7 @@ export function useColorir() {
       return;
     }
     if (r.tipo === "malha") {
+      setPrevia(null);
       setDados({
         ...r,
         slots: new Uint8Array(r.regioes.length).fill(1),
@@ -51,6 +55,8 @@ export function useColorir() {
     if (r.tipo === "regioes")
       setDados((d) => (d ? { ...d, regioes: r.regioes, revisao: d.revisao + 1 } : d));
     if (r.tipo === "pintura") {
+      if (r.paleta) setPaletaHistorico(r.paleta);
+      setPrevia(null);
       setDados((d) => {
         if (!d) return d;
         for (let i = 0; i < r.faces.length; i++) d.slots[r.faces[i] ?? 0] = r.slots[i] ?? 1;
@@ -63,6 +69,13 @@ export function useColorir() {
       setUndo(r.desfazer);
       setRedo(r.refazer);
     }
+    if (r.tipo === "previaIA") {
+      setDados(d => {
+        if (d) setPrevia({ ...d, slots: r.slots, detalhes: r.detalhes, alteradas: new Uint32Array(), revisao: d.revisao + 1 });
+        return d;
+      });
+    }
+    if (r.tipo === "descartadaIA") setPrevia(null);
     if (r.tipo === "exportado") {
       exportPromise.current?.resolve(r);
       exportPromise.current = null;
@@ -109,6 +122,7 @@ export function useColorir() {
     async (file: File, sensibilidade: number) => {
       setOcupado(true);
       setDados(null);
+      setPrevia(null);
       setProgresso({ etapa: "Lendo", percentual: 0 });
       try {
         const w = criar(),
@@ -129,6 +143,7 @@ export function useColorir() {
     exportPromise.current?.reject(new Error("Operação cancelada."));
     exportPromise.current = null;
     setDados(null);
+    setPrevia(null);
     setOcupado(false);
     setProgresso(null);
     setUndo(false);
@@ -151,5 +166,5 @@ export function useColorir() {
       }),
     [],
   );
-  return { dados, progresso, ocupado, usadas, undo, redo, enviar, abrir, cancelar, exportar };
+  return { dados, previa, paletaHistorico, progresso, ocupado, usadas, undo, redo, enviar, abrir, cancelar, exportar };
 }

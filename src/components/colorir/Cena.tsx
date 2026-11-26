@@ -41,6 +41,7 @@ export interface CenaProps {
   espelho: boolean;
   seeds: Semente[];
   disabled: boolean;
+  realcar?: number[];
 }
 export function Cena(p: CenaProps) {
   const wrapper = useRef<HTMLDivElement>(null);
@@ -174,6 +175,7 @@ function SceneContent(p: CenaProps & { onReady: () => void }) {
         paleta={p.paleta}
         verRegioes={p.verRegioes}
         hover={hover}
+        realcar={p.realcar ?? []}
         onHit={hit}
         onHover={(f) => setHover(f < 0 ? -1 : (p.dados.regioes[f] ?? -1))}
         onFim={p.onFim}

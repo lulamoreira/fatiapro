@@ -113,7 +113,7 @@ export const PRIVACIDADE_SECOES: SecaoLegal[] = [
  {
   "n": 5,
   "titulo": "Inteligência artificial e transferência internacional",
-  "texto": "Para gerar as sugestões, enviamos ao nosso provedor de inteligência artificial, a Anthropic, PBC (Estados Unidos), apenas o necessário para a análise: configurações do fatiador, medidas e características da peça, resultados dos testes e, em alguns casos, uma imagem em miniatura da peça. Não enviamos seu nome, e-mail ou dados de pagamento. Essa transferência internacional é feita para executar o contrato com você (LGPD, art. 33) e com provedor que adota medidas de segurança compatíveis. O provedor não usa esses dados para treinar modelos, conforme seus termos comerciais."
+  "texto": "Para gerar as sugestões, enviamos ao nosso provedor de inteligência artificial, a Anthropic, PBC (Estados Unidos), apenas o necessário para a análise: configurações do fatiador, medidas e características da peça, resultados dos testes e, em alguns casos, uma imagem em miniatura da peça; na ferramenta Colorir pela foto, a foto de referência que você escolher e imagens geradas da peça. Não enviamos seu nome, e-mail ou dados de pagamento. Essa transferência internacional é feita para executar o contrato com você (LGPD, art. 33) e com provedor que adota medidas de segurança compatíveis. O provedor não usa esses dados para treinar modelos, conforme seus termos comerciais."
  },
  {
   "n": 6,

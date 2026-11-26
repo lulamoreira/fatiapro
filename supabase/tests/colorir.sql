@@ -1,0 +1,40 @@
+-- Isolated, rollback-only regression: credits, idempotency, ownership, hourly and shared daily limits.
+begin;
+do $$
+declare u uuid:=gen_random_uuid(); other_user uuid:=gen_random_uuid(); k uuid:=gen_random_uuid(); l uuid; before_balance integer; r jsonb; i integer; d uuid; c uuid;
+begin
+ if has_function_privilege('authenticated','public.consumir_colorir(uuid,uuid)','EXECUTE') or has_function_privilege('anon','public.estornar_colorir(uuid)','EXECUTE') then raise exception 'credit permissions exposed'; end if;
+ insert into creditos_lotes(user_id,origem,quantidade,restante,expira_em) values(u,'ajuste',30,30,now()+interval '1 day') returning id into l;
+ before_balance:=public.saldo_creditos(u);
+ perform public.consumir_colorir(u,k);perform public.consumir_colorir(u,k);
+ if public.saldo_creditos(u)<>before_balance-1 then raise exception 'same key charged twice'; end if;
+ if (select count(*) from creditos_movimentos where chave_colorir=k and tipo='reserva')<>1 then raise exception 'duplicate reservation'; end if;
+ perform public.iniciar_colorir_etapa(u,k,'geral','boneco.stl','[0]'::jsonb,4);
+ begin perform public.iniciar_colorir_etapa(u,k,'geral','boneco.stl','[0]'::jsonb,4);raise exception 'duplicate general accepted';exception when others then if sqlerrm='duplicate general accepted' then raise; end if;end;
+ begin perform public.consumir_colorir(other_user,k);raise exception 'foreign key ownership bypass';exception when others then if sqlerrm='foreign key ownership bypass' then raise; end if;end;
+ update colorir_pedidos set estado='pronto',paleta='[{"nome":"Pele","hex":"#FFFFFF"}]' where chave=k;
+ perform public.iniciar_colorir_etapa(u,k,'rosto','boneco.stl','[0]'::jsonb,4);
+ if public.saldo_creditos(u)<>before_balance-1 then raise exception 'face charged twice';end if;
+ begin perform public.iniciar_colorir_etapa(u,k,'rosto','boneco.stl','[0]'::jsonb,4);raise exception 'face duplicated';exception when others then if sqlerrm<>'etapa_ja_usada' then raise;end if;end;
+ perform public.estornar_colorir(k);perform public.estornar_colorir(k);
+ if public.saldo_creditos(u)<>before_balance then raise exception 'refund not exact'; end if;
+ if (select count(*) from creditos_movimentos where chave_colorir=k and tipo='estorno' and quantidade=1 and lote_id=l)<>1 then raise exception 'wrong refund lot/amount'; end if;
+ if (select motivo from creditos_movimentos where chave_colorir=k and tipo='reserva')<>'Colorir pela foto: boneco.stl' then raise exception 'wrong statement description'; end if;
+ k:=gen_random_uuid();perform public.cancelar_colorir(u,k);
+ begin perform public.iniciar_colorir_etapa(u,k,'geral','cancelado','[0]'::jsonb,4);raise exception 'canceled request revived';exception when others then if sqlerrm='canceled request revived' then raise; end if;end;
+ for i in 1..9 loop perform public.consumir_colorir(u,gen_random_uuid());end loop;
+ begin perform public.consumir_colorir(u,gen_random_uuid());raise exception '11th hourly allowed';exception when others then if sqlerrm<>'limite_hora' then raise; end if;end;
+ insert into cortesias(user_id,tipo,por_dia,premium,ativa,inicio) values(other_user,'uso_diario',1,false,true,now()-interval '1 hour') returning id into c;
+ k:=gen_random_uuid();r:=public.consumir_colorir(other_user,k);if r->>'fonte'<>'cortesia' then raise exception 'courtesy priority';end if;perform public.estornar_colorir(k);
+ if public.saldo_creditos(other_user)<>0 then raise exception 'courtesy minted credit';end if;
+ insert into testes_gratis(user_id,inicio,fim) values(other_user,now(),now()+interval '14 days');
+ update cortesias set ativa=false where id=c;
+ insert into devices(user_id,nome,sistema,token_hash,maquina_hash) values(other_user,'colorir teste','macos',gen_random_uuid()::text,md5(other_user::text)||md5(other_user::text)) returning id into d;
+ k:=gen_random_uuid();r:=public.consumir_colorir(other_user,k);if r->>'fonte'<>'teste' then raise exception 'trial source';end if;
+ begin perform public.consumir_colorir(other_user,gen_random_uuid());raise exception 'second daily trial allowed';exception when others then if sqlerrm<>'teste_hoje_usado' then raise;end if;end;
+ r:=public.criar_analise(other_user,d,'reduzir_tempo','orca','{}'::jsonb,'fatiapro',false,null,null);
+ if r->>'codigo'<>'teste_hoje_usado' then raise exception 'shared daily quota';end if;
+ perform public.estornar_colorir(k);perform public.consumir_colorir(other_user,gen_random_uuid());
+ if public.saldo_creditos(other_user)<>0 then raise exception 'trial minted credit';end if;
+end $$;
+rollback;

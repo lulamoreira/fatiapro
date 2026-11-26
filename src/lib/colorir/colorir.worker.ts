@@ -16,6 +16,8 @@ import { watershed } from "./watershed";
 import { exportar3mf } from "./exportar3mf";
 import type { Comando, Resposta, DetalhesRender } from "./protocolo";
 import { construirBVH } from "./bvh";
+import { montarPrevia, diferencaPintura } from "./ia-previa";
+import type { CorSlot } from "./paleta";
 const scope = self as unknown as {
   postMessage: (r: Resposta, transfer?: Transferable[]) => void;
   onmessage: ((e: MessageEvent<Comando>) => void) | null;
@@ -25,17 +27,19 @@ let malha: Malha | null = null,
   pintura: Pintura = { slots: new Uint8Array(), detalhes: new Map() },
   historico = new Historico(),
   traco: Map<number, Alteracao> | null = null;
+let previaIA: Pintura | null = null;
+let paletasIA = new WeakMap<object, { antes: CorSlot[]; depois: CorSlot[] }>();
 const send = (r: Resposta, t: Transferable[] = []) => scope.postMessage(r, t);
-function renderDetalhes(): DetalhesRender {
+function renderDetalhes(p = pintura): DetalhesRender {
   let total = 0;
-  pintura.detalhes.forEach((n, f) =>
+  p.detalhes.forEach((n, f) =>
     folhas(n, triangulo(malha?.posicoes ?? new Float32Array(), f), () => total++),
   );
   const posicoes = new Float32Array(total * 9),
     slots = new Uint8Array(total),
     faces = new Uint32Array(total);
   let i = 0;
-  pintura.detalhes.forEach((n, f) =>
+  p.detalhes.forEach((n, f) =>
     folhas(n, triangulo(malha?.posicoes ?? new Float32Array(), f), (slot, t) => {
       for (let j = 0; j < 3; j++) posicoes.set(t[j] ?? [0, 0, 0], i * 9 + j * 3);
       slots[i] = slot;
@@ -44,7 +48,7 @@ function renderDetalhes(): DetalhesRender {
   );
   return { posicoes, slots, faces, bvh: construirBVH(posicoes) };
 }
-function publicar(diff: Alteracao[], trees: boolean) {
+function publicar(diff: Alteracao[], trees: boolean, paleta?: CorSlot[]) {
   const faces = new Uint32Array(diff.map((d) => d.face)),
     slots = new Uint8Array(diff.map((d) => pintura.slots[d.face] ?? 1)),
     detalhes = trees ? renderDetalhes() : null;
@@ -56,6 +60,7 @@ function publicar(diff: Alteracao[], trees: boolean) {
     usadas: coresUsadas(pintura),
     desfazer: historico.desfazer.length > 0,
     refazer: historico.refazer.length > 0,
+    ...(paleta ? { paleta } : {}),
   });
 }
 function pintar(select: (f: number, antes: No) => No) {
@@ -92,6 +97,8 @@ scope.onmessage = (event) => {
       pintura = { slots: new Uint8Array(malha.indices.length / 3).fill(1), detalhes: new Map() };
       historico = new Historico();
       traco = null;
+      previaIA = null;
+      paletasIA = new WeakMap();
       const bvh = construirBVH(malha.posicoes),
         posicoes = malha.posicoes.slice(),
         normais = malha.normais.slice();
@@ -104,6 +111,27 @@ scope.onmessage = (event) => {
     if (!malha) throw new Error("Envie uma peça primeiro.");
     const m = malha;
     switch (cmd.tipo) {
+      case "previaIA":
+        previaIA = montarPrevia(m, regioes, pintura, cmd.plano, cmd.semRosto);
+        send({ tipo: "previaIA", slots: previaIA.slots.slice(), detalhes: renderDetalhes(previaIA) });
+        break;
+      case "aplicarIA": {
+        if (!previaIA) throw new Error("A prévia ainda não está pronta.");
+        const diff = diferencaPintura(pintura, previaIA);
+        // Even identical slot indices can have a new palette: retain one undo step.
+        if (!diff.length && pintura.slots.length) diff.push({ face: 0, antes: lerFace(pintura, 0), depois: lerFace(previaIA, 0) });
+        pintura = previaIA;
+        previaIA = null;
+        historico.registrar(diff);
+        const passo = historico.desfazer.at(-1);
+        if (passo && diff.length) paletasIA.set(passo, { antes: cmd.paletaAntes, depois: cmd.paletaDepois });
+        publicar(diff, true);
+        break;
+      }
+      case "descartarIA":
+        previaIA = null;
+        send({ tipo: "descartadaIA" });
+        break;
       case "segmentar":
         send({ tipo: "progresso", etapa: "Regiões", percentual: 85 });
         regioes = segmentar(m, cmd.sensibilidade);
@@ -137,10 +165,13 @@ scope.onmessage = (event) => {
         pintar((_f, n) => trocarSlot(n, cmd.a, cmd.b));
         break;
       case "historico": {
+        const passo = (cmd.refazer ? historico.refazer : historico.desfazer).at(-1);
+        const cores = passo ? paletasIA.get(passo) : undefined;
         const diff = historico.voltar(pintura, cmd.refazer);
         publicar(
           diff,
           diff.some((d) => !("slot" in d.antes) || !("slot" in d.depois)),
+          cores ? (cmd.refazer ? cores.depois : cores.antes) : undefined,
         );
         break;
       }

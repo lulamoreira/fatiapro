@@ -2,7 +2,12 @@ import type { Forma } from "./formas";
 import type { Vec3 } from "./pintura";
 import type { Semente } from "./watershed";
 import type { SerializedBVH } from "three-mesh-bvh";
+import type { PlanoPinturaIA } from "./ia-previa";
+import type { CorSlot } from "./paleta";
 export type Comando =
+  | { tipo: "previaIA"; plano: PlanoPinturaIA; semRosto: boolean }
+  | { tipo: "aplicarIA"; paletaAntes: CorSlot[]; paletaDepois: CorSlot[] }
+  | { tipo: "descartarIA" }
   | { tipo: "ler"; buffer: ArrayBuffer; sensibilidade: number }
   | { tipo: "segmentar"; sensibilidade: number }
   | { tipo: "balde"; face: number; slot: number }
@@ -21,6 +26,8 @@ export interface DetalhesRender {
   bvh: SerializedBVH | null;
 }
 export type Resposta =
+  | { tipo: "previaIA"; slots: Uint8Array; detalhes: DetalhesRender }
+  | { tipo: "descartadaIA" }
   | { tipo: "progresso"; etapa: string; percentual: number }
   | {
       tipo: "malha";
@@ -38,6 +45,7 @@ export type Resposta =
       usadas: number[];
       desfazer: boolean;
       refazer: boolean;
+      paleta?: CorSlot[];
     }
   | { tipo: "exportado"; blob: Blob; usadas: number[] }
   | { tipo: "erro"; mensagem: string };

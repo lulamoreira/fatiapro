@@ -56,6 +56,77 @@ export type Database = {
         }
         Relationships: []
       }
+      colorir_ia_bloqueios: {
+        Row: {
+          criado_em: string
+          motivo: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          motivo: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          motivo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      colorir_pedidos: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          criado_em: string
+          estado: string
+          fonte: string | null
+          gasto_usd: number
+          ids: Json | null
+          lote_id: string | null
+          nome: string
+          paleta: Json | null
+          slots: number | null
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          criado_em?: string
+          estado?: string
+          fonte?: string | null
+          gasto_usd?: number
+          ids?: Json | null
+          lote_id?: string | null
+          nome?: string
+          paleta?: Json | null
+          slots?: number | null
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          criado_em?: string
+          estado?: string
+          fonte?: string | null
+          gasto_usd?: number
+          ids?: Json | null
+          lote_id?: string | null
+          nome?: string
+          paleta?: Json | null
+          slots?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colorir_pedidos_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "creditos_lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config_app: {
         Row: {
           chave: string
@@ -149,6 +220,7 @@ export type Database = {
       creditos_movimentos: {
         Row: {
           admin_id: string | null
+          chave_colorir: string | null
           criado_em: string
           id: string
           job_id: string | null
@@ -160,6 +232,7 @@ export type Database = {
         }
         Insert: {
           admin_id?: string | null
+          chave_colorir?: string | null
           criado_em?: string
           id?: string
           job_id?: string | null
@@ -171,6 +244,7 @@ export type Database = {
         }
         Update: {
           admin_id?: string | null
+          chave_colorir?: string | null
           criado_em?: string
           id?: string
           job_id?: string | null
@@ -181,6 +255,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "creditos_movimentos_chave_colorir_fkey"
+            columns: ["chave_colorir"]
+            isOneToOne: false
+            referencedRelation: "colorir_pedidos"
+            referencedColumns: ["chave"]
+          },
           {
             foreignKeyName: "creditos_movimentos_job_id_fkey"
             columns: ["job_id"]
@@ -463,43 +544,56 @@ export type Database = {
         Row: {
           cache_escrita: number
           cache_leitura: number
+          chave_colorir: string | null
           criado_em: string
           custo_usd: number
           duracao_ms: number
           entrada: number
           id: string
-          job_id: string
+          job_id: string | null
           modelo: string
+          origem: string
           saida: number
           user_id: string
         }
         Insert: {
           cache_escrita?: number
           cache_leitura?: number
+          chave_colorir?: string | null
           criado_em?: string
           custo_usd?: number
           duracao_ms?: number
           entrada?: number
           id?: string
-          job_id: string
+          job_id?: string | null
           modelo: string
+          origem?: string
           saida?: number
           user_id: string
         }
         Update: {
           cache_escrita?: number
           cache_leitura?: number
+          chave_colorir?: string | null
           criado_em?: string
           custo_usd?: number
           duracao_ms?: number
           entrada?: number
           id?: string
-          job_id?: string
+          job_id?: string | null
           modelo?: string
+          origem?: string
           saida?: number
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ia_chamadas_chave_colorir_fkey"
+            columns: ["chave_colorir"]
+            isOneToOne: false
+            referencedRelation: "colorir_pedidos"
+            referencedColumns: ["chave"]
+          },
           {
             foreignKeyName: "ia_chamadas_job_id_fkey"
             columns: ["job_id"]
@@ -1170,6 +1264,10 @@ export type Database = {
         Returns: undefined
       }
       admin_resetar_meu_aceite: { Args: never; Returns: undefined }
+      cancelar_colorir: {
+        Args: { p_chave: string; p_user: string }
+        Returns: boolean
+      }
       claim_next_command: {
         Args: { p_device_id: string }
         Returns: {
@@ -1218,6 +1316,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      consumir_colorir: {
+        Args: { p_chave: string; p_user: string }
+        Returns: Json
+      }
       create_pairing_code: {
         Args: never
         Returns: {
@@ -1262,6 +1364,7 @@ export type Database = {
           numero: number
         }[]
       }
+      estornar_colorir: { Args: { p_chave: string }; Returns: undefined }
       estornar_credito: { Args: { p_job: string }; Returns: undefined }
       estornar_pedido: {
         Args: { p_motivo: string; p_pedido: string }
@@ -1269,6 +1372,17 @@ export type Database = {
       }
       expirar_pedidos_pendentes: { Args: never; Returns: number }
       impressoras_escolhidas_valido: { Args: { v: Json }; Returns: boolean }
+      iniciar_colorir_etapa: {
+        Args: {
+          p_chave: string
+          p_etapa: string
+          p_ids: Json
+          p_nome: string
+          p_slots: number
+          p_user: string
+        }
+        Returns: Json
+      }
       inicio_dia_sp: { Args: { p?: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       job_contou: {

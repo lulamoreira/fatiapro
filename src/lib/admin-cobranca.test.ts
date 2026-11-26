@@ -34,6 +34,12 @@ describe("Financeiro", () => {
     expect(x.creditos_consumidos).toBe(0);
     expect(x.custo_por_credito_brl).toBeNull();
   });
+  it("inclui custo de Colorir sem contabilizar uma análise fictícia", () => {
+    const x = resumoFinanceiro({ chamadas: [{ job_id: null, user_id: "u1", modelo: "s", custo_usd: 0.30 }], jobs: [], movimentos: [], cambio: 5 });
+    expect(x.total_usd).toBeCloseTo(0.30);
+    expect(x.total_brl).toBeCloseTo(1.50);
+    expect(x.cliente.analises).toBe(0);
+  });
 });
 
 describe("Feedback", () => {

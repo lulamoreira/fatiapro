@@ -193,7 +193,7 @@ export const adminFinanceiro = createServerFn({ method: "POST" })
     const porUser = new Map<string, { custo: number; jobs: Set<string> }>();
     for (const c of chamadas) {
       const e = porUser.get(c.user_id) ?? { custo: 0, jobs: new Set<string>() };
-      e.custo += Number(c.custo_usd || 0); e.jobs.add(c.job_id); porUser.set(c.user_id, e);
+      e.custo += Number(c.custo_usd || 0); if (c.job_id) e.jobs.add(c.job_id); porUser.set(c.user_id, e);
     }
     const top = [...porUser.entries()].sort((a, b) => b[1].custo - a[1].custo || a[0].localeCompare(b[0])).slice(0, 10);
     const topLinhas = await Promise.all(top.map(async ([id, e]) => {
