@@ -31,15 +31,20 @@ export function medirRegioes(m: MalhaMin, regioes: ArrayLike<number>): MedidasRe
 export function larguraMedia(area: number, borda: number): number {
   return borda > 0 ? (2 * area) / borda : Infinity;
 }
-/** Lines = narrow (< 2 mm) and large (> 1% of the total area). */
+/** Large narrow regions, including elongated contours up to 3.3 mm wide. */
+export function ehRegiaoLinha(area: number, borda: number, total: number): boolean {
+  const largura = larguraMedia(area, borda);
+  return area > total * 0.01 && (largura < LARGURA_LINHA || (largura < 3.3 && area / (borda * borda) < 0.02));
+}
+/** Uses the same pure rule for inheritance exclusions and mandatory image regions. */
 export function regioesLinha(m: MalhaMin, regioes: ArrayLike<number>, medidas = medirRegioes(m, regioes)): Set<number> {
   const out = new Set<number>();
   for (const [id, a] of medidas.area)
-    if (a > medidas.total * 0.01 && larguraMedia(a, medidas.borda.get(id) ?? 0) < LARGURA_LINHA) out.add(id);
+    if (ehRegiaoLinha(a, medidas.borda.get(id) ?? 0, medidas.total)) out.add(id);
   return out;
 }
 /**
- * Replaces only "mixed" base regions (thin line ≥ 40% + thick parts ≥ 10%) by their finer sub-regions.
+ * Replaces only "mixed" base regions (thin line ≥ 40% + thick parts ≥ 5%) by their finer sub-regions.
  * Unchanged regions keep their ids; returns the same array when nothing is mixed.
  */
 export function refinarMistas(m: MalhaMin, base: Uint32Array, fina: Uint32Array): Uint32Array {
@@ -59,7 +64,7 @@ export function refinarMistas(m: MalhaMin, base: Uint32Array, fina: Uint32Array)
     porBase.set(b, s);
   }
   const mistas = new Set<number>();
-  for (const [b, s] of porBase) if (s.ids.length > 1 && s.fina >= s.total * 0.4 && s.grossa >= s.total * 0.1) mistas.add(b);
+  for (const [b, s] of porBase) if (s.ids.length > 1 && s.fina >= s.total * 0.4 && s.grossa >= s.total * 0.05) mistas.add(b);
   if (!mistas.size) return base;
   let proximo = 0;
   for (const id of base) proximo = Math.max(proximo, id + 1);

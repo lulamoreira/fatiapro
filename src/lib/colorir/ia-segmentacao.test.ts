@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { prepararMalha } from "./malha";
 import { herdarCores, escolherRegioes } from "./ia-regioes";
-import { refinarMistas, regioesLinha, larguraMedia, medirRegioes, facesDeBorda } from "./ia-segmentacao";
+import { refinarMistas, regioesLinha, ehRegiaoLinha, larguraMedia, medirRegioes, facesDeBorda } from "./ia-segmentacao";
 import { montarPrevia } from "./ia-previa";
 /** Flat 28,8 mm plate: 3×3 squares of 8 mm separated by a 1,2 mm grid of lines (cells of 0,4 mm). */
 function grade() {
@@ -16,6 +16,60 @@ function grade() {
   return { m: prepararMalha(new Float32Array(p)), regioes: new Uint32Array(reg) };
 }
 describe("linhas finas no Colorir pela foto", () => {
+  it("divide a teia com três quadrados grudados somando aproximadamente 6% da região", () => {
+    const p: number[] = [], ids: number[] = [];
+    for (let x = 0; x < 85; x++) for (let y = 0; y < 71; y++) {
+      const linha = x % 7 === 0 || y % 7 === 0;
+      const id = linha ? 120 : Math.floor(y / 7) * 12 + Math.floor(x / 7);
+      p.push(x, y, 0, x + 1, y, 0, x + 1, y + 1, 0, x, y, 0, x + 1, y + 1, 0, x, y + 1, 0);
+      ids.push(id, id);
+    }
+    const m = prepararMalha(new Float32Array(p)), fina = new Uint32Array(ids);
+    const base = fina.map((id) => id < 3 || id === 120 ? 120 : id);
+    const med = medirRegioes(m, fina), grossa = [0, 1, 2].reduce((a, id) => a + (med.area.get(id) ?? 0), 0);
+    const totalMista = grossa + (med.area.get(120) ?? 0);
+    expect(grossa / totalMista).toBeCloseTo(0.06, 2);
+    expect(grossa / totalMista).toBeLessThan(0.1);
+    expect(larguraMedia(med.area.get(120) ?? 0, med.borda.get(120) ?? 0)).toBeLessThan(2);
+    for (const id of [0, 1, 2]) expect(larguraMedia(med.area.get(id) ?? 0, med.borda.get(id) ?? 0)).toBeGreaterThan(2.5);
+    const out = refinarMistas(m, base, fina);
+    expect(out).not.toBe(base);
+    const novas = new Set<number>();
+    for (let f = 0; f < base.length; f++) {
+      if (base[f] === 120) novas.add(out[f] ?? 0);
+      else expect(out[f]).toBe(base[f]);
+    }
+    expect(novas.size).toBe(4);
+  });
+  it("anel de 3 mm é linha obrigatória, mas retângulo compacto de 3 × 6 mm não é", () => {
+    const p: number[] = [], ids: number[] = [], n = 128;
+    const ponto = (r: number, i: number) => [r * Math.cos(i * 2 * Math.PI / n), r * Math.sin(i * 2 * Math.PI / n), 0];
+    for (let i = 0; i < n; i++) {
+      p.push(0, 0, 0, ...ponto(20, i), ...ponto(20, i + 1)); ids.push(0);
+      for (const [interno, externo, id] of [[20, 23, 1], [23, 30, 2]]) {
+        if (interno === undefined || externo === undefined || id === undefined) throw new Error("Anel inválido");
+        p.push(...ponto(interno, i), ...ponto(externo, i), ...ponto(externo, i + 1),
+          ...ponto(interno, i), ...ponto(externo, i + 1), ...ponto(interno, i + 1));
+        ids.push(id, id);
+      }
+    }
+    const m = prepararMalha(new Float32Array(p)), regioes = new Uint32Array(ids), med = medirRegioes(m, regioes);
+    const area = med.area.get(1) ?? 0, borda = med.borda.get(1) ?? 0;
+    expect(larguraMedia(area, borda)).toBeCloseTo(3, 2);
+    expect(area).toBeGreaterThan(med.total * 0.01);
+    expect(ehRegiaoLinha(area, borda, med.total)).toBe(true);
+    const linhas = regioesLinha(m, regioes, med);
+    expect(linhas.has(1)).toBe(true);
+    const candidatas = [...Array.from({ length: 80 }, (_, id) => ({ id: id + 10, area: 1000 })), { id: 1, area }];
+    expect(escolherRegioes(candidatas, linhas).map((r) => r.id)).toContain(1);
+    expect(ehRegiaoLinha(3 * 6, 2 * (3 + 6), 100)).toBe(false);
+  });
+  it("mantém os limites estritos de área, largura e proporção do contorno", () => {
+    expect(ehRegiaoLinha(1, 4, 100)).toBe(false);
+    expect(ehRegiaoLinha(33, 20, 100)).toBe(false);
+    expect(ehRegiaoLinha(50, 50, 100)).toBe(false);
+    expect(ehRegiaoLinha(10, 0, 100)).toBe(false);
+  });
   it("mede a grade como linha (< 2 mm) e os quadrados como grossos", () => {
     const { m, regioes } = grade(), med = medirRegioes(m, regioes);
     expect(larguraMedia(med.area.get(9) ?? 0, med.borda.get(9) ?? 0)).toBeLessThan(2);
