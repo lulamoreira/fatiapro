@@ -16,16 +16,35 @@ export const RostoSchema = z.object({
 }).strict();
 export type PropostaGeral = z.infer<typeof GeralSchema>;
 export type PropostaRosto = z.infer<typeof RostoSchema>;
-export function validarGeral(raw: unknown, ids: readonly number[]): PropostaGeral {
-  const p = GeralSchema.parse(raw), enviados = new Set(ids), vistos = new Set<number>();
-  for (const r of p.regioes) {
-    if (!enviados.has(r.id) || vistos.has(r.id) || r.cor >= p.paleta.length) throw new Error("incompleta");
-    vistos.add(r.id);
-  }
-  if (vistos.size !== enviados.size) throw new Error("incompleta");
-  for (const d of p.dividir) if (!enviados.has(d.id) || d.sementes.some(s => s.cor >= p.paleta.length)) throw new Error("incompleta");
-  if (p.rosto && !enviados.has(p.rosto.regiao_id)) throw new Error("incompleta");
-  return p;
+/** Falha de validação com a regra quebrada e contagens, para registrar em motivo_falha. */
+export class ErroValidacao extends Error { constructor(readonly detalhe: string) { super("incompleta"); } }
+/**
+ * Tolerante: ids desconhecidos, repetidos ou com cor fora da paleta são ignorados; ids esquecidos ficam fora
+ * do plano e herdam cor como as regiões não enviadas. Só falha com paleta vazia ou mais de 30% faltando.
+ */
+export function validarGeral(raw: unknown, ids: readonly number[]): PropostaGeral & { faltando: number; ignorados: number } {
+  const r = GeralSchema.safeParse(raw);
+  if (!r.success) throw new ErroValidacao(`schema: ${r.error.issues.slice(0, 3).map(i => `${i.path.join(".")} ${i.code}`).join("; ")}`.slice(0, 300));
+  const p = r.data, enviados = new Set(ids), vistos = new Set<number>(), n = p.paleta.length;
+  if (n === 0) throw new ErroValidacao("paleta_vazia");
+  let ignorados = 0;
+  const regioes = p.regioes.filter(x => { const ok = enviados.has(x.id) && !vistos.has(x.id) && x.cor < n; if (ok) vistos.add(x.id); else ignorados++; return ok; });
+  const faltando = enviados.size - vistos.size;
+  if (faltando > enviados.size * 0.3) throw new ErroValidacao(`faltando ${faltando}/${enviados.size}; ignorados ${ignorados}`);
+  const dividir = p.dividir.filter(d => enviados.has(d.id) && d.sementes.every(s => s.cor < n));
+  const rosto = p.rosto && enviados.has(p.rosto.regiao_id) ? p.rosto : null;
+  const avisos = faltando > 0 ? [...p.avisos, `A IA não classificou ${faltando} ${faltando === 1 ? "região" : "regiões"}; conferir`] : p.avisos;
+  return { ...p, regioes, dividir, rosto, avisos, faltando, ignorados };
+}
+/** Texto gravado em colorir_pedidos.motivo_falha: código + detalhe técnico curto (sem imagens nem resposta). */
+export function motivoFalha(etapa: string, codigo: string, detalhe = ""): string {
+  return `${etapa}:${codigo}${detalhe ? ` ${detalhe}` : ""}`.slice(0, 500);
+}
+/** max_tokens da etapa: geral usa no mínimo 12.000 (sem o fator 0,7 abaixo disso); o teto vale pelo gasto real depois. */
+export function calcularMaxTokens(etapa: "geral" | "rosto", teto: number, gasto: number, pIn: number, pOut: number): number {
+  const reserva = (etapa === "geral" ? 30000 : 12000) * pIn * 1.25 / 1e6;
+  const livre = Math.floor((teto - gasto - reserva) * (etapa === "geral" ? .7 : 1) * 1e6 / pOut);
+  return Math.min(16000, etapa === "geral" ? Math.max(12000, livre) : livre);
 }
 export function validarRosto(raw: unknown, quantidade: number): PropostaRosto {
   const p = RostoSchema.parse(raw);

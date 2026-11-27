@@ -47,10 +47,12 @@ export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:
         }catch{if(atual.controller.signal.aborted)throw new Error("Cancelado");avisos.push("Não foi possível analisar o rosto. Confira e aplique só as cores.");}
       }
       atual.controller.signal.throwIfAborted();setFusoes([]);setSemRosto(false);setProposta({geral:{...geral.dados,avisos:[...geral.dados.avisos,...avisos]},rosto,close,imagens,seg});
-    }catch{
+    }catch(e){
       if(!atual.controller.signal.aborted&&montada.current){
+        const nomeErro=e instanceof Error?e.name:typeof e;console.error("[colorir/ia] erro no navegador:",nomeErro);
+        const tempo=nomeErro==="TimeoutError"||(e instanceof TypeError&&/fetch|network|load/i.test(e.message));
         const r=await cancelarFn({data:{chave:atual.chave}}).catch(()=>null);
-        setErro({codigo:"ia_indisponivel",mensagem:r?.estornado?"Não deu certo desta vez; seu crédito foi devolvido.":"Não foi possível concluir. Confira seu extrato antes de tentar novamente."});
+        setErro({codigo:tempo?"tempo":"erro_local",mensagem:!r?.estornado?"Não foi possível concluir. Confira seu extrato antes de tentar novamente.":tempo?"A conexão demorou demais; seu crédito foi devolvido.":"Não deu certo desta vez; seu crédito foi devolvido."});
       }
     }finally{if(run.current===atual){run.current=null;if(montada.current)setEtapa(null);}void queryClient.invalidateQueries({queryKey:["plano"]});}
   }

@@ -53,4 +53,8 @@ describe("FaixaIA", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Sem créditos.");
     expect(screen.getByText("Ver planos")).toBeInTheDocument();
   });
+  it("faixa de erro mostra o código", () => {
+    render(<FaixaIA ia={ia({ erro: { codigo: "max_tokens", mensagem: "Não deu certo desta vez; seu crédito foi devolvido." } })} ocupado={false} onAplicar={() => {}} />);
+    expect(screen.getByText("Código: max_tokens")).toBeInTheDocument();
+  });
 });

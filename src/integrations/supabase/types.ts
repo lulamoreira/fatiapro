@@ -84,6 +84,7 @@ export type Database = {
           gasto_usd: number
           ids: Json | null
           lote_id: string | null
+          motivo_falha: string | null
           nome: string
           paleta: Json | null
           slots: number | null
@@ -98,6 +99,7 @@ export type Database = {
           gasto_usd?: number
           ids?: Json | null
           lote_id?: string | null
+          motivo_falha?: string | null
           nome?: string
           paleta?: Json | null
           slots?: number | null
@@ -112,6 +114,7 @@ export type Database = {
           gasto_usd?: number
           ids?: Json | null
           lote_id?: string | null
+          motivo_falha?: string | null
           nome?: string
           paleta?: Json | null
           slots?: number | null

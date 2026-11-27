@@ -60,7 +60,7 @@ export function FaixaIA({ia,ocupado,onAplicar}:FaixaIAProps){
     {ia.montagem.avisos.length>0&&<ul className="mt-2 space-y-1 text-xs">{ia.montagem.avisos.map((a,i)=><li key={`${i}-${a}`} className="flex gap-1.5"><AlertTriangle className="size-3.5 shrink-0 text-warning-ink"/>{a}</li>)}</ul>}
   </div>;
   if(ia.erro&&!ia.proposta) return <div role="alert" className={cn(base,"border-destructive/40 bg-destructive/15 text-foreground")}>
-    <div className="flex flex-wrap items-center gap-2"><AlertTriangle className="size-4 shrink-0 text-destructive"/><span className="font-medium">{ia.erro.mensagem}</span>
+    <div className="flex flex-wrap items-center gap-2"><AlertTriangle className="size-4 shrink-0 text-destructive"/><span className="font-medium">{ia.erro.mensagem}<span className="block text-xs font-normal text-muted-foreground">Código: {ia.erro.codigo}</span></span>
       {ia.erro.codigo==="sem_creditos"&&<Button asChild variant="outline" size="sm"><Link to="/app/plano">Ver planos</Link></Button>}
       <Button variant="ghost" size="icon" className="ml-auto size-7" aria-label="Fechar aviso" onClick={ia.limparErro}><X/></Button></div>
   </div>;

@@ -2,7 +2,7 @@
 import { describe,it,expect } from "vitest";
 import { escolherRegioes,herdarCores,pontosInternos,areasRegioes } from "./ia-regioes";
 import { ciede2000,reduzirPaleta } from "./ia-cores";
-import { validarGeral,validarRosto,EntradaColorir } from "./ia-schema";
+import { validarGeral,validarRosto,EntradaColorir,calcularMaxTokens,motivoFalha } from "./ia-schema";
 import type { PropostaGeral,PropostaRosto } from "./ia-schema";
 import { cameraOrto,criarAlvo,atingir,formaDePixels,conferirOlhos,cameraRosto } from "./ia-geometria";
 import { prepararMalha } from "./malha";
@@ -22,7 +22,7 @@ describe("regiões para IA",()=>{
  it("esconde números com menos de 150 pixels visíveis",()=>{expect(pontosInternos(new Int32Array(100).fill(0),10,10).size).toBe(0);});
 });
 describe("validação das propostas",()=>{
- it("aceita todos os ids enviados uma vez",()=>expect(validarGeral(geral,[0])).toEqual(geral));
+ it("aceita todos os ids enviados uma vez",()=>expect(validarGeral(geral,[0])).toMatchObject(geral));
  it("rejeita id inexistente",()=>expect(()=>validarGeral({...geral,regioes:[{...geral.regioes[0],id:5}]},[0])).toThrow());
  it("rejeita região enviada sem resposta",()=>expect(()=>validarGeral(geral,[0,1])).toThrow());
  it("rejeita cor fora da paleta",()=>expect(()=>validarGeral({...geral,regioes:[{id:0,parte:"rosto",cor:3,confianca:1}]},[0])).toThrow());
@@ -49,3 +49,20 @@ describe("câmera e prévia",()=>{
 });
 import * as requireFormas from "./formas";
 import { Vector3 } from "three";
+
+describe("tolerância da etapa geral",()=>{
+  const muitas=(ids:number[])=>({paleta:[{nome:"Vermelho",hex:"#FF0000"}],regioes:ids.map(id=>({id,parte:"corpo",cor:0,confianca:1})),dividir:[],rosto:null,avisos:[]});
+  const enviados=Array.from({length:20},(_,i)=>i);
+  it("3 ids faltando passa com aviso",()=>{const r=validarGeral(muitas(enviados.slice(3)),enviados);expect(r.faltando).toBe(3);expect(r.avisos).toContain("A IA não classificou 3 regiões; conferir");});
+  it("40% faltando falha incompleta",()=>expect(()=>validarGeral(muitas(enviados.slice(8)),enviados)).toThrow("incompleta"));
+  it("ids desconhecidos são ignorados",()=>expect(validarGeral(muitas([...enviados,99]),enviados).regioes).toHaveLength(20));
+  it("max_tokens da geral com preços reais (Sonnet 2/10, teto 0,30) e mínimo 12.000",()=>{
+    expect(calcularMaxTokens("geral",.30,0,2,10)).toBe(15749);
+    expect(calcularMaxTokens("geral",.30,.15,2,10)).toBe(12000);
+  });
+});
+describe("motivo_falha",()=>{
+  for(const c of ["incompleta","max_tokens","json_invalido","limite_de_gasto","cancelado","excecao","recusa","ia_indisponivel"])
+    it(`grava ${c}`,()=>expect(motivoFalha("geral",c,"stop end_turn saida 2587/15750")).toBe(`geral:${c} stop end_turn saida 2587/15750`));
+  it("corta em 500",()=>expect(motivoFalha("geral","incompleta","x".repeat(900))).toHaveLength(500));
+});

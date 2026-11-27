@@ -1,0 +1,1 @@
+ALTER TABLE public.colorir_pedidos ADD COLUMN IF NOT EXISTS motivo_falha text;
