@@ -466,7 +466,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
                 dados={ia.proposta && api.previa ? api.previa : api.dados}
                 paleta={ia.proposta && ia.montagem ? ia.montagem.paleta : paleta}
                 tool={bloqueadoIA ? "mover" : tool}
-                realcar={ia.proposta ? [...ia.proposta.geral.regioes.filter(r => r.confianca < .6).map(r => r.id), ...(ia.selecionada === null ? [] : [ia.selecionada])] : []}
+                realce={ia.proposta ? { regioes: ia.proposta.seg.regioes, borda: ia.proposta.seg.borda, conferir: ia.proposta.geral.regioes.filter(r => r.confianca < .6).map(r => r.id), selecionada: ia.selecionada } : null}
                 verRegioes={bloqueadoIA ? false : regioes}
                 vista={vista}
                 onHit={hit}

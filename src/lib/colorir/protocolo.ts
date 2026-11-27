@@ -8,6 +8,7 @@ export type Comando =
   | { tipo: "previaIA"; plano: PlanoPinturaIA; semRosto: boolean }
   | { tipo: "aplicarIA"; paletaAntes: CorSlot[]; paletaDepois: CorSlot[] }
   | { tipo: "descartarIA" }
+  | { tipo: "regioesIA" }
   | { tipo: "ler"; buffer: ArrayBuffer; sensibilidade: number }
   | { tipo: "segmentar"; sensibilidade: number }
   | { tipo: "balde"; face: number; slot: number }
@@ -28,6 +29,7 @@ export interface DetalhesRender {
 export type Resposta =
   | { tipo: "previaIA"; slots: Uint8Array; detalhes: DetalhesRender }
   | { tipo: "descartadaIA" }
+  | { tipo: "regioesIA"; regioes: Uint32Array; linhas: number[]; borda: Uint8Array }
   | { tipo: "progresso"; etapa: string; percentual: number }
   | {
       tipo: "malha";

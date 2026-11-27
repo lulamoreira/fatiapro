@@ -19,8 +19,8 @@ function renderizador(posicoes:Float32Array,regioes:Uint32Array,size:number){
   return {renderer,scene,geo,draw,target,pixels,dispose:()=>{geo.dispose();standard.dispose();basic.dispose();target.dispose();renderer.dispose();renderer.forceContextLoss();}};
 }
 const DIRECOES:Vec3[]=[[0,-1,0],[0,1,0],[-1,0,0],[1,0,0],[Math.cos(Math.PI/6)/Math.SQRT2,-Math.cos(Math.PI/6)/Math.SQRT2,.5]];
-export async function prepararImagens(posicoes:Float32Array,regioes:Uint32Array,url:string,signal:AbortSignal,onVista?:(n:number)=>void):Promise<ImagensGerais>{
-  const areas=areasRegioes(posicoes,regioes),selected=escolherRegioes(areas),ids=selected.map(r=>r.id),foto=await reduzirFoto(url),vistas:ImagemIA[]=[],cameras:Record<string,CameraIA>={};
+export async function prepararImagens(posicoes:Float32Array,regioes:Uint32Array,url:string,signal:AbortSignal,onVista?:(n:number)=>void,linhas:ReadonlySet<number>=new Set()):Promise<ImagensGerais>{
+  const areas=areasRegioes(posicoes,regioes),selected=escolherRegioes(areas,linhas),ids=selected.map(r=>r.id),foto=await reduzirFoto(url),vistas:ImagemIA[]=[],cameras:Record<string,CameraIA>={};
   signal.throwIfAborted();const r=renderizador(posicoes,regioes,768),attr=new Float32Array(posicoes.length),palette=ids.map((_,i)=>new Color().setHSL(((i*137.508)%360)/360,.7,.55)),idLookup=new Map(ids.map((id,i)=>[id,i+1]));
   for(let f=0;f<regioes.length;f++){const code=idLookup.get(regioes[f]??0)??0;for(let v=0;v<3;v++)attr.set([(code&255)/255,0,0],f*9+v*3);}
   r.geo.setAttribute("color",new BufferAttribute(attr,3));

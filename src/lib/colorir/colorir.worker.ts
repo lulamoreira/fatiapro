@@ -18,6 +18,7 @@ import type { Comando, Resposta, DetalhesRender } from "./protocolo";
 import { construirBVH } from "./bvh";
 import { montarPrevia, diferencaPintura } from "./ia-previa";
 import type { CorSlot } from "./paleta";
+import { refinarMistas, regioesLinha, facesDeBorda } from "./ia-segmentacao";
 const scope = self as unknown as {
   postMessage: (r: Resposta, transfer?: Transferable[]) => void;
   onmessage: ((e: MessageEvent<Comando>) => void) | null;
@@ -28,6 +29,8 @@ let malha: Malha | null = null,
   historico = new Historico(),
   traco: Map<number, Alteracao> | null = null;
 let previaIA: Pintura | null = null;
+// Photo-colouring segmentation only: never replaces the manual tool's regions.
+let ia: { regioes: Uint32Array; linhas: Set<number> } | null = null;
 let paletasIA = new WeakMap<object, { antes: CorSlot[]; depois: CorSlot[] }>();
 const send = (r: Resposta, t: Transferable[] = []) => scope.postMessage(r, t);
 function renderDetalhes(p = pintura): DetalhesRender {
@@ -98,6 +101,7 @@ scope.onmessage = (event) => {
       historico = new Historico();
       traco = null;
       previaIA = null;
+      ia = null;
       paletasIA = new WeakMap();
       const bvh = construirBVH(malha.posicoes),
         posicoes = malha.posicoes.slice(),
@@ -112,7 +116,7 @@ scope.onmessage = (event) => {
     const m = malha;
     switch (cmd.tipo) {
       case "previaIA":
-        previaIA = montarPrevia(m, regioes, pintura, cmd.plano, cmd.semRosto);
+        previaIA = ia ? montarPrevia(m, ia.regioes, pintura, cmd.plano, cmd.semRosto, ia.linhas) : montarPrevia(m, regioes, pintura, cmd.plano, cmd.semRosto);
         send({ tipo: "previaIA", slots: previaIA.slots.slice(), detalhes: renderDetalhes(previaIA) });
         break;
       case "aplicarIA": {
@@ -128,6 +132,12 @@ scope.onmessage = (event) => {
         publicar(diff, true);
         break;
       }
+      case "regioesIA": {
+        const fina = segmentar(m, 3), r = refinarMistas(m, regioes, fina), linhas = regioesLinha(m, r);
+        ia = { regioes: r, linhas };
+        send({ tipo: "regioesIA", regioes: r.slice(), linhas: [...linhas], borda: facesDeBorda(m, r) });
+        break;
+      }
       case "descartarIA":
         previaIA = null;
         send({ tipo: "descartadaIA" });
@@ -135,6 +145,7 @@ scope.onmessage = (event) => {
       case "segmentar":
         send({ tipo: "progresso", etapa: "Regiões", percentual: 85 });
         regioes = segmentar(m, cmd.sensibilidade);
+        ia = null;
         send({ tipo: "regioes", regioes: regioes.slice() });
         break;
       case "inicioTraco":

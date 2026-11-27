@@ -13,6 +13,8 @@ export interface DadosCena {
   revisao: number;
   bvh: SerializedBVH | null;
 }
+/** Photo-colouring regions (refined mixed regions), with boundary faces for the "conferir" outline. */
+export interface SegmentacaoIA { regioes: Uint32Array; linhas: number[]; borda: Uint8Array }
 const vazio: DetalhesRender = {
   posicoes: new Float32Array(),
   slots: new Uint8Array(),
@@ -24,7 +26,8 @@ export function useColorir() {
     exportPromise = useRef<{
       resolve: (v: { blob: Blob; usadas: number[] }) => void;
       reject: (e: Error) => void;
-    } | null>(null);
+    } | null>(null),
+    segPromise = useRef<{ resolve: (v: SegmentacaoIA) => void; reject: (e: Error) => void } | null>(null);
   const [dados, setDados] = useState<DadosCena | null>(null),
     [previa, setPrevia] = useState<DadosCena | null>(null),
     [paletaHistorico, setPaletaHistorico] = useState<CorSlot[] | null>(null),
@@ -76,12 +79,18 @@ export function useColorir() {
       });
     }
     if (r.tipo === "descartadaIA") setPrevia(null);
+    if (r.tipo === "regioesIA") {
+      segPromise.current?.resolve({ regioes: r.regioes, linhas: r.linhas, borda: r.borda });
+      segPromise.current = null;
+    }
     if (r.tipo === "exportado") {
       exportPromise.current?.resolve(r);
       exportPromise.current = null;
     }
     if (r.tipo === "erro") {
       toast.error(r.mensagem);
+      segPromise.current?.reject(new Error(r.mensagem));
+      segPromise.current = null;
       exportPromise.current?.reject(new Error(r.mensagem));
       exportPromise.current = null;
     }
@@ -166,5 +175,14 @@ export function useColorir() {
       }),
     [],
   );
-  return { dados, previa, paletaHistorico, progresso, ocupado, usadas, undo, redo, enviar, abrir, cancelar, exportar };
+  const segmentarIA = useCallback(
+    () =>
+      new Promise<SegmentacaoIA>((resolve, reject) => {
+        if (!worker.current) return reject(new Error("Envie uma peça primeiro."));
+        segPromise.current = { resolve, reject };
+        worker.current.postMessage({ tipo: "regioesIA" } satisfies Comando);
+      }),
+    [],
+  );
+  return { segmentarIA, dados, previa, paletaHistorico, progresso, ocupado, usadas, undo, redo, enviar, abrir, cancelar, exportar };
 }

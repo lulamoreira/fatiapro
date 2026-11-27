@@ -1,3 +1,4 @@
+import type { RealceIA } from "./Geometria";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentRef } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
@@ -41,7 +42,7 @@ export interface CenaProps {
   espelho: boolean;
   seeds: Semente[];
   disabled: boolean;
-  realcar?: number[];
+  realce?: RealceIA | null;
 }
 export function Cena(p: CenaProps) {
   const wrapper = useRef<HTMLDivElement>(null);
@@ -175,7 +176,7 @@ function SceneContent(p: CenaProps & { onReady: () => void }) {
         paleta={p.paleta}
         verRegioes={p.verRegioes}
         hover={hover}
-        realcar={p.realcar ?? []}
+        realce={p.realce ?? null}
         onHit={hit}
         onHover={(f) => setHover(f < 0 ? -1 : (p.dados.regioes[f] ?? -1))}
         onFim={p.onFim}

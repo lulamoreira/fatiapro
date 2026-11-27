@@ -12,13 +12,15 @@ export interface GeometriaProps {
   paleta: CorSlot[];
   verRegioes: boolean;
   hover: number;
-  realcar?: number[];
+  realce?: RealceIA | null;
   onHit: (event: ThreeEvent<PointerEvent>, face: number, slot: number, drag: boolean) => void;
   onHover: (face: number) => void;
   onFim: () => void;
 }
-function rgb(slot: number, paleta: CorSlot[], regiao: number, ver: boolean, realcar: readonly number[] = []): Color {
-  return realcar.includes(regiao) ? new Color("#FFD600") : ver
+/** "Conferir" outline: only boundary faces of the flagged regions blink; the proposed colour stays visible. */
+export interface RealceIA { regioes: Uint32Array; borda: Uint8Array; conferir: number[]; selecionada: number | null }
+function rgb(slot: number, paleta: CorSlot[], regiao: number, ver: boolean): Color {
+  return ver
     ? new Color().setHSL(((regiao * 137.508) % 360) / 360, 0.55, 0.55)
     : new Color(paleta[slot - 1]?.cor ?? "#FFFFFF");
 }
@@ -44,6 +46,7 @@ export function Geometria(p: GeometriaProps) {
     g.setAttribute("normal", new BufferAttribute(normals, 3));
     g.setAttribute("color", new BufferAttribute(new Uint8Array(normals.length), 3, true));
     g.setAttribute("region", new BufferAttribute(new Float32Array(normals.length / 3), 1));
+    g.setAttribute("conferir", new BufferAttribute(new Float32Array(normals.length / 3), 1));
     g.computeBoundingBox();
     g.computeBoundingSphere();
     restaurarBVH(g, p.dados.bvh);
@@ -53,17 +56,18 @@ export function Geometria(p: GeometriaProps) {
     const m = new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 });
     m.onBeforeCompile = (s) => {
       s.uniforms["hoverRegion"] = { value: -1 };
+      s.uniforms["fase"] = { value: 0 };
       s.vertexShader =
-        "attribute float region; varying float vRegion;\n" +
+        "attribute float region; attribute float conferir; varying float vRegion; varying float vConferir;\n" +
         s.vertexShader.replace(
           "#include <begin_vertex>",
-          "#include <begin_vertex>\nvRegion = region;",
+          "#include <begin_vertex>\nvRegion = region; vConferir = conferir;",
         );
       s.fragmentShader =
-        "uniform float hoverRegion; varying float vRegion;\n" +
+        "uniform float hoverRegion; uniform float fase; varying float vRegion; varying float vConferir;\n" +
         s.fragmentShader.replace(
           "#include <color_fragment>",
-          "#include <color_fragment>\nif(abs(vRegion-hoverRegion)<0.1) diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),0.28);",
+          "#include <color_fragment>\nif(abs(vRegion-hoverRegion)<0.1) diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),0.28);\nif(vConferir>0.5){float on=step(0.5,fract(fase*0.5+(gl_FragCoord.x+gl_FragCoord.y)/24.0));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(on),vConferir>1.5?0.85:0.55);}",
         );
       shader.current = s;
     };
@@ -81,11 +85,11 @@ export function Geometria(p: GeometriaProps) {
     const attr = geo.getAttribute("color") as BufferAttribute;
     const a = attr.array as Uint8Array;
     for (let f = 0; f < p.dados.slots.length; f++)
-      writeColor(a, f, rgb(p.dados.slots[f] ?? 1, p.paleta, p.dados.regioes[f] ?? 0, p.verRegioes, p.realcar));
+      writeColor(a, f, rgb(p.dados.slots[f] ?? 1, p.paleta, p.dados.regioes[f] ?? 0, p.verRegioes));
     attr.clearUpdateRanges();
     attr.needsUpdate = true;
     invalidate();
-  }, [geo, p.paleta, p.verRegioes, p.dados.regioes, p.realcar, invalidate]);
+  }, [geo, p.paleta, p.verRegioes, p.dados.regioes, invalidate]);
   useEffect(() => {
     const attr = geo.getAttribute("color") as BufferAttribute,
       a = attr.array as Uint8Array;
@@ -97,6 +101,29 @@ export function Geometria(p: GeometriaProps) {
     p.dados.alteradas = new Uint32Array();
     invalidate();
   }, [geo, p.dados.revisao, invalidate]);
+  // 0 = none, 1 = low-confidence outline, 2 = selected outline (stronger). Never a solid fill.
+  useEffect(() => {
+    const attr = geo.getAttribute("conferir") as BufferAttribute, a = attr.array as Float32Array, r = p.realce;
+    a.fill(0);
+    if (r) {
+      const conferir = new Set(r.conferir);
+      for (let f = 0; f < r.borda.length && f * 3 + 2 < a.length; f++) {
+        if (!r.borda[f]) continue;
+        const id = r.regioes[f] ?? 0, v = id === r.selecionada ? 2 : conferir.has(id) ? 1 : 0;
+        if (v) a.fill(v, f * 3, f * 3 + 3);
+      }
+    }
+    attr.needsUpdate = true;
+    invalidate();
+    if (!r) return;
+    // Moving stripes at ~4 fps: frameloop is "demand", so tick explicitly only while an outline is shown.
+    const t = window.setInterval(() => {
+      const u = shader.current?.uniforms["fase"];
+      if (u) u.value = (u.value as number) + 0.5;
+      invalidate();
+    }, 250);
+    return () => window.clearInterval(t);
+  }, [geo, p.realce, invalidate]);
   useEffect(() => {
     if (shader.current?.uniforms["hoverRegion"])
       shader.current.uniforms["hoverRegion"].value = p.hover;
@@ -147,7 +174,6 @@ export function Geometria(p: GeometriaProps) {
         dados={p.dados}
         paleta={p.paleta}
         ver={p.verRegioes}
-        realcar={p.realcar ?? []}
         onHit={handle}
         onHover={p.onHover}
         onFim={p.onFim}
@@ -159,7 +185,6 @@ function Detalhes({
   dados,
   paleta,
   ver,
-  realcar,
   onHit,
   onHover,
   onFim,
@@ -167,7 +192,6 @@ function Detalhes({
   dados: DadosCena;
   paleta: CorSlot[];
   ver: boolean;
-  realcar: number[];
   onHit: GeometriaProps["onHit"];
   onHover: (f: number) => void;
   onFim: () => void;
@@ -196,12 +220,11 @@ function Detalhes({
           paleta,
           dados.regioes[dados.detalhes.faces[f] ?? 0] ?? 0,
           ver,
-          realcar,
         ),
       );
     attr.needsUpdate = true;
     invalidate();
-  }, [g, paleta, ver, realcar, dados.regioes, invalidate]);
+  }, [g, paleta, ver, dados.regioes, invalidate]);
   useEffect(() => () => g.dispose(), [g]);
   function hit(e: ThreeEvent<PointerEvent>, move = false) {
     const i = e.faceIndex ?? -1;

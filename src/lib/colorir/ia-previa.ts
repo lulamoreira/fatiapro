@@ -9,8 +9,8 @@ import type { Forma } from "./formas";
 import { herdarCores } from "./ia-regioes";
 export interface PlanoPinturaIA { regioes:{id:number;slot:number}[]; sementes:Semente[]; formas:{forma:Forma;slot:number}[] }
 export function copiarPintura(p:Pintura):Pintura {return {slots:p.slots.slice(),detalhes:new Map(p.detalhes)};}
-export function montarPrevia(m:Malha,regioes:Uint32Array,original:Pintura,plano:PlanoPinturaIA,semRosto=false):Pintura {
-  const p=copiarPintura(original),cores=herdarCores(m,regioes,new Map(plano.regioes.map(r=>[r.id,r.slot]))),divididas=watershed(m,regioes,plano.sementes);
+export function montarPrevia(m:Malha,regioes:Uint32Array,original:Pintura,plano:PlanoPinturaIA,semRosto=false,linhas:ReadonlySet<number>=new Set()):Pintura {
+  const p=copiarPintura(original),cores=herdarCores(m,regioes,new Map(plano.regioes.map(r=>[r.id,r.slot])),linhas),divididas=watershed(m,regioes,plano.sementes);
   for(let f=0;f<p.slots.length;f++)escreverFace(p,f,folha(divididas[f]||cores.get(regioes[f]??0)||1));
   if(!semRosto)for(const {forma,slot} of plano.formas){const orientada=planoDaSuperficie(m.posicoes,forma,forma);for(let f=0;f<p.slots.length;f++)escreverFace(p,f,pintarFormas(m,f,lerFace(p,f),[orientada],slot));}
   return p;

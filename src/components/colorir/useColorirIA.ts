@@ -11,15 +11,15 @@ import type { CameraIA } from "@/lib/colorir/ia-geometria";
 import { planoProposta } from "@/lib/colorir/ia-plano";
 import type { FusaoCor } from "@/lib/colorir/ia-cores";
 import type { CorSlot } from "@/lib/colorir/paleta";
-import type { useColorir } from "./useColorir";
-export interface PropostaLocal { geral:PropostaGeral; rosto:PropostaRosto|null; imagens:ImagensGerais; close:CameraIA|null }
+import type { useColorir, SegmentacaoIA } from "./useColorir";
+export interface PropostaLocal { geral:PropostaGeral; rosto:PropostaRosto|null; imagens:ImagensGerais; close:CameraIA|null; seg:SegmentacaoIA }
 export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:string|null,n:number,onPaleta:(p:CorSlot[])=>void){
   const chamar=useServerFn(colorirPelaFoto),cancelarFn=useServerFn(cancelarColorir),saldoFn=useServerFn(meuPlano),queryClient=useQueryClient();
   const saldo=useQuery({queryKey:["plano"],queryFn:()=>saldoFn(),staleTime:30000});
   const [etapa,setEtapa]=useState<string|null>(null),[consentimento,setConsentimento]=useState(false),[proposta,setProposta]=useState<PropostaLocal|null>(null),[fusoes,setFusoes]=useState<FusaoCor[]>([]),[semRosto,setSemRosto]=useState(false),[selecionada,setSelecionada]=useState<number|null>(null),[erro,setErro]=useState<{codigo:string;mensagem:string}|null>(null);
   const [inicio,setInicio]=useState<number|null>(null),avisado=useRef(false);
   const run=useRef<{chave:string;controller:AbortController;geralRecebida:boolean}|null>(null),montada=useRef(true),previewReady=useRef(false);
-  const montagem=useMemo(()=>proposta&&api.dados?planoProposta(proposta.geral,proposta.rosto,api.dados.posicoes,api.dados.regioes,api.dados.bvh,proposta.imagens.cameras,proposta.close,proposta.imagens.areas,n,fusoes):null,[proposta,api.dados?.posicoes,api.dados?.regioes,n,fusoes]);
+  const montagem=useMemo(()=>proposta&&api.dados?planoProposta(proposta.geral,proposta.rosto,api.dados.posicoes,proposta.seg.regioes,api.dados.bvh,proposta.imagens.cameras,proposta.close,proposta.imagens.areas,n,fusoes):null,[proposta,api.dados?.posicoes,api.dados?.regioes,n,fusoes]);
   useEffect(()=>{if(!montagem)return;previewReady.current=false;setEtapa("Montando a prévia");api.enviar({tipo:"previaIA",plano:montagem.plano,semRosto},true);},[montagem,semRosto,api.enviar]);
   useEffect(()=>{if(api.previa){previewReady.current=true;setEtapa(null);}},[api.previa]);
   const pronta=!!proposta&&!!api.previa&&!etapa;
@@ -35,18 +35,18 @@ export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:
     if(!api.dados||!foto||run.current||proposta)return;
     const atual={chave:crypto.randomUUID(),controller:new AbortController(),geralRecebida:false};run.current=atual;avisado.current=false;setInicio(Date.now());setErro(null);setConsentimento(false);setEtapa("Preparando imagens");
     try{
-      const imagens=await prepararImagens(api.dados.posicoes,api.dados.regioes,foto,atual.controller.signal);atual.controller.signal.throwIfAborted();setEtapa("IA analisando as cores");
+      const dados=api.dados,seg=await api.segmentarIA();atual.controller.signal.throwIfAborted();const imagens=await prepararImagens(dados.posicoes,seg.regioes,foto,atual.controller.signal,undefined,new Set(seg.linhas));atual.controller.signal.throwIfAborted();setEtapa("IA analisando as cores");
       const geral=await chamar({data:{chave:atual.chave,etapa:"geral",nome:nome.slice(0,200)||"peça",slots:n,ids:imagens.ids,imagens:[imagens.foto,...imagens.vistas]}});
       atual.controller.signal.throwIfAborted();atual.geralRecebida=true;
       if(!geral.ok){setErro({codigo:geral.codigo,mensagem:geral.mensagem});return;}if(geral.etapa!=="geral")throw new Error("Resposta incompleta.");
       let rosto:PropostaRosto|null=null,close:CameraIA|null=null;const avisos:string[]=[];
       if(geral.dados.rosto){
-        setEtapa("IA analisando o rosto");try{const recorte=prepararClose(api.dados.posicoes,api.dados.regioes,geral.dados.rosto.regiao_id);close=recorte.camera;
+        setEtapa("IA analisando o rosto");try{const recorte=prepararClose(dados.posicoes,seg.regioes,geral.dados.rosto.regiao_id);close=recorte.camera;
           const r=await chamar({data:{chave:atual.chave,etapa:"rosto",nome:nome.slice(0,200)||"peça",slots:n,ids:imagens.ids,imagens:[imagens.foto,recorte.imagem]}});
           atual.controller.signal.throwIfAborted();if(r.ok&&r.etapa==="rosto")rosto=r.dados;else if(!r.ok)avisos.push(r.mensagem);
         }catch{if(atual.controller.signal.aborted)throw new Error("Cancelado");avisos.push("Não foi possível analisar o rosto. Confira e aplique só as cores.");}
       }
-      atual.controller.signal.throwIfAborted();setFusoes([]);setSemRosto(false);setProposta({geral:{...geral.dados,avisos:[...geral.dados.avisos,...avisos]},rosto,close,imagens});
+      atual.controller.signal.throwIfAborted();setFusoes([]);setSemRosto(false);setProposta({geral:{...geral.dados,avisos:[...geral.dados.avisos,...avisos]},rosto,close,imagens,seg});
     }catch{
       if(!atual.controller.signal.aborted&&montada.current){
         const r=await cancelarFn({data:{chave:atual.chave}}).catch(()=>null);
