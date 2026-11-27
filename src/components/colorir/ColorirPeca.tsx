@@ -37,7 +37,7 @@ import { FotoReferencia } from "./FotoReferencia";
 import { espelharForma, planoDaSuperficie } from "@/lib/colorir/formas";
 import type { EixosCamera, Forma } from "@/lib/colorir/formas";
 import { useColorirIA } from "./useColorirIA";
-import { PainelColorirIA } from "./PainelColorirIA";
+import { PainelColorirIA, FaixaIA } from "./PainelColorirIA";
 export interface ColorirPecaProps {
   userId: string;
 }
@@ -70,6 +70,27 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
     setPaleta(p => p.map((c, i) => cores[i] ?? c));
   });
   const bloqueadoIA = !!ia.etapa || !!ia.proposta;
+  const painelRef = useRef<HTMLElement>(null),
+    [destaque, setDestaque] = useState(false);
+  // When the preview becomes ready: scroll the side panel to it, flash it and flag background tabs.
+  useEffect(() => {
+    if (!ia.pronta) return;
+    painelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setDestaque(true);
+    const t = setTimeout(() => setDestaque(false), 2000);
+    if (document.hidden) {
+      const anterior = document.title;
+      document.title = "✓ Prévia pronta — FatiaPro";
+      const voltar = () => {
+        if (!document.hidden) {
+          document.title = anterior;
+          document.removeEventListener("visibilitychange", voltar);
+        }
+      };
+      document.addEventListener("visibilitychange", voltar);
+    }
+    return () => clearTimeout(t);
+  }, [ia.pronta]);
   const disabled = !api.dados || api.ocupado || bloqueadoIA,
     saida = useSaidaColorida(userId, nome, api.exportar);
   useEffect(() => {
@@ -208,6 +229,19 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
   function ver(nomeVista: string) {
     setVista((v) => ({ id: v.id + 1, nome: nomeVista, face: ultimo.current }));
   }
+  const aplicarIA = () => {
+    if (ia.montagem && ia.montagem.paleta.some((c, i) => c.nome !== paleta[i]?.nome || c.cor !== paleta[i]?.cor) && !window.confirm("Aplicar a paleta da IA substituirá os nomes e cores dos seus slots. Continuar?")) return;
+    const manual = ia.montagem?.manuais[0];
+    if (manual) { setForma(manual.forma); setPosicionada(true); setAtivo(manual.slot); setTool("forma"); eixosCamera.current = manual.forma; }
+    ia.aplicar(paleta);
+  };
+  const painelIA = (
+          <PainelColorirIA painelRef={painelRef} destaque={destaque} n={n} ia={ia} habilitado={!!api.dados && !!foto} ocupado={api.ocupado} onAplicar={aplicarIA} onSelecionar={id => {
+            ia.setSelecionada(id);
+            const face = api.dados?.regioes.findIndex(r => r === id) ?? -1;
+            if (face >= 0) setVista(v => ({ id: v.id + 1, nome: "close", face }));
+          }} />
+  );
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -281,6 +315,10 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               ))}
             </select>
           </section>
+          </fieldset>
+          {bloqueadoIA && painelIA}
+          {bloqueadoIA && <p className="rounded-xl bg-muted p-2 text-xs font-medium text-muted-foreground">Aguardando a IA… As ferramentas voltam ao aplicar ou descartar.</p>}
+          <fieldset disabled={bloqueadoIA} className="min-w-0 space-y-5">
           <Medida
             nome="Sensibilidade"
             valor={sens}
@@ -313,7 +351,8 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
             disabled={disabled}
           />
           <Paleta
-            cores={paleta}
+            cores={ia.proposta && ia.montagem ? ia.montagem.paleta : paleta}
+            {...(ia.proposta && ia.montagem ? { resumo: `Cores da prévia: ${Math.min(ia.montagem.paleta.length, n)} de ${n}` } : {})}
             quantidade={n}
             ativo={ativo}
             onAtivo={setAtivo}
@@ -336,16 +375,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
             />
           )}
           </fieldset>
-          <PainelColorirIA ia={ia} habilitado={!!api.dados && !!foto} ocupado={api.ocupado} onAplicar={() => {
-            if (ia.montagem && ia.montagem.paleta.some((c, i) => c.nome !== paleta[i]?.nome || c.cor !== paleta[i]?.cor) && !window.confirm("Aplicar a paleta da IA substituirá os nomes e cores dos seus slots. Continuar?")) return;
-            const manual = ia.montagem?.manuais[0];
-            if (manual) { setForma(manual.forma); setPosicionada(true); setAtivo(manual.slot); setTool("forma"); eixosCamera.current = manual.forma; }
-            ia.aplicar(paleta);
-          }} onSelecionar={id => {
-            ia.setSelecionada(id);
-            const face = api.dados?.regioes.findIndex(r => r === id) ?? -1;
-            if (face >= 0) setVista(v => ({ id: v.id + 1, nome: "close", face }));
-          }} />
+          {!bloqueadoIA && painelIA}
         </aside>
         <section className="order-first min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -420,11 +450,18 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
           </div>
           <div
             className={cn(
-              "h-[520px] min-w-0 overflow-hidden border border-border bg-card md:h-[640px] lg:h-[calc(100dvh-330px)] lg:min-h-96",
+              "relative h-[520px] min-w-0 overflow-hidden border border-border bg-card md:h-[640px] lg:h-[calc(100dvh-330px)] lg:min-h-96",
               comparar && !bloqueadoIA && "grid grid-cols-2",
             )}
           >
+            <FaixaIA ia={ia} ocupado={api.ocupado} onAplicar={aplicarIA} />
+            {ia.proposta && !ia.etapa && (
+              <span className="pointer-events-none absolute left-2 top-2 z-20 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground shadow">
+                PRÉVIA — ainda não aplicada
+              </span>
+            )}
             {api.dados ? (
+              <div className={cn("h-full transition-opacity", ia.etapa && "opacity-60")}>
               <Cena
                 dados={ia.proposta && api.previa ? api.previa : api.dados}
                 paleta={ia.proposta && ia.montagem ? ia.montagem.paleta : paleta}
@@ -441,6 +478,7 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
                 seeds={seeds}
                 disabled={api.ocupado || bloqueadoIA}
               />
+              </div>
             ) : (
               <div
                 className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center"
@@ -472,7 +510,6 @@ export function ColorirPeca({ userId }: ColorirPecaProps) {
               />
             )}
           </div>
-          {ia.proposta && <p className="text-sm font-semibold text-primary-ink">Prévia da IA</p>}
           {saida.aviso !== null && (
             <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
               Abra no fatiador com sua impressora já selecionada e pelo menos {saida.aviso}{" "}

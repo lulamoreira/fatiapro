@@ -14,6 +14,8 @@ export interface PaletaProps {
   onCor: (index: number, cor: CorSlot) => void;
   onJuntar: (a: number, b: number) => void;
   disabled: boolean;
+  /** Optional header text replacing the used-colors counter (e.g. AI preview). */
+  resumo?: string;
 }
 export function Paleta({
   cores,
@@ -24,6 +26,7 @@ export function Paleta({
   onCor,
   onJuntar,
   disabled,
+  resumo,
 }: PaletaProps) {
   const [juntar, setJuntar] = useState(false),
     [a, setA] = useState(1),
@@ -33,7 +36,7 @@ export function Paleta({
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Filamentos</h2>
         <span className="text-xs tabular-nums text-muted-foreground">
-          Cores usadas: {usadas.length} de {quantidade}
+          {resumo ?? `Cores usadas: ${usadas.length} de ${quantidade}`}
         </span>
       </div>
       <div className="flex flex-wrap gap-1.5">

@@ -17,10 +17,13 @@ export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:
   const chamar=useServerFn(colorirPelaFoto),cancelarFn=useServerFn(cancelarColorir),saldoFn=useServerFn(meuPlano),queryClient=useQueryClient();
   const saldo=useQuery({queryKey:["plano"],queryFn:()=>saldoFn(),staleTime:30000});
   const [etapa,setEtapa]=useState<string|null>(null),[consentimento,setConsentimento]=useState(false),[proposta,setProposta]=useState<PropostaLocal|null>(null),[fusoes,setFusoes]=useState<FusaoCor[]>([]),[semRosto,setSemRosto]=useState(false),[selecionada,setSelecionada]=useState<number|null>(null),[erro,setErro]=useState<{codigo:string;mensagem:string}|null>(null);
+  const [inicio,setInicio]=useState<number|null>(null),avisado=useRef(false);
   const run=useRef<{chave:string;controller:AbortController;geralRecebida:boolean}|null>(null),montada=useRef(true),previewReady=useRef(false);
   const montagem=useMemo(()=>proposta&&api.dados?planoProposta(proposta.geral,proposta.rosto,api.dados.posicoes,api.dados.regioes,api.dados.bvh,proposta.imagens.cameras,proposta.close,proposta.imagens.areas,n,fusoes):null,[proposta,api.dados?.posicoes,api.dados?.regioes,n,fusoes]);
   useEffect(()=>{if(!montagem)return;previewReady.current=false;setEtapa("Montando a prévia");api.enviar({tipo:"previaIA",plano:montagem.plano,semRosto},true);},[montagem,semRosto,api.enviar]);
   useEffect(()=>{if(api.previa){previewReady.current=true;setEtapa(null);}},[api.previa]);
+  const pronta=!!proposta&&!!api.previa&&!etapa;
+  useEffect(()=>{if(pronta&&!avisado.current){avisado.current=true;toast.success("Prévia pronta! Confira as cores e clique em Aplicar.");}},[pronta]);
   useEffect(()=>{if(etapa==="Montando a prévia"&&!api.ocupado&&!api.previa){setEtapa(null);}},[api.ocupado,api.previa,etapa]);
   const cancelar=useCallback(async()=>{
     const r=run.current;run.current=null;r?.controller.abort();setEtapa(null);
@@ -30,7 +33,7 @@ export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:
   useEffect(()=>{montada.current=true;return()=>{montada.current=false;const r=run.current;r?.controller.abort();if(r&&!r.geralRecebida)void cancelarFn({data:{chave:r.chave}}).catch(()=>{});};},[cancelarFn]);
   async function iniciar(){
     if(!api.dados||!foto||run.current||proposta)return;
-    const atual={chave:crypto.randomUUID(),controller:new AbortController(),geralRecebida:false};run.current=atual;setErro(null);setConsentimento(false);setEtapa("Preparando imagens");
+    const atual={chave:crypto.randomUUID(),controller:new AbortController(),geralRecebida:false};run.current=atual;avisado.current=false;setInicio(Date.now());setErro(null);setConsentimento(false);setEtapa("Preparando imagens");
     try{
       const imagens=await prepararImagens(api.dados.posicoes,api.dados.regioes,foto,atual.controller.signal);atual.controller.signal.throwIfAborted();setEtapa("IA analisando as cores");
       const geral=await chamar({data:{chave:atual.chave,etapa:"geral",nome:nome.slice(0,200)||"peça",slots:n,ids:imagens.ids,imagens:[imagens.foto,...imagens.vistas]}});
@@ -53,8 +56,9 @@ export function useColorirIA(api:ReturnType<typeof useColorir>,nome:string,foto:
   }
   function pedir(){let aceito=false;try{aceito=localStorage.getItem("fatiapro.colorir.ia.consentimento")==="1";}catch{}if(aceito)void iniciar();else setConsentimento(true);}
   function aceitar(){try{localStorage.setItem("fatiapro.colorir.ia.consentimento","1");}catch{}void iniciar();}
-  function descartar(){setProposta(null);setSelecionada(null);setEtapa(null);api.enviar({tipo:"descartarIA"});}
-  function aplicar(antes:CorSlot[]){if(!montagem||!previewReady.current||api.ocupado)return;onPaleta(montagem.paleta);api.enviar({tipo:"aplicarIA",paletaAntes:antes,paletaDepois:antes.map((c,i)=>montagem.paleta[i]??c)},true);setProposta(null);setSelecionada(null);}
+  function descartar(){setProposta(null);setSelecionada(null);setEtapa(null);api.enviar({tipo:"descartarIA"});toast.info("Prévia descartada; sua pintura não mudou.");}
+  function aplicar(antes:CorSlot[]){if(!montagem||!previewReady.current||api.ocupado)return;onPaleta(montagem.paleta);api.enviar({tipo:"aplicarIA",paletaAntes:antes,paletaDepois:antes.map((c,i)=>montagem.paleta[i]??c)},true);setProposta(null);setSelecionada(null);toast.success("Cores aplicadas. Use ↶ Desfazer se quiser voltar.");}
   function editarCor(index:number,c:CorSlot){setProposta(p=>p?{...p,geral:{...p.geral,paleta:p.geral.paleta.map((old,i)=>i===index?{nome:c.nome,hex:c.cor}:old)}}:p);}
-  return {saldo:saldo.data?.saldo,etapa,consentimento,setConsentimento,proposta,montagem,semRosto,setSemRosto,selecionada,setSelecionada,erro,pedir,aceitar,cancelar,descartar,aplicar,editarCor,setFusoes,fusoes};
+  const temRosto=proposta?!!proposta.geral.rosto:true;
+  return {inicio,pronta,temRosto,limparErro:()=>setErro(null),saldo:saldo.data?.saldo,etapa,consentimento,setConsentimento,proposta,montagem,semRosto,setSemRosto,selecionada,setSelecionada,erro,pedir,aceitar,cancelar,descartar,aplicar,editarCor,setFusoes,fusoes};
 }
